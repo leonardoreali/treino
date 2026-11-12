@@ -22,6 +22,12 @@
     if (!last) return { targets: fill(Math.round((it.min + it.max) / 2)), hint: it.min === it.max ? '' : 'Primeira vez: comece pelo meio da faixa.', up: false };
     const prev = last.item.sets, quando = U.fmtDate(last.log.date), txt = 'Última vez (' + quando + '): ' + prev.join(', ') + U.unit(it.unit) + '. ';
     const top = prev.length >= Math.min(it.sets, 2) && prev.every(v => v >= it.max);
+    const lk = last.item.kg && last.item.kg.length ? Math.max(...last.item.kg) : null;
+    if (S.ex(ex).w) {
+      const txtK = 'Última vez (' + quando + '): ' + prev.join(', ') + (lk ? ' com ' + lk + ' kg' : '') + '. ';
+      if (top && lk) { const nk = Math.round((lk + (lk >= 20 ? 2.5 : 1)) * 2) / 2; return { targets: fill(it.min), kg: nk, hint: txtK + 'Topo da faixa em todas as séries: suba para ' + nk + ' kg e volte ao início da faixa.', up: false }; }
+      return { targets: fill(0).map((_, i) => clamp((prev[i] == null ? prev[prev.length - 1] : prev[i]) + (top ? 0 : 1))), kg: lk, hint: txtK + (top ? 'Aumente a carga.' : 'Mesma carga, tente +1 repetição por série.'), up: false };
+    }
     if (top) return { targets: fill(it.max), hint: txt + 'Topo da faixa em todas as séries — hora de dificultar.', up: true };
     if (gap >= 3 && it.min !== it.max) return { targets: fill(it.min), hint: txt + 'Você ficou 3+ dias parado: volte pelo início da faixa.', up: false };
     return { targets: fill(0).map((_, i) => clamp((prev[i] == null ? prev[prev.length - 1] : prev[i]) + step)), hint: txt + (it.min === it.max ? '' : 'Tente +' + step + ' por série.'), up: false };
@@ -45,7 +51,7 @@
         if (it.text) return Object.assign(it, { key, checked: false });
         const ex = W.resolve(it, p.id, key), sets = deload && b.kind === 'forca' ? Math.ceil(it.sets / 2) : it.sets;
         const o = Object.assign(it, { key, ex, sets, checked: false });
-        if (b.kind === 'forca') { const s = W.suggest(ex, o, gap); Object.assign(o, { vals: s.targets, hint: s.hint, up: s.up, done: Array(sets).fill(false) }); }
+        if (b.kind === 'forca') { const s = W.suggest(ex, o, gap); Object.assign(o, { vals: s.targets, hint: s.hint, up: s.up, done: Array(sets).fill(false), kgs: S.ex(ex).w ? Array(sets).fill(s.kg || '') : null }); }
         return o;
       });
       blocks.push(nb);
@@ -75,6 +81,7 @@
         '<div class="set' + (it.done[i] ? ' done' : '') + '"><span class="set-n">' + (i + 1) + '</span>' +
         '<input type="number" inputmode="numeric" min="0" value="' + v + '" data-set="' + it.key + '" data-i="' + i + '" aria-label="Série ' + (i + 1) + '">' +
         '<span class="muted small">' + (it.unit === 's' ? 's' : it.unit === 'min' ? 'min' : 'reps') + '</span>' +
+        (it.kgs ? '<input class="kg" type="number" inputmode="decimal" step="0.5" min="0" value="' + it.kgs[i] + '" placeholder="kg" data-kg="' + it.key + '" data-i="' + i + '" aria-label="Carga em kg da série ' + (i + 1) + '"><span class="muted small">kg</span>' : '') +
         (it.unit === 's' && !it.done[i] ? '<button class="ghost" data-a="w-hold" data-key="' + it.key + '" data-i="' + i + '" title="Cronometrar">⏱</button>' : '') +
         '<button class="check" data-a="w-set" data-key="' + it.key + '" data-i="' + i + '" aria-label="Concluir série">✓</button></div>').join('') + '</div></div>';
   }
@@ -118,6 +125,10 @@
     const t = ev.target;
     if (!S.current) return;
     if (t.dataset.set) { const it = findItem(t.dataset.set); if (it) { it.vals[+t.dataset.i] = Math.max(0, Number(t.value) || 0); S.saveCurrent(); } }
+    if (t.dataset.kg) { // a carga digitada vale para esta série e as seguintes ainda não feitas
+      const it = findItem(t.dataset.kg), i = +t.dataset.i, v = Math.max(0, Number(t.value) || 0);
+      if (it && it.kgs) { for (let k = i; k < it.kgs.length; k++) if (k === i || !it.done[k]) { it.kgs[k] = v || ''; const el = document.querySelector('[data-kg="' + it.key + '"][data-i="' + k + '"]'); if (el && k !== i) el.value = v || ''; } S.saveCurrent(); }
+    }
     if (t.dataset.cardio) { S.current.blocks[+t.dataset.cardio].minutes = Number(t.value) || 0; S.saveCurrent(); }
   });
   document.addEventListener('change', ev => {
@@ -149,7 +160,7 @@
   function swapInPlace(it, exId) {
     it.ex = exId;
     const s = W.suggest(exId, it, 0);
-    Object.assign(it, { vals: s.targets, hint: s.hint, up: false, done: Array(it.sets).fill(false) });
+    Object.assign(it, { vals: s.targets, hint: s.hint, up: false, done: Array(it.sets).fill(false), kgs: S.ex(exId).w ? Array(it.sets).fill(s.kg || '') : null });
     rerender();
   }
   A['w-swap'] = d => {
@@ -178,7 +189,7 @@
   A['w-save'] = () => {
     const c = S.current, items = [];
     c.blocks.forEach(b => {
-      if (b.kind === 'forca') b.items.forEach(it => { const sets = it.vals.filter((v, i) => it.done[i]); if (sets.length) items.push({ ex: it.ex, unit: it.unit, sets, side: !!it.side }); });
+      if (b.kind === 'forca') b.items.forEach(it => { const sets = it.vals.filter((v, i) => it.done[i]); if (sets.length) { const o = { ex: it.ex, unit: it.unit, sets, side: !!it.side }; if (it.kgs && it.kgs.some(Number)) o.kg = it.kgs.filter((v, i) => it.done[i]).map(v => Number(v) || 0); items.push(o); } });
       if (b.kind === 'cardio' && b.minutes) items.push({ ex: b.ex || 'caminhada', unit: 'min', sets: [b.minutes] });
     });
     const interval = c.blocks.map(b => b.doneOpt).filter(Boolean)[0] || null;

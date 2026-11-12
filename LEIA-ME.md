@@ -32,3 +32,10 @@ Em **Ajustes → Sincronização** há o passo a passo: você cria um token do G
 | Mudar cores | topo de `css/style.css` |
 
 Depois de alterar arquivos, publique de novo (`git add -A`, `git commit -m "atualiza"`, `git push`) e aumente o `VERSION` em `sw.js`.
+
+## Perfil, gerador, professor e compartilhamento
+
+- **Perfil → Gerar meu treino**: monta um programa por regras (objetivo, nível, dias, tempo, local, equipamentos, limitações). As regras ficam em `js/generator.js`.
+- **Academia**: exercícios com carga em `js/data/gym.js`; o treino registra kg por série.
+- **Compartilhar**: Programa → Compartilhar gera um link com o treino inteiro dentro (sem servidor) para mandar pelo WhatsApp.
+- **Modo profissional**: Perfil → "Sou profissional de educação física" libera fichas de alunos, avaliações físicas, treinos por aluno e relatórios recebidos.

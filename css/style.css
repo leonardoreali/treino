@@ -134,3 +134,14 @@ body.has-timer #music-btn { bottom: calc(140px + env(safe-area-inset-bottom)); }
 .music-panel iframe { width: 100%; border: 0; border-radius: 10px; display: block; margin-top: 10px; }
 @media (min-width: 900px) { #music-btn { bottom: 16px; } body.has-timer #music-btn { bottom: 76px; } .music-panel { bottom: 74px; } }
 .ed-extra { margin-top: 12px; } .ed-extra input { width: 90px; } .ed-extra label > input.s-il { width: 100%; }
+
+/* perfil / fichas */
+.pf { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; } .pf .wide { grid-column: 1 / -1; }
+.pf input:not([type=checkbox]), .pf select, .pf textarea { width: 100%; }
+.set input.kg { width: 64px; font-size: 1rem; }
+@media (max-width: 400px) { .set { gap: 5px; padding: 6px 5px; } .set input { width: 58px; } .set input.kg { width: 54px; } .set .check { width: 40px; } }
+@media print { #nav, #music, .timerbar, #toast { display: none !important; } body { background: #fff; color: #000; padding: 0; } }
+@media (max-width: 899px) { /* no celular o botão de música fica no alto, fora do caminho dos botões de série */
+  #music-btn, body.has-timer #music-btn { top: 10px; bottom: auto; width: 42px; height: 42px; font-size: 1.1rem; }
+  .music-panel { top: 60px; bottom: auto; }
+}

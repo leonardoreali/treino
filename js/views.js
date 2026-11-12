@@ -2,7 +2,7 @@
 (function () {
   const V = window.V = {}, after = V.after = {};
   const e = U.esc;
-  const ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, draft: null };
+  const ui = V.ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, draft: null };
 
   function streak() {
     const days = new Set(S.state.logs.map(l => l.date));
@@ -20,6 +20,8 @@
     const doneToday = logs.some(l => l.date === S.today() && l.type === 'session');
     const weekAgo = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
     let h = '<h1>Hoje</h1>';
+    if (!S.state.profile && !logs.length) h += '<div class="card hl"><h2>Bem-vindo! 👋</h2><p>Crie seu perfil e o app monta um treino sob medida para você — em casa ou na academia. Se preferir, importe um treino em PDF, receba um do seu professor ou use o programa de exemplo abaixo.</p>' +
+      '<div class="row wrap"><a class="btn big" href="#perfil">Criar meu perfil</a><a class="btn ghosty" href="#programa">Importar PDF</a></div></div>';
     if (S.current) h += '<div class="card hl"><b>Treino em andamento:</b> ' + e(S.current.name) + '<div class="row"><a class="btn" href="#treino">Continuar</a></div></div>';
     if (S.finished()) {
       h += '<div class="card hl"><h2>Programa concluído! 🏆</h2><p>Você fechou as ' + p.rounds + ' voltas. Suba o PDF do próximo treino para montar a nova rotina.</p><a class="btn" href="#programa">Ir para Programa</a></div>';
@@ -77,7 +79,7 @@
       for (let i = 34; i >= 0; i--) { const d = new Date(Date.now() - i * 864e5), iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); cells.push('<i class="' + (days.has(iso) ? 'on' : '') + '" title="' + U.fmtDate(iso) + '"></i>'); }
       h += '<div class="card"><div class="muted small">Últimos 35 dias</div><div class="heat">' + cells.join('') + '</div></div>';
       h += logs.length ? logs.map(l => '<details class="card log"><summary><b>' + U.fmtDate(l.date) + '</b> · ' + e(l.sessionName || '') + (l.rpe ? ' <span class="tag">esforço ' + l.rpe + '</span>' : '') + (l.type === 'flex' ? ' <span class="tag">dia leve</span>' : '') + '</summary>' +
-        '<ul class="plain">' + (l.items || []).map(i => '<li><span data-a="exercise" data-ex="' + e(i.ex) + '" class="ex-name">' + e(S.ex(i.ex).name) + '</span>: ' + i.sets.join(', ') + U.unit(i.unit) + '</li>').join('') +
+        '<ul class="plain">' + (l.items || []).map(i => '<li><span data-a="exercise" data-ex="' + e(i.ex) + '" class="ex-name">' + e(S.ex(i.ex).name) + '</span>: ' + i.sets.join(', ') + U.unit(i.unit) + (i.kg && i.kg.some(Number) ? ' @ ' + [...new Set(i.kg)].join('/') + ' kg' : '') + '</li>').join('') +
         (l.interval ? '<li>Intervalado: ' + e(l.interval) + '</li>' : '') + '</ul>' + (l.notes ? '<p class="muted">' + e(l.notes) + '</p>' : '') +
         '<div class="muted small">' + (l.round ? 'Volta ' + l.round : '') + (l.minutes ? ' · ' + l.minutes + ' min' : '') + '</div><button class="link danger" data-a="log-del" data-id="' + l.id + '">Apagar registro</button></details>').join('')
         : '<div class="empty">Nenhum treino registrado ainda.</div>';
@@ -85,10 +87,10 @@
       const ids = [...new Set(logs.flatMap(l => (l.items || []).map(i => i.ex)))].sort((a, b) => S.ex(a).name.localeCompare(S.ex(b).name));
       if (!ids.includes(ui.chartEx)) ui.chartEx = ids[0] || null;
       h += ids.length ? '<div class="card"><label>Exercício <select id="chart-ex">' + ids.map(id => '<option value="' + e(id) + '"' + (id === ui.chartEx ? ' selected' : '') + '>' + e(S.ex(id).name) + '</option>').join('') + '</select></label>' +
-        '<canvas id="chart" class="chart"></canvas><div class="legend"><span><i style="background:var(--accent)"></i>Melhor série</span><span><i style="background:var(--blue)"></i>Total do treino</span></div><div id="chart-info" class="muted small"></div></div>'
+        '<canvas id="chart" class="chart"></canvas><div class="legend"><span><i style="background:var(--accent)"></i>' + (S.ex(ui.chartEx).w ? 'Carga máxima (kg)' : 'Melhor série') + '</span><span><i style="background:var(--blue)"></i>Total do treino</span></div><div id="chart-info" class="muted small"></div></div>'
         : '<div class="empty">Registre treinos para ver os gráficos.</div>';
     } else {
-      const p = S.program(), tests = p.tests || [];
+      const p = S.program(), tests = V.tests();
       if (!tests.find(t => t.id === ui.chartTest)) ui.chartTest = tests[0] ? tests[0].id : null;
       h += '<div class="card"><h3>Novo registro</h3><div class="row wrap"><label>Teste <select id="m-test">' + tests.map(t => '<option value="' + t.id + '"' + (t.id === ui.chartTest ? ' selected' : '') + '>' + e(t.name) + ' (' + t.unit + ')</option>').join('') + '</select></label>' +
         '<label>Valor <input id="m-val" type="number" inputmode="decimal" step="0.1" min="0"></label><label>Data <input id="m-date" type="date" value="' + S.today() + '"></label><button class="btn" data-a="m-add">Salvar</button></div>' +
@@ -102,17 +104,18 @@
     }
     return h;
   };
+  V.tests = () => { const t = (S.program().tests || []).slice(); if (!t.some(x => x.id === 'peso')) t.push({ id: 'peso', name: 'Peso', unit: 'kg', baseline: null, goal: '' }); return t; };
   after.evolucao = () => {
     const cv = U.$('#chart'); if (!cv) return;
     const css = getComputedStyle(document.documentElement);
     if (ui.evoTab === 'graficos') {
-      const hs = S.logsFor(ui.chartEx);
-      U.chart(cv, [{ color: css.getPropertyValue('--accent'), points: hs.map(x => ({ x: U.fmtDate(x.log.date), y: Math.max(...x.item.sets) })) },
+      const hs = S.logsFor(ui.chartEx), wt = S.ex(ui.chartEx).w;
+      U.chart(cv, [{ color: css.getPropertyValue('--accent'), points: hs.map(x => ({ x: U.fmtDate(x.log.date), y: wt ? (x.item.kg && x.item.kg.length ? Math.max(...x.item.kg) : null) : Math.max(...x.item.sets) })) },
         { color: css.getPropertyValue('--blue'), points: hs.map(x => ({ x: U.fmtDate(x.log.date), y: x.item.sets.reduce((a, b) => a + b, 0) })) }], { zero: true });
       const best = Math.max(...hs.flatMap(x => x.item.sets));
       U.$('#chart-info').textContent = 'Recorde em uma série: ' + best + U.unit(hs[0].item.unit) + ' · ' + hs.length + ' treino(s)';
     } else if (ui.evoTab === 'testes') {
-      const t = (S.program().tests || []).find(x => x.id === ui.chartTest); if (!t) return;
+      const t = V.tests().find(x => x.id === ui.chartTest); if (!t) return;
       const ms = S.state.measures.filter(m => m.test === t.id).sort((a, b) => a.date < b.date ? -1 : 1);
       const pts = (t.baseline != null ? [{ x: 'início', y: t.baseline }] : []).concat(ms.map(m => ({ x: U.fmtDate(m.date), y: m.value })));
       U.chart(cv, [{ color: css.getPropertyValue('--accent'), points: pts }]);
@@ -188,10 +191,10 @@
     h += '<h3>Novo treino</h3><div class="card"><p>Suba o PDF do próximo treino e o app monta a rotina. Você revisa antes de salvar.</p>' +
       '<div class="row wrap"><label class="btn">📄 Importar PDF<input type="file" id="pdf-file" accept="application/pdf" hidden></label>' +
       '<button class="btn ghosty" data-a="prog-json">Colar texto/JSON de um chat</button><button class="btn ghosty" data-a="prog-new">Montar à mão</button></div><div id="pdf-status" class="muted small"></div></div>';
-    const all = Object.values(S.state.programs);
+    const all = Object.values(S.state.programs).filter(x => !x.alunoId);
     h += '<h3>Meus programas</h3><div class="list">' + all.map(x => '<div class="list-item"><span>' + (x.id === p.id ? '● ' : '') + e(x.name) + '</span><span class="row">' +
       (x.id === p.id ? '<span class="tag">ativo</span>' : '<button class="btn small" data-a="prog-use" data-id="' + e(x.id) + '">Usar</button>') +
-      '<button class="btn small ghosty" data-a="prog-edit" data-id="' + e(x.id) + '">Editar</button>' +
+      '<button class="btn small ghosty" data-a="prog-edit" data-id="' + e(x.id) + '">Editar</button><button class="btn small ghosty" data-a="prog-share" data-id="' + e(x.id) + '">Compartilhar</button>' +
       (all.length > 1 && x.id !== p.id ? '<button class="link danger" data-a="prog-del" data-id="' + e(x.id) + '">apagar</button>' : '') + '</span></div>').join('') + '</div>';
     return h;
   };
@@ -205,7 +208,7 @@
         if (!d.sessions.length) { st.textContent = 'Não encontrei tabelas de treino neste PDF. Use "Colar texto/JSON de um chat" ou "Montar à mão".'; return; }
         // É o mesmo programa que já existe no app? (título do PDF contido no nome de um programa)
         const tk = s => norm(s).split(' ').filter(w => w.length > 2), dn = tk(d.name);
-        const same = Object.values(S.state.programs).find(p => { const pn = new Set(tk(p.name)); return dn.length >= 2 && dn.filter(w => pn.has(w)).length / dn.length >= 0.75; });
+        const same = Object.values(S.state.programs).find(p => { if (p.alunoId) return false; const pn = new Set(tk(p.name)); return dn.length >= 2 && dn.filter(w => pn.has(w)).length / dn.length >= 0.75; });
         if (same) { d.sameAs = same.id; d.onlyData = true; }
         ui.draft = d; APP.render(); U.toast('Encontrei ' + d.sessions.length + ' sessões. Revise e salve.');
       } catch (err) { console.error(err); st.textContent = 'Erro ao ler o PDF: ' + err.message + ' (a importação precisa de internet na primeira vez).'; }
@@ -219,7 +222,7 @@
     ui.draft = { id: p.id, name: p.name, rounds: p.rounds, flex: false, keep: p, sessions: p.sessions.map((s, si) => ({ name: s.name,
       items: s.blocks.filter(b => b.kind === 'forca').flatMap((b, bi) => b.items.map(it => Object.assign({}, it, { name: S.ex(W.resolve(it, p.id, 'x')).name }))) })) };
     if (p.sessions.some(s => s.blocks.some(b => b.kind !== 'forca'))) U.toast('Editando só os exercícios de força; aquecimento, cardio e alongamento são mantidos.');
-    APP.render();
+    if (location.hash !== '#programa') location.hash = '#programa'; else APP.render();
   };
   const PROMPT = 'Converta o treino do PDF/texto que enviei para JSON, sem nenhum texto fora do JSON, neste formato exato:\n' +
     '{"name":"nome do programa","rounds":12,"sessions":[{"name":"nome da sessão","items":[{"name":"nome do exercício","sets":4,"min":6,"max":10,"unit":"reps","side":false,"rest":90,"note":""}]}]}\n' +
@@ -296,7 +299,7 @@
   A['ed-del-s'] = d => { readDraft(); ui.draft.sessions.splice(+d.s, 1); APP.render(); };
   A['ed-add-i'] = d => { readDraft(); ui.draft.sessions[+d.s].items.push({ name: '', sets: 3, min: 8, max: 12, unit: 'reps' }); APP.render(); };
   A['ed-del-i'] = d => { readDraft(); ui.draft.sessions[+d.s].items.splice(+d.i, 1); APP.render(); };
-  A['ed-cancel'] = () => { ui.draft = null; APP.render(); };
+  A['ed-cancel'] = () => { const al = ui.draft.alunoId || (ui.draft.keep && ui.draft.keep.alunoId); ui.draft = null; if (al) location.hash = '#aluno'; else APP.render(); };
   const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
   // Aplica ao programa os dados pessoais lidos do PDF: data de início, testes e registros de treino.
   function applyData(d, progId) {
@@ -371,14 +374,17 @@
       if (!prog.sessions.length) return U.toast('Adicione pelo menos um exercício.');
       S.state.pos[id] = 0;
     }
-    S.state.programs[id] = prog; S.state.activeProgram = id;
+    if (d.alunoId) prog.alunoId = d.alunoId;
+    S.state.programs[id] = prog;
+    if (prog.alunoId) { ui.draft = null; S.save(); location.hash = '#aluno'; return U.toast('Treino salvo na ficha do aluno.'); }
+    S.state.activeProgram = id;
     if (!d.keep) { if (d.tests && d.tests.length && d.useData) prog.tests = []; applyData(d, id); }
     ui.draft = null;
     S.save(); APP.render(); U.toast('Programa salvo e ativado!');
   };
 
   // ================= AJUSTES =================
-  V.ajustes = () => '<h1>Ajustes</h1>' +
+  V.ajustes = () => '<a href="#perfil" class="muted small">← Perfil</a><h1>Ajustes</h1>' +
     '<div class="card"><h2>Sincronização PC ↔ celular</h2><p class="muted">Seus dados ficam num Gist <b>privado</b> da sua conta do GitHub. Faça isto uma vez em cada aparelho:</p>' +
     '<ol class="small"><li>Abra <a target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?description=App%20de%20treino&scopes=gist">github.com → Settings → Tokens (classic) → Generate new token</a>.</li>' +
     '<li>Marque <b>apenas</b> a permissão <code>gist</code>, escolha "No expiration" e gere.</li><li>Cole o token abaixo e toque em Conectar. Use o mesmo token no PC e no celular.</li></ol>' +

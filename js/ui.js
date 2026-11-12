@@ -150,7 +150,7 @@
       U.videoHtml(exId) + '<p>' + U.esc(ex.how) + '</p>' +
       '<p class="small"><b>Equipamento:</b> ' + (S.needs(exId).length ? S.needs(exId).map(q => { const n = (S.allEquip().find(x => x.id === q) || { name: q }).name, ok = S.owned().includes(q); return '<span class="' + (ok ? 'good' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + U.esc(n) + '</span>'; }).join(' · ') : 'nenhum (peso do corpo)') + '</p>' +
       (next ? '<p class="muted">Ficou fácil? Próxima variação: <a href="#" data-a="exercise" data-ex="' + next + '">' + U.esc(S.ex(next).name) + '</a></p>' : '') +
-      (hist.length ? '<h3>Últimos registros</h3><ul class="plain">' + hist.map(h => '<li><b>' + U.fmtDate(h.log.date) + '</b> — ' + h.item.sets.join(', ') + U.unit(h.item.unit) + '</li>').join('') + '</ul>' : ''));
+      (hist.length ? '<h3>Últimos registros</h3><ul class="plain">' + hist.map(h => '<li><b>' + U.fmtDate(h.log.date) + '</b> — ' + h.item.sets.join(', ') + U.unit(h.item.unit) + (h.item.kg && h.item.kg.some(Number) ? ' @ ' + Math.max(...h.item.kg) + ' kg' : '') + '</li>').join('') + '</ul>' : ''));
   };
   A.exercise = d => U.showExercise(d.ex);
   A.video = d => U.showExercise(d.ex);

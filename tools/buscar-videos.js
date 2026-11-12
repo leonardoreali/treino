@@ -7,9 +7,9 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..');
 const out = path.join(root, 'js', 'data', 'videos.js');
-const ctx = { window: {} };
-vm.runInNewContext(fs.readFileSync(path.join(root, 'js', 'data', 'exercises.js'), 'utf8'), ctx);
-if (fs.existsSync(out) && !process.argv.includes('--todos')) vm.runInNewContext(fs.readFileSync(out, 'utf8'), ctx);
+const ctx = {}; ctx.window = ctx; vm.createContext(ctx);
+for (const f of ['exercises.js', 'equip.js', 'gym.js']) vm.runInContext(fs.readFileSync(path.join(root, 'js', 'data', f), 'utf8'), ctx);
+if (fs.existsSync(out) && !process.argv.includes('--todos')) vm.runInContext(fs.readFileSync(out, 'utf8'), ctx);
 const have = ctx.window.VIDEOS || {};
 const titles = ctx.window.VIDEO_TITLES || {};
 const sleep = ms => new Promise(r => setTimeout(r, ms));
