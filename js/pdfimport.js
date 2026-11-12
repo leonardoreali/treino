@@ -57,7 +57,20 @@
 
     const sessions = [];
     let cur = null;
-    const flush = () => { if (cur && cur.items.length) sessions.push(cur); cur = null; };
+    const flush = () => { if (cur && (cur.items.length || cur.cardio || cur.interval)) sessions.push(cur); cur = null; };
+    // cardio contínuo ("30–40 min") e intervalado ("30 s ..., 30 s de pausa. Repita 10 vezes")
+    const cardioInterval = blk => {
+      const txt = blk.map(b => b.text).join(' ');
+      const cm = txt.match(/(\d+)\s*[–\-—]\s*(\d+)\s*min\b/);
+      if (cm && !cur.cardio && /cardio|caminhada|trote|corrida|pedal|ritmo/i.test(cur.name + ' ' + txt)) cur.cardio = { min: +cm[1], max: +cm[2] };
+      const ms = [...txt.matchAll(/(\d+)\s*s\b[^.]*?(\d+)\s*s\s+de\s+pausa\.?\s*Repita\s+(\d+)\s+vezes/gi)];
+      ms.forEach((m, n) => {
+        const after = txt.slice(m.index + m[0].length, ms[n + 1] ? ms[n + 1].index : m.index + m[0].length + 260);
+        const lab = after.match(/[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ ]*(?:\s*→\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ ]*)+/);
+        (cur.interval = cur.interval || []).push({ work: +m[1], rest: +m[2], rounds: +m[3],
+          labels: lab ? lab[0].split('→').map(s => clean(s)).filter(s => s && !/de novo/i.test(s)).map(s => s[0].toUpperCase() + s.slice(1)) : [] });
+      });
+    };
     let i = 0;
     while (i < all.length) {
       const l = all[i], hm = l.cells.length <= 2 && l.text.match(HEAD);
@@ -71,6 +84,7 @@
       // bloco contínuo até o próximo título
       const blk = [];
       while (i < all.length && !isSection(all[i]) && !(all[i].cells.length <= 2 && HEAD.test(all[i].text) && !SETS.test(all[i].text))) blk.push(all[i++]);
+      cardioInterval(blk);
       // 1) tabelas: célula só com "4 × 6–10" → nome = textos da 1ª coluna mais próximos na vertical
       const setCells = [], nameCells = [];
       const left = Math.min(...blk.flatMap(b => b.cells.map(c => c.x)));
@@ -178,6 +192,7 @@
         if (items.length) logs.push({ date: a.date, tag: a.tag, items });
       }
     }
-    return { startDate: sd ? sd[3] + '-' + p2(sd[2]) + '-' + p2(sd[1]) : null, tests, logs };
+    const dl = full.replace(/\n/g, ' ').match(/voltas\s+((?:\d+\s*(?:,|e)?\s*)+)(?:s[aã]o\s+leves|com\s+metade)/i);
+    return { startDate: sd ? sd[3] + '-' + p2(sd[2]) + '-' + p2(sd[1]) : null, tests, logs, deload: dl ? dl[1].match(/\d+/g).map(Number) : [] };
   }
 })();

@@ -23,6 +23,7 @@
   // ---------- som / vibração / tela ligada ----------
   let ac;
   U.beep = (freq, ms) => {
+    if (ms >= 90 && window.MUSIC) MUSIC.duck();
     if (!S.cfg.sound) return;
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
@@ -147,6 +148,7 @@
     const ex = S.ex(exId), hist = S.logsFor(exId).slice(-5).reverse(), next = NEXT_VARIATION[exId];
     U.modal('<h2>' + U.esc(ex.name) + '</h2><div class="tags"><span class="tag">' + U.esc(CATEGORIES[ex.cat] || 'Outros') + '</span><span class="tag lvl' + ex.level + '">' + LEVELS[ex.level] + '</span></div>' +
       U.videoHtml(exId) + '<p>' + U.esc(ex.how) + '</p>' +
+      '<p class="small"><b>Equipamento:</b> ' + (S.needs(exId).length ? S.needs(exId).map(q => { const n = (S.allEquip().find(x => x.id === q) || { name: q }).name, ok = S.owned().includes(q); return '<span class="' + (ok ? 'good' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + U.esc(n) + '</span>'; }).join(' · ') : 'nenhum (peso do corpo)') + '</p>' +
       (next ? '<p class="muted">Ficou fácil? Próxima variação: <a href="#" data-a="exercise" data-ex="' + next + '">' + U.esc(S.ex(next).name) + '</a></p>' : '') +
       (hist.length ? '<h3>Últimos registros</h3><ul class="plain">' + hist.map(h => '<li><b>' + U.fmtDate(h.log.date) + '</b> — ' + h.item.sets.join(', ') + U.unit(h.item.unit) + '</li>').join('') + '</ul>' : ''));
   };

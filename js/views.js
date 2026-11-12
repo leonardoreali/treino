@@ -136,24 +136,38 @@
   // ================= BIBLIOTECA =================
   function libList() {
     const q = ui.libQ.trim().toLowerCase();
-    const list = S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!q || x.name.toLowerCase().includes(q)))
+    const list = S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
     return list.length ? list.map(x => '<button class="list-item" data-a="exercise" data-ex="' + e(x.id) + '"><span>' + e(x.name) + '<small class="muted"> · ' + e(CATEGORIES[x.cat] || 'Outros') + '</small></span>' +
       '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
   }
   V.biblioteca = () => '<h1>Biblioteca</h1><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
     '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + '</button>').join('') + '</div>' +
-    '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + '</button>').join('') + '</div>' +
+    '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button></div>' +
     '<div class="list" id="lib-list">' + libList() + '</div><button class="btn ghosty" data-a="lib-new">+ Adicionar exercício próprio</button>';
   A['lib-cat'] = d => { ui.libCat = d.c; APP.render(); };
   A['lib-lvl'] = d => { ui.libLvl = +d.l; APP.render(); };
+  A['lib-own'] = () => { ui.libOwn = !ui.libOwn; APP.render(); };
+  // equipamentos (Ajustes)
+  document.addEventListener('change', ev => {
+    const q = ev.target.dataset && ev.target.dataset.equip; if (!q) return;
+    const own = new Set(S.owned()); if (ev.target.checked) own.add(q); else own.delete(q);
+    S.state.equip = [...own]; S.save();
+  });
+  A['equip-add'] = () => {
+    const name = U.$('#equip-new').value.trim(); if (!name) return U.toast('Digite o nome do equipamento.');
+    const id = 'q-' + S.uid(); (S.state.customEquip = S.state.customEquip || []).push({ id, t: Date.now(), name });
+    S.state.equip = S.owned().concat(id); S.save(); APP.render();
+  };
+  A['equip-del'] = d => { S.state.customEquip = (S.state.customEquip || []).filter(x => x.id !== d.id); S.state.deleted.push(d.id); S.save(); APP.render(); };
   document.addEventListener('input', ev => { if (ev.target.id === 'lib-q') { ui.libQ = ev.target.value; U.$('#lib-list').innerHTML = libList(); } });
   A['lib-new'] = () => U.modal('<h2>Novo exercício</h2><label>Nome <input id="nx-name"></label><label>Categoria <select id="nx-cat">' + Object.entries(CATEGORIES).map(c => '<option value="' + c[0] + '">' + c[1] + '</option>').join('') + '</select></label>' +
     '<label>Nível <select id="nx-lvl">' + LEVELS.slice(1).map((l, i) => '<option value="' + (i + 1) + '">' + l + '</option>').join('') + '</select></label>' +
+    '<label>Equipamento necessário <select id="nx-eq"><option value="">Nenhum (peso do corpo)</option>' + S.allEquip().map(q => '<option value="' + e(q.id) + '">' + e(q.name) + '</option>').join('') + '</select></label>' +
     '<label>Como fazer <textarea id="nx-how" rows="2"></textarea></label><label>Link do short no YouTube (opcional) <input id="nx-vid" placeholder="https://youtube.com/shorts/…"></label><button class="btn block" data-a="lib-save">Salvar</button>');
   A['lib-save'] = () => {
     const name = U.$('#nx-name').value.trim(); if (!name) return U.toast('Dê um nome ao exercício.');
-    S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, video: U.ytId(U.$('#nx-vid').value) || undefined });
+    S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined });
     S.save(); U.closeModal(); APP.render();
   };
 
@@ -228,7 +242,8 @@
     const d = ui.draft;
     return '<h1>' + (d.id ? 'Editar programa' : 'Revisar novo programa') + '</h1><p class="muted">Confira nomes, séries e repetições. Exercícios que não existem na biblioteca são criados automaticamente.</p>' +
       '<datalist id="ex-names">' + S.allExercises().map(x => '<option value="' + e(x.name) + '">').join('') + '</datalist>' +
-      '<div class="card"><label>Nome do programa <input id="ed-name" value="' + e(d.name) + '"></label><div class="row wrap"><label>Voltas (repetições da sequência) <input id="ed-rounds" type="number" min="1" value="' + d.rounds + '"></label></div>' +
+      '<div class="card"><label>Nome do programa <input id="ed-name" value="' + e(d.name) + '"></label><div class="row wrap"><label>Voltas (repetições da sequência) <input id="ed-rounds" type="number" min="1" value="' + d.rounds + '"></label>' +
+      '<label>Voltas leves, com metade das séries (ex.: 4, 8, 12) <input id="ed-deload" value="' + e((d.deload || (d.keep && d.keep.deloadRounds) || []).join(', ')) + '"></label></div>' +
       (d.keep ? '' : '<label class="chk"><input type="checkbox" id="ed-flex"' + (d.flex ? ' checked' : '') + '><span>Incluir aquecimento no início e rotina curta de flexibilidade no fim de cada sessão</span></label>') + '</div>' +
       ((d.logs && d.logs.length) || (d.tests && d.tests.length) || d.sameAs ? '<div class="card hl"><h2>Seus dados no PDF</h2>' +
         '<ul class="plain small">' + (d.startDate ? '<li>Início do programa: <b>' + U.fmtDate(d.startDate) + '</b></li>' : '') +
@@ -243,7 +258,12 @@
           '<select class="i-unit" aria-label="Unidade">' + ['reps', 's', 'min'].map(u => '<option' + (u === it.unit ? ' selected' : '') + '>' + u + '</option>').join('') + '</select>' +
           '<input class="i-side" type="checkbox"' + (it.side ? ' checked' : '') + ' title="Cada lado/perna" aria-label="Cada lado">' +
           '<button class="link danger" data-a="ed-del-i" data-s="' + si + '" data-i="' + ii + '" aria-label="Remover">✕</button></div>').join('') +
-        '<button class="btn small ghosty" data-a="ed-add-i" data-s="' + si + '">+ exercício</button></div>').join('') +
+        '<button class="btn small ghosty" data-a="ed-add-i" data-s="' + si + '">+ exercício</button>' +
+        (d.keep ? '' : (() => { const c = s.cardio || {}, o = (s.interval || [])[0] || {};
+          return '<details class="ed-extra"' + (s.cardio || s.interval ? ' open' : '') + ' data-more="' + e(JSON.stringify((s.interval || []).slice(1))) + '"><summary class="muted small">Cardio e intervalado desta sessão (opcional)</summary>' +
+            '<div class="row wrap"><label>Cardio contínuo: de (min) <input class="s-cmin" type="number" min="0" value="' + (c.min || '') + '"></label><label>até (min) <input class="s-cmax" type="number" min="0" value="' + (c.max || '') + '"></label></div>' +
+            '<div class="row wrap"><label>Intervalado: forte (s) <input class="s-iw" type="number" min="0" value="' + (o.work || '') + '"></label><label>pausa (s) <input class="s-ir" type="number" min="0" value="' + (o.rest || '') + '"></label><label>rodadas <input class="s-in" type="number" min="0" value="' + (o.rounds || '') + '"></label></div>' +
+            '<label>Exercícios do intervalado, separados por vírgula <input class="s-il" value="' + e((o.labels || []).join(', ')) + '" placeholder="Burpee, Polichinelo…"></label></details>'; })()) + '</div>').join('') +
       '<div class="row"><button class="btn ghosty" data-a="ed-add-s">+ sessão</button></div>' +
       '<div class="row end"><button class="btn ghosty" data-a="ed-cancel">Cancelar</button><button class="btn big" data-a="ed-save">Salvar programa</button></div>';
   }
@@ -253,9 +273,24 @@
     if (U.$('#ed-flex')) d.flex = U.$('#ed-flex').checked;
     if (U.$('#ed-data')) d.useData = U.$('#ed-data').checked;
     if (U.$('#ed-only')) d.onlyData = U.$('#ed-only').checked;
-    d.sessions = [...document.querySelectorAll('.ed-session')].map(sEl => ({ name: U.$('.ed-sname', sEl).value.trim() || 'Sessão',
+    d.deload = U.$('#ed-deload').value.split(/[^\d]+/).map(Number).filter(n => n > 0);
+    const extra = sEl => {
+      const x = U.$('.ed-extra', sEl); if (!x) return {};
+      const n = c => +U.$(c, x).value || 0, o = {};
+      if (n('.s-cmin')) o.cardio = { min: n('.s-cmin'), max: Math.max(n('.s-cmin'), n('.s-cmax')) };
+      let more = []; try { more = JSON.parse(x.dataset.more || '[]'); } catch (err) {}
+      if (n('.s-iw') && n('.s-in')) o.interval = [{ work: n('.s-iw'), rest: n('.s-ir'), rounds: n('.s-in'), labels: U.$('.s-il', x).value.split(',').map(t => t.trim()).filter(Boolean) }].concat(more);
+      return o;
+    };
+    d.sessions = [...document.querySelectorAll('.ed-session')].map(sEl => Object.assign(extra(sEl), { name: U.$('.ed-sname', sEl).value.trim() || 'Sessão',
       items: [...sEl.querySelectorAll('.ed-item')].map(r => { const min = +U.$('.i-min', r).value || 0; return { name: U.$('.i-name', r).value.trim(), sets: Math.max(1, +U.$('.i-sets', r).value || 1), min, max: Math.max(min, +U.$('.i-max', r).value || 0),
         unit: U.$('.i-unit', r).value, side: U.$('.i-side', r).checked, note: r.dataset.note || undefined, rest: +r.dataset.rest || undefined, skill: r.dataset.skill || undefined }; }) }));
+  }
+  const hasWork = s => s.items.some(i => i.name) || s.cardio || s.interval;
+  function extraBlocks(s) {
+    const c = s.cardio ? [{ title: 'Cardio contínuo', kind: 'cardio', min: s.cardio.min, max: s.cardio.max, ex: 'caminhada', note: 'Ritmo em que dá para falar frases curtas.' }] : [];
+    const i = s.interval ? [{ title: 'Intervalado', kind: 'intervalado', note: 'Esforço máximo no forte, pausa leve.', options: s.interval.map((o, n) => ({ name: 'Opção ' + 'ABCDEF'[n] + ' — ' + o.rounds + ' × ' + o.work + ' s / ' + o.rest + ' s', work: o.work, rest: o.rest, rounds: o.rounds, labels: o.labels && o.labels.length ? o.labels : ['Esforço máximo'], ex: 'corda' })) }] : [];
+    return { c, i };
   }
   A['ed-add-s'] = () => { readDraft(); ui.draft.sessions.push({ name: 'Sessão ' + (ui.draft.sessions.length + 1), items: [] }); APP.render(); };
   A['ed-del-s'] = d => { readDraft(); ui.draft.sessions.splice(+d.s, 1); APP.render(); };
@@ -318,7 +353,7 @@
     });
     let prog;
     if (d.keep) { // mantém blocos que não são de força; substitui os de força pelo editado
-      prog = JSON.parse(JSON.stringify(d.keep)); prog.name = d.name; prog.rounds = d.rounds;
+      prog = JSON.parse(JSON.stringify(d.keep)); prog.name = d.name; prog.rounds = d.rounds; prog.deloadRounds = d.deload || [];
       prog.sessions = d.sessions.map((s, si) => {
         const old = d.keep.sessions[si], items = toItems(s);
         if (!old) return { name: s.name, blocks: [{ title: s.name, kind: 'forca', items }] };
@@ -330,8 +365,9 @@
       delete S.state.swaps[id];
     } else {
       const base = DEFAULT_PROGRAM.sessions[0].blocks, aq = base[0], fx = base[base.length - 1];
-      prog = { id, name: d.name, rounds: d.rounds, startDate: S.today(), deloadRounds: [], tests: DEFAULT_PROGRAM.tests, notes: [],
-        sessions: d.sessions.filter(s => s.items.some(i => i.name)).map(s => ({ name: s.name, blocks: (d.flex ? [JSON.parse(JSON.stringify(aq))] : []).concat([{ title: s.name, kind: 'forca', items: toItems(s) }], d.flex ? [JSON.parse(JSON.stringify(fx))] : []) })) };
+      prog = { id, name: d.name, rounds: d.rounds, startDate: S.today(), deloadRounds: d.deload || [], tests: JSON.parse(JSON.stringify(DEFAULT_PROGRAM.tests)), notes: [],
+        sessions: d.sessions.filter(hasWork).map(s => { const x = extraBlocks(s), items = toItems(s);
+          return { name: s.name, blocks: (d.flex ? [JSON.parse(JSON.stringify(aq))] : []).concat(x.c, items.length ? [{ title: s.name, kind: 'forca', items }] : [], x.i, d.flex ? [JSON.parse(JSON.stringify(fx))] : []) }; }) };
       if (!prog.sessions.length) return U.toast('Adicione pelo menos um exercício.');
       S.state.pos[id] = 0;
     }
@@ -349,6 +385,11 @@
     '<div class="row wrap"><input id="tok" type="password" autocomplete="off" placeholder="ghp_…" value="' + e(S.cfg.token) + '" class="grow" aria-label="Token do GitHub">' +
     '<button class="btn" data-a="sync-connect">' + (S.cfg.token ? 'Sincronizar agora' : 'Conectar') + '</button>' + (S.cfg.token ? '<button class="btn ghosty" data-a="sync-off">Desligar</button>' : '') + '</div>' +
     '<div class="muted small" id="sync-status">Situação: ' + e(S.syncStatus) + '</div></div>' +
+    '<div class="card"><h2>Meus equipamentos</h2><p class="muted">Marque o que você tem. O app avisa quando um exercício pede algo que falta, e a Biblioteca pode filtrar só o que dá para fazer.</p>' +
+    S.allEquip().map(q => '<label class="chk"><input type="checkbox" data-equip="' + e(q.id) + '"' + (S.owned().includes(q.id) ? ' checked' : '') + '><span class="grow">' + e(q.name) + '</span>' +
+      (q.id.startsWith('q-') ? '<button class="link danger" data-a="equip-del" data-id="' + e(q.id) + '">remover</button>' : '') + '</label>').join('') +
+    '<div class="row"><input id="equip-new" class="grow" placeholder="Novo equipamento (ex.: halteres 10 kg)" aria-label="Novo equipamento"><button class="btn small" data-a="equip-add">Adicionar</button></div></div>' +
+    '<div class="card"><h2>Música</h2><p class="muted">Toque no botão 🎵 (canto da tela) para colar o link de uma playlist do YouTube, YouTube Music ou Spotify. Com YouTube, o volume abaixa sozinho quando um timer apita.</p></div>' +
     '<div class="card"><h2>Backup manual</h2><p class="muted">Baixe um arquivo com tudo (treinos, programas, medidas) ou restaure um backup.</p><div class="row wrap"><button class="btn" data-a="backup">⬇ Baixar backup</button>' +
     '<label class="btn ghosty">⬆ Restaurar backup<input type="file" id="restore" accept="application/json,.json" hidden></label></div></div>' +
     '<div class="card"><h2>Preferências</h2><label class="chk"><input type="checkbox" id="snd"' + (S.cfg.sound ? ' checked' : '') + '><span>Sons dos timers</span></label></div>' +

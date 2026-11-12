@@ -53,6 +53,12 @@
   S.removeLog = id => { S.state.logs = S.state.logs.filter(l => l.id !== id); S.state.deleted.push(id); S.save(); };
   S.removeMeasure = id => { S.state.measures = S.state.measures.filter(l => l.id !== id); S.state.deleted.push(id); S.save(); };
 
+  // ---------- equipamentos ----------
+  S.allEquip = () => EQUIP.concat(S.state.customEquip || []);
+  S.owned = () => S.state.equip || EQUIP_DEFAULT;
+  S.needs = exId => S.ex(exId).equip || EQUIP_NEEDS[exId] || [];
+  S.missing = exId => { const own = S.owned(); return S.needs(exId).filter(q => !own.includes(q)).map(q => (S.allEquip().find(x => x.id === q) || { name: q }).name); };
+
   // Quantos dos últimos 2 treinos com o exercício cumpriram o critério (0, 1 ou 2).
   S.critProgress = step => {
     const ls = S.logsFor(step.ex).slice(-2).reverse();
@@ -87,6 +93,8 @@
     out.logs = union(local.logs, remote.logs, out.deleted);
     out.measures = union(local.measures, remote.measures, out.deleted);
     out.customEx = union(local.customEx, remote.customEx, out.deleted);
+    out.customEquip = union(local.customEquip, remote.customEquip, out.deleted);
+    out.playlists = union(local.playlists, remote.playlists, out.deleted);
     out.programs = Object.assign({}, remote.programs, local.programs, newer.programs);
     for (const id of out.deleted) delete out.programs[id];
     if (!out.programs[out.activeProgram]) out.activeProgram = Object.keys(out.programs)[0];
