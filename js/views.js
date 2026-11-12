@@ -32,6 +32,7 @@
       const pesado = logs.filter(l => l.rpe).slice(0, 2), exausto = pesado.length === 2 && pesado.every(l => l.rpe >= 9);
       h += '<div class="card"><div class="muted small">' + e(p.name) + '</div><div class="row between"><b>Volta ' + round + ' de ' + p.rounds + '</b><span class="muted">Sessão ' + (si + 1) + ' de ' + n + '</span></div>' +
         '<div class="bar"><i style="width:' + pct + '%"></i></div></div>';
+      const fase = (p.phases || []).find(f => round >= f.from && round <= f.to); if (fase) h += '<div class="hint">' + e(fase.label) + '</div>';
       if (S.isDeload()) h += '<div class="hint up">Volta leve: metade das séries e <a href="#evolucao" data-a="evo-tab" data-tab="testes">reteste dos números do início</a>.</div>';
       if (caindo || exausto) h += '<div class="hint warn">' + (caindo ? 'Seu desempenho nesta sessão caiu 2 vezes seguidas. ' : 'Seus 2 últimos treinos foram esforço 9–10. ') + 'Considere descansar hoje: faça só a flexibilidade.</div>';
       if (doneToday) h += '<div class="hint">Você já treinou hoje. O plano é uma sessão por dia — a próxima fica para amanhã.</div>';
@@ -190,7 +191,8 @@
     h += (p.notes || []).map(nt => '<details class="card"><summary><b>' + e(nt.title) + '</b></summary><p class="pre">' + e(nt.text) + '</p></details>').join('');
     h += '<h3>Novo treino</h3><div class="card"><p>Suba o PDF do próximo treino e o app monta a rotina. Você revisa antes de salvar.</p>' +
       '<div class="row wrap"><label class="btn">📄 Importar PDF<input type="file" id="pdf-file" accept="application/pdf" hidden></label>' +
-      '<button class="btn ghosty" data-a="prog-json">Colar texto/JSON de um chat</button><button class="btn ghosty" data-a="prog-new">Montar à mão</button></div><div id="pdf-status" class="muted small"></div></div>';
+      '<label class="btn">📷 Foto da ficha<input type="file" id="img-file" accept="image/*" hidden></label>' +
+      '<button class="btn ghosty" data-a="prog-json">Colar texto</button><button class="btn ghosty" data-a="prog-new">Montar à mão</button></div><div id="pdf-status" class="muted small"></div></div>';
     const all = Object.values(S.state.programs).filter(x => !x.alunoId);
     h += '<h3>Meus programas</h3><div class="list">' + all.map(x => '<div class="list-item"><span>' + (x.id === p.id ? '● ' : '') + e(x.name) + '</span><span class="row">' +
       (x.id === p.id ? '<span class="tag">ativo</span>' : '<button class="btn small" data-a="prog-use" data-id="' + e(x.id) + '">Usar</button>') +
@@ -201,6 +203,15 @@
   document.addEventListener('change', async ev => {
     const t = ev.target;
     if (t.id === 'pos-r' || t.id === 'pos-s') { S.setPos((+U.$('#pos-r').value - 1) * S.program().sessions.length + +U.$('#pos-s').value); S.save(); U.toast('Posição na fila ajustada.'); }
+    if (t.id === 'img-file' && t.files[0]) {
+      const st = U.$('#pdf-status'); st.textContent = 'Lendo a foto… (na primeira vez baixa o leitor, pode demorar)';
+      try {
+        const txt = await OCR.read(t.files[0], pct => { st.textContent = 'Lendo a foto… ' + pct + '%'; });
+        st.textContent = '';
+        if (txt.trim().length < 10) return void (st.textContent = 'Não consegui ler texto nessa foto. Tente com mais luz, de frente e mais perto.');
+        A['prog-json']({ text: txt, photo: 1 });
+      } catch (err) { console.error(err); st.textContent = 'Erro ao ler a foto: ' + err.message; }
+    }
     if (t.id === 'pdf-file' && t.files[0]) {
       const st = U.$('#pdf-status'); st.textContent = 'Lendo o PDF…';
       try {
@@ -227,13 +238,23 @@
   const PROMPT = 'Converta o treino do PDF/texto que enviei para JSON, sem nenhum texto fora do JSON, neste formato exato:\n' +
     '{"name":"nome do programa","rounds":12,"sessions":[{"name":"nome da sessão","items":[{"name":"nome do exercício","sets":4,"min":6,"max":10,"unit":"reps","side":false,"rest":90,"note":""}]}]}\n' +
     'Regras: uma entrada em "sessions" para cada sessão/dia de treino, na ordem; "unit" é "reps", "s" (segundos) ou "min"; "min" e "max" são a faixa de repetições (iguais se for número fixo); "side" é true quando for "cada perna/lado"; "rest" é o descanso em segundos; "rounds" é quantas vezes a sequência se repete (semanas ou voltas).';
-  A['prog-json'] = () => U.modal('<h2>Importar por texto</h2><p class="muted">Se o PDF não for lido direito, envie-o para qualquer chat gratuito junto com o pedido abaixo e cole a resposta aqui.</p>' +
-    '<textarea readonly rows="5" id="pj-prompt">' + e(PROMPT) + '</textarea><button class="btn small ghosty" data-a="pj-copy">Copiar pedido</button>' +
-    '<label>Resposta do chat (JSON)<textarea id="pj-json" rows="7" placeholder="{ &quot;name&quot;: … }"></textarea></label><button class="btn block" data-a="pj-go">Abrir no editor</button>');
+  A['prog-json'] = d => U.modal('<h2>' + (d && d.photo ? 'Texto lido da foto' : 'Importar por texto') + '</h2>' +
+    '<p class="muted">' + (d && d.photo ? 'Corrija o que saiu errado antes de continuar. ' : '') + 'Uma linha por exercício, com séries × repetições. Linhas como "Treino A" ou "Dia 2" separam as sessões.</p>' +
+    '<textarea id="pj-json" rows="11" placeholder="Treino A&#10;Supino reto 3x10-12&#10;Puxada alta 3x12&#10;Prancha 3x30s&#10;&#10;Treino B&#10;Agachamento 4x8">' + e((d && d.text) || '') + '</textarea>' +
+    '<button class="btn block" data-a="pj-go">Abrir no editor</button>' +
+    '<details style="margin-top:12px"><summary class="muted small">O texto está bagunçado? Peça ajuda a um chat gratuito</summary><p class="muted small">Envie o PDF ou a foto para qualquer chat gratuito junto com o pedido abaixo e cole a resposta (JSON) no campo acima.</p>' +
+    '<textarea readonly rows="4" id="pj-prompt">' + e(PROMPT) + '</textarea><button class="btn small ghosty" data-a="pj-copy">Copiar pedido</button></details>');
   A['pj-copy'] = () => { navigator.clipboard.writeText(PROMPT).then(() => U.toast('Copiado!'), () => { U.$('#pj-prompt').select(); U.toast('Selecione e copie com Ctrl+C.'); }); };
   A['pj-go'] = () => {
+    const raw = U.$('#pj-json').value;
+    if (!/"sessions"/.test(raw)) { // texto simples: uma linha por exercício
+      const d = PDFIMPORT.parseText(raw);
+      if (!d.sessions.length) return U.toast('Não encontrei exercícios. Use o formato "Supino 3x10", um por linha.');
+      ui.draft = d; U.closeModal(); if (location.hash !== '#programa') location.hash = '#programa'; else APP.render();
+      return U.toast('Encontrei ' + d.sessions.reduce((a, s) => a + s.items.length, 0) + ' exercícios. Revise e salve.');
+    }
     try {
-      const txt = U.$('#pj-json').value, d = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+      const txt = raw, d = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
       if (!Array.isArray(d.sessions)) throw new Error('sem "sessions"');
       ui.draft = { name: d.name || 'Meu treino', rounds: +d.rounds || 12, flex: true, sessions: d.sessions.map(s => ({ name: s.name || 'Sessão', items: (s.items || []).map(i => Object.assign({ sets: 3, min: 10, max: 10, unit: 'reps' }, i)) })) };
       U.closeModal(); APP.render();
@@ -335,8 +356,11 @@
     let hit = all.find(x => norm(x.name) === n || x.id === n.replace(/ /g, '-'));
     if (hit) return hit;
     const tk = new Set(n.split(' ').filter(w => w.length > 2)); let best = null, bs = 0;
-    for (const x of all) { const xt = new Set(norm(x.name).split(' ').filter(w => w.length > 2)); const inter = [...tk].filter(w => xt.has(w)).length, sc = inter / (tk.size + xt.size - inter || 1); if (sc > bs) { bs = sc; best = x; } }
-    return bs >= 0.5 ? best : null;
+    for (const x of all) { const xt = new Set(norm(x.name).split(' ').filter(w => w.length > 2)); const inter = [...tk].filter(w => xt.has(w)).length, sc = inter / (tk.size + xt.size - inter || 1);
+      // aceita se for bem parecido, ou se um nome estiver inteiro dentro do outro ("Búlgaro" → "Agachamento búlgaro")
+      const ok = sc >= 0.6 || (sc >= 0.4 && inter > 0 && (inter === tk.size || (inter === xt.size && xt.size >= 2)));
+      if (ok && sc > bs) { bs = sc; best = x; } }
+    return best;
   };
   A['ed-save'] = () => {
     readDraft();
@@ -346,9 +370,10 @@
       S.state.activeProgram = d.sameAs; ui.draft = null; S.save(); location.hash = '#hoje';
       return U.toast(d.useData ? 'Dados importados: ' + n + ' treino(s) e ' + (d.tests || []).length + ' teste(s).' : 'Programa mantido, nada importado.');
     }
+    const created = [];
     const toItems = s => s.items.filter(i => i.name).map((i, n) => {
       let ex = V.matchExercise(i.name);
-      if (!ex) { ex = { id: 'c-' + S.uid() + n, t: Date.now(), name: i.name, cat: 'outros', level: 1, how: i.note || '', q: i.name }; S.state.customEx.push(ex); }
+      if (!ex) { ex = Object.assign({ id: 'c-' + S.uid() + n, t: Date.now(), name: i.name, level: 1, how: i.note || '', q: i.name }, guess(i.name)); S.state.customEx.push(ex); created.push(ex.id); }
       const o = { ex: ex.id, sets: i.sets, min: i.min, max: i.max, unit: i.unit, side: i.side, rest: i.rest || (n < 2 ? 150 : 75) };
       if (i.note) o.note = i.note;
       if (i.skill && S.skill(i.skill) && S.skill(i.skill).steps.some(st => st.ex === ex.id)) { o.skill = i.skill; }
@@ -376,12 +401,29 @@
     }
     if (d.alunoId) prog.alunoId = d.alunoId;
     S.state.programs[id] = prog;
-    if (prog.alunoId) { ui.draft = null; S.save(); location.hash = '#aluno'; return U.toast('Treino salvo na ficha do aluno.'); }
+    if (prog.alunoId) { ui.draft = null; S.save(); location.hash = '#aluno'; U.toast('Treino salvo na ficha do aluno.'); return newEx(created); }
     S.state.activeProgram = id;
     if (!d.keep) { if (d.tests && d.tests.length && d.useData) prog.tests = []; applyData(d, id); }
     ui.draft = null;
-    S.save(); APP.render(); U.toast('Programa salvo e ativado!');
+    S.save(); APP.render(); U.toast('Programa salvo e ativado!'); newEx(created);
   };
+  // Categoria e "usa carga" de um exercício novo, pelo nome.
+  function guess(name) {
+    const n = norm(name), cat = /supino|flexao|triceps|desenvolvimento|peito|ombro|crucifixo|voador|peck|mergulho|elevacao (lateral|frontal)/.test(n) ? 'empurrar'
+      : /remada|puxada|puxador|pulley|rosca|biceps|dorsal|barra fixa|pull/.test(n) ? 'puxar'
+      : /agach|leg|perna|panturrilha|gluteo|afundo|passada|stiff|terra|extensora|flexora|cadeira|hack|abdutor|adutor|quadril/.test(n) ? 'pernas'
+      : /abd|prancha|core|lombar|obliquo/.test(n) ? 'core' : /corrida|esteira|bike|bicicleta|corda|cardio|hiit|eliptico|caminhada/.test(n) ? 'cardio' : /along|mobilidade|flexibilidade/.test(n) ? 'flexibilidade' : 'outros';
+    return { cat, w: /supino|rosca|puxada|puxador|pulley|leg|cadeira|maquina|halter|polia|cabo|cross|extensora|flexora|stiff|terra|triceps|desenvolvimento|crucifixo|elevacao (lateral|frontal)|remada (baixa|curvada|cavalinho|unilateral|alta)|hack|smith|voador|peck|abdutor|adutor|hip thrust|goblet/.test(n) || undefined };
+  }
+  // Depois de salvar: vídeo automático para os exercícios novos (com chave) ou lista para escolher (sem chave).
+  async function newEx(ids) {
+    if (!ids.length) return;
+    const n = S.cfg.ytKey ? await U.autoVideos(ids) : 0;
+    const left = ids.filter(id => !S.videoFor(id));
+    U.modal('<h2>' + ids.length + ' exercício(s) novo(s) na biblioteca</h2>' + (n ? '<p class="hint up">Fixei um vídeo automaticamente em ' + n + '. Toque no exercício para conferir ou trocar.</p>' : '') +
+      (left.length && !S.cfg.ytKey ? '<p class="muted">Eles ainda não têm vídeo. Toque em cada um para buscar no YouTube e colar o link — ou cadastre uma chave gratuita do YouTube em Ajustes para o app escolher sozinho.</p>' : '') +
+      '<div class="list">' + ids.map(id => '<button class="list-item" data-a="exercise" data-ex="' + e(id) + '"><span>' + e(S.ex(id).name) + '<small class="muted"> · ' + e(CATEGORIES[S.ex(id).cat] || 'Outros') + '</small></span><span class="tag">' + (S.videoFor(id) ? '▶ com vídeo' : 'sem vídeo') + '</span></button>').join('') + '</div>');
+  }
 
   // ================= AJUSTES =================
   V.ajustes = () => '<a href="#perfil" class="muted small">← Perfil</a><h1>Ajustes</h1>' +
@@ -396,12 +438,22 @@
       (q.id.startsWith('q-') ? '<button class="link danger" data-a="equip-del" data-id="' + e(q.id) + '">remover</button>' : '') + '</label>').join('') +
     '<div class="row"><input id="equip-new" class="grow" placeholder="Novo equipamento (ex.: halteres 10 kg)" aria-label="Novo equipamento"><button class="btn small" data-a="equip-add">Adicionar</button></div></div>' +
     '<div class="card"><h2>Música</h2><p class="muted">Toque no botão 🎵 (canto da tela) para colar o link de uma playlist do YouTube, YouTube Music ou Spotify. Com YouTube, o volume abaixa sozinho quando um timer apita.</p></div>' +
+    '<div class="card"><h2>Vídeos automáticos (opcional)</h2><p class="muted">Com uma chave gratuita da API do YouTube, o app escolhe sozinho o vídeo dos exercícios novos e mostra opções no botão "Escolher vídeo". Sem chave, tudo continua funcionando: você busca e cola o link.</p>' +
+    '<details><summary class="muted small">Como criar a chave (grátis, sem cartão)</summary><ol class="small"><li>Entre em <a target="_blank" rel="noopener" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com">console.cloud.google.com → YouTube Data API v3</a> com sua conta Google, crie um projeto e toque em <b>Ativar</b>.</li>' +
+    '<li>Vá em <b>Credenciais → Criar credenciais → Chave de API</b>.</li><li>Em <b>Restrições</b>, limite a chave à "YouTube Data API v3" e ao site <code>' + e(location.hostname || 'leonardoreali.github.io') + '</code>.</li><li>Cole a chave abaixo. O limite gratuito dá cerca de 100 buscas por dia.</li></ol></details>' +
+    '<div class="row wrap"><input id="ytkey" type="password" autocomplete="off" placeholder="AIza…" value="' + e(S.cfg.ytKey || '') + '" class="grow" aria-label="Chave da API do YouTube"><button class="btn" data-a="ytkey-save">Salvar</button></div>' +
+    '<p class="muted small">A chave fica só neste aparelho.</p></div>' +
     '<div class="card"><h2>Backup manual</h2><p class="muted">Baixe um arquivo com tudo (treinos, programas, medidas) ou restaure um backup.</p><div class="row wrap"><button class="btn" data-a="backup">⬇ Baixar backup</button>' +
     '<label class="btn ghosty">⬆ Restaurar backup<input type="file" id="restore" accept="application/json,.json" hidden></label></div></div>' +
     '<div class="card"><h2>Preferências</h2><label class="chk"><input type="checkbox" id="snd"' + (S.cfg.sound ? ' checked' : '') + '><span>Sons dos timers</span></label></div>' +
     '<div class="card"><h2>Instalar no celular</h2><p class="muted">Abra este mesmo endereço no Chrome do Android → menu ⋮ → <b>Adicionar à tela inicial / Instalar app</b>. Depois de aberto uma vez, funciona sem internet (só os vídeos precisam de conexão).</p></div>' +
     '<div class="card"><h2>Zona de perigo</h2><button class="btn danger ghosty" data-a="reset">Apagar todos os dados deste aparelho</button></div>';
   A['sync-connect'] = async () => { S.cfg.token = U.$('#tok').value.trim(); S.saveCfg(); if (!S.cfg.token) return U.toast('Cole o token primeiro.'); await S.sync(); APP.render(); };
+  A['ytkey-save'] = async () => {
+    S.cfg.ytKey = U.$('#ytkey').value.trim(); S.saveCfg();
+    if (!S.cfg.ytKey) return U.toast('Chave removida.');
+    try { await U.ytSearch('push up shorts'); U.toast('Chave funcionando!'); } catch (err) { U.toast('A chave não funcionou: ' + err.message); }
+  };
   A['sync-off'] = () => { S.cfg.token = ''; S.cfg.gistId = ''; S.saveCfg(); S.syncStatus = 'Desligada'; APP.render(); };
   A.backup = () => {
     const a = document.createElement('a');

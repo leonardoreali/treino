@@ -142,7 +142,8 @@
     else if (location.protocol === 'file:') v = '<a class="thumb" target="_blank" rel="noopener" href="https://www.youtube.com/shorts/' + id + '"><img alt="" src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg"><span>▶ Abrir no YouTube</span></a>';
     else v = '<div class="short"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&loop=1&playlist=' + id + '&playsinline=1&rel=0" title="Vídeo do exercício" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>';
     return v + '<div class="vid-links"><a target="_blank" rel="noopener" href="' + U.searchUrl(ex) + '">🔎 Buscar outros shorts</a>' +
-      '<button class="link" data-a="video-change" data-ex="' + U.esc(exId) + '">Trocar vídeo</button></div>';
+      (S.cfg.ytKey ? '<button class="link" data-a="video-pick" data-ex="' + U.esc(exId) + '">Escolher vídeo</button>' : '') +
+      '<button class="link" data-a="video-change" data-ex="' + U.esc(exId) + '">' + (S.cfg.ytKey ? 'Colar link' : 'Trocar vídeo') + '</button></div>';
   };
   U.showExercise = exId => {
     const ex = S.ex(exId), hist = S.logsFor(exId).slice(-5).reverse(), next = NEXT_VARIATION[exId];
@@ -160,6 +161,29 @@
     if (!url.trim()) delete S.state.videos[d.ex];
     else { const id = U.ytId(url); if (!id) return U.toast('Não reconheci esse link do YouTube.'); S.state.videos[d.ex] = id; }
     S.save(); U.showExercise(d.ex);
+  };
+
+  // ---------- busca de vídeos (opcional: precisa de uma chave gratuita da API do YouTube, colada em Ajustes) ----------
+  U.ytSearch = async q => {
+    const r = await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&videoEmbeddable=true&maxResults=6&q=' + encodeURIComponent(q) + '&key=' + encodeURIComponent(S.cfg.ytKey));
+    if (!r.ok) throw new Error(r.status === 403 || r.status === 400 ? 'chave inválida, sem permissão ou cota do dia esgotada' : 'o YouTube respondeu ' + r.status);
+    return ((await r.json()).items || []).filter(i => i.id && i.id.videoId).map(i => ({ id: i.id.videoId, title: i.snippet.title, ch: i.snippet.channelTitle }));
+  };
+  const vq = ex => (ex.gym || EXERCISES.includes(ex) ? ex.q : ex.name + ' exercício execução') + ' shorts';
+  A['video-pick'] = async d => {
+    const ex = S.ex(d.ex);
+    try {
+      const rs = await U.ytSearch(vq(ex));
+      if (!rs.length) return U.toast('Nenhum vídeo encontrado.');
+      U.modal('<h2>Escolher vídeo — ' + U.esc(ex.name) + '</h2><div class="vgrid">' + rs.map(v => '<button data-a="video-set" data-ex="' + U.esc(d.ex) + '" data-id="' + v.id + '"><img alt="" src="https://i.ytimg.com/vi/' + v.id + '/mqdefault.jpg"><span>' + U.esc(v.title) + '</span><small class="muted">' + U.esc(v.ch) + '</small></button>').join('') + '</div>');
+    } catch (e) { U.toast('Busca de vídeos falhou: ' + e.message); }
+  };
+  A['video-set'] = d => { S.state.videos[d.ex] = d.id; S.save(); U.showExercise(d.ex); };
+  // Fixa o primeiro resultado para cada exercício novo. Devolve quantos conseguiu.
+  U.autoVideos = async ids => {
+    let n = 0;
+    for (const id of ids) { try { const rs = await U.ytSearch(vq(S.ex(id))); if (rs[0]) { S.state.videos[id] = rs[0].id; n++; } } catch (e) { break; } }
+    if (n) S.save(); return n;
   };
 
   // ---------- gráfico de linhas simples ----------

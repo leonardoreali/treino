@@ -133,6 +133,27 @@
     return Object.assign({ name: clean(title) || 'Meu treino', rounds: rm ? +rm[1] : 12, flex: true, sessions: out, useData: true }, extras(all, full, isSection));
   };
 
+  // Texto solto (foto lida por OCR ou texto colado): uma linha por exercício, ex. "Supino reto 3x10-12".
+  P.parseText = text => {
+    const HEADT = /^(?:treino|ficha|dia|s[ée]rie|sess[aã]o)\s*[:\-–]?\s*(?:[a-z]|\d{1,2})\b|^[a-h]\s*[\-–:).]\s|^(?:segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo)/i;
+    const SET2 = /(\d{1,2})\s*(?:[×xX*]|s[ée]ries?\s*(?:de|x)?)\s*(\d{1,3})(?:\s*(?:[–\-—\/]|a|até)\s*(\d{1,3}))?\s*(min\b|s\b|seg\b|")?/;
+    const sessions = []; let cur = null;
+    for (const raw of String(text).split(/\r?\n/)) {
+      const line = raw.trim(); if (!line) continue;
+      const m = line.match(SET2);
+      if (!m) { if (HEADT.test(line) && line.length < 50) { cur = { name: clean(line) || line, items: [] }; sessions.push(cur); } continue; }
+      const sets = +m[1], min = +m[2], max = +(m[3] || m[2]);
+      if (sets < 1 || sets > 10 || min < 1 || min > 300 || max < min) continue;
+      let name = line.replace(SET2, ' ').replace(/\d+(?:[.,]\d+)?\s*kg\b/gi, ' ').replace(/\b(?:reps?|repeti[cç][oõ]es|descanso|intervalo|carga|cada\s+(?:lado|perna))\b.*$/i, ' ').replace(/[|_•·*]+/g, ' ');
+      name = clean(name).replace(/\s+\d+$/, '');
+      if (name.replace(/[^A-Za-zÀ-ÿ]/g, '').length < 3) continue;
+      if (!cur) { cur = { name: 'Treino A', items: [] }; sessions.push(cur); }
+      const u = (m[4] || '').toLowerCase();
+      cur.items.push({ name: name[0].toUpperCase() + name.slice(1), sets, min, max, unit: u === 'min' ? 'min' : u ? 's' : 'reps', side: /cada\s+(lado|perna)|unilateral/i.test(line) });
+    }
+    return { name: 'Treino importado', rounds: 12, flex: true, useData: false, tests: [], logs: [], sessions: sessions.filter(s => s.items.length) };
+  };
+
   // Dados pessoais do PDF: data de início, tabela "Teste / Hoje / Meta" e tabela de registro de treinos.
   function extras(all, full, isSection) {
     const sd = full.match(/a partir de\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/i), p2 = s => String(s).padStart(2, '0');

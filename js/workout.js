@@ -41,6 +41,7 @@
       const b = all.find(b => b.kind === 'check' && /rotina curta/i.test(b.title)) || all.find(b => b.kind === 'check' && /flexib|along/i.test(b.title)) || FLEX_PADRAO;
       src = { name: 'Rotina curta de flexibilidade', blocks: [b] };
     } else src = p.sessions[si];
+    const ph = type === 'flex' ? null : (p.phases || []).find(f => round >= f.from && round <= f.to);
     const lastAny = S.sortedLogs()[0], gap = lastAny ? S.daysBetween(lastAny.date, S.today()) : 0;
     const blocks = [];
     src.blocks.forEach((b, bi) => {
@@ -51,12 +52,13 @@
         if (it.text) return Object.assign(it, { key, checked: false });
         const ex = W.resolve(it, p.id, key), sets = deload && b.kind === 'forca' ? Math.ceil(it.sets / 2) : it.sets;
         const o = Object.assign(it, { key, ex, sets, checked: false });
+        if (ph && ph.shift && b.kind === 'forca' && o.unit === 'reps' && S.ex(ex).w) { o.min = Math.max(3, o.min - ph.shift); o.max = Math.max(o.min + 1, o.max - ph.shift); }
         if (b.kind === 'forca') { const s = W.suggest(ex, o, gap); Object.assign(o, { vals: s.targets, hint: s.hint, up: s.up, done: Array(sets).fill(false), kgs: S.ex(ex).w ? Array(sets).fill(s.kg || '') : null }); }
         return o;
       });
       blocks.push(nb);
     });
-    S.current = { type, programId: p.id, round, sessionIdx: si, name: src.name, startedAt: Date.now(), date: S.today(), blocks, deload };
+    S.current = { type, programId: p.id, round, sessionIdx: si, name: src.name, startedAt: Date.now(), date: S.today(), blocks, deload, phase: ph ? ph.label : '' };
     S.saveCurrent();
   };
 
@@ -114,7 +116,7 @@
     if (!c) return '<div class="empty"><p>Nenhum treino em andamento.</p><a class="btn" href="#hoje">Ir para Hoje</a></div>';
     const tot = c.blocks.flatMap(b => b.kind === 'forca' ? b.items.flatMap(i => i.done) : b.kind === 'check' ? b.items.map(i => i.checked) : [!!(b.minutes || b.doneOpt)]);
     const pct = Math.round(100 * tot.filter(Boolean).length / Math.max(1, tot.length));
-    return '<header class="wk-head"><div><div class="muted small">' + (c.type === 'flex' ? 'Dia leve — a fila não anda' : 'Volta ' + c.round + ' · Sessão ' + (c.sessionIdx + 1)) + (c.deload ? ' · <b>volta leve (metade das séries)</b>' : '') + '</div>' +
+    return '<header class="wk-head"><div><div class="muted small">' + (c.type === 'flex' ? 'Dia leve — a fila não anda' : 'Volta ' + c.round + ' · Sessão ' + (c.sessionIdx + 1)) + (c.deload ? ' · <b>volta leve (metade das séries)</b>' : '') + (c.phase ? '<br>' + e(c.phase) : '') + '</div>' +
       '<h1>' + e(c.name) + '</h1></div></header><div class="bar"><i style="width:' + pct + '%"></i></div>' +
       c.blocks.map(block).join('') +
       '<div class="row end"><button class="btn danger ghosty" data-a="w-cancel">Descartar</button><button class="btn big" data-a="w-finish">Concluir treino</button></div>';
