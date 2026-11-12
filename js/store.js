@@ -94,6 +94,7 @@
     out.measures = union(local.measures, remote.measures, out.deleted);
     out.customEx = union(local.customEx, remote.customEx, out.deleted);
     out.customEquip = union(local.customEquip, remote.customEquip, out.deleted);
+    out.diet = union(local.diet, remote.diet, out.deleted);
     out.alunos = union(local.alunos, remote.alunos, out.deleted);
     out.playlists = union(local.playlists, remote.playlists, out.deleted);
     out.programs = Object.assign({}, remote.programs, local.programs, newer.programs);

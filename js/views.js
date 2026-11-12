@@ -142,13 +142,14 @@
     const q = ui.libQ.trim().toLowerCase();
     const list = S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
-    return list.length ? list.map(x => '<button class="list-item" data-a="exercise" data-ex="' + e(x.id) + '"><span>' + e(x.name) + '<small class="muted"> · ' + e(CATEGORIES[x.cat] || 'Outros') + '</small></span>' +
-      '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
+    const EMO = { empurrar: '💪', puxar: '🧗', pernas: '🦵', core: '🎯', habilidade: '🤸', cardio: '🏃', flexibilidade: '🧘', mobilidade: '🔄', acrobacia: '🌀', luta: '🥊' };
+    return list.length ? list.map(x => '<button class="tile" data-a="exercise" data-ex="' + e(x.id) + '"><span class="tile-img">' + (EMO[x.cat] || '🏋️') + (U.thumb(x.id) ? '<img alt="" loading="lazy" src="' + U.thumb(x.id) + '" onerror="this.remove()">' : '') +
+      '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></span><span class="tile-body"><b>' + e(x.name) + '</b><small>' + e(CATEGORIES[x.cat] || 'Outros') + (x.w ? ' · com carga' : '') + '</small></span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
   }
   V.biblioteca = () => '<h1>Biblioteca</h1><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
     '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + '</button>').join('') + '</div>' +
     '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button></div>' +
-    '<div class="list" id="lib-list">' + libList() + '</div><button class="btn ghosty" data-a="lib-new">+ Adicionar exercício próprio</button>';
+    '<div class="tiles" id="lib-list">' + libList() + '</div><button class="btn ghosty" data-a="lib-new">+ Adicionar exercício próprio</button>';
   A['lib-cat'] = d => { ui.libCat = d.c; APP.render(); };
   A['lib-lvl'] = d => { ui.libLvl = +d.l; APP.render(); };
   A['lib-own'] = () => { ui.libOwn = !ui.libOwn; APP.render(); };
@@ -215,6 +216,8 @@
     if (t.id === 'pdf-file' && t.files[0]) {
       const st = U.$('#pdf-status'); st.textContent = 'Lendo o PDF…';
       try {
+        const lk = await PDFIMPORT.findLink(t.files[0]).catch(() => null);
+        if (lk) { st.textContent = ''; location.hash = lk; return; } // PDF feito pelo app: importa o treino completo
         const d = await PDFIMPORT.parse(t.files[0]);
         if (!d.sessions.length) { st.textContent = 'Não encontrei tabelas de treino neste PDF. Use "Colar texto/JSON de um chat" ou "Montar à mão".'; return; }
         // É o mesmo programa que já existe no app? (título do PDF contido no nome de um programa)

@@ -39,6 +39,14 @@
   const parseSets = m => { const u = (m[4] || '').toLowerCase(); return { sets: +m[1], min: +m[2], max: +(m[3] || m[2]), unit: u === 'min' ? 'min' : u ? 's' : 'reps' }; };
   const clean = s => s.replace(/\s+/g, ' ').replace(/^[\s·•\-–—:.,\d)]+/, '').replace(/[\s:,.;(]+$/, '').trim();
 
+  // PDF gerado pelo próprio app: traz um link com o treino completo. Devolve o trecho "#t=..." ou null.
+  P.findLink = async function (file) {
+    await load();
+    const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    for (let n = pdf.numPages; n >= 1; n--) for (const a of await (await pdf.getPage(n)).getAnnotations()) { const u = a.url || a.unsafeUrl || ''; const i = u.indexOf('#t='); if (i >= 0) return u.slice(i); }
+    return null;
+  };
+
   P.parse = async function (file) {
     await load();
     const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;

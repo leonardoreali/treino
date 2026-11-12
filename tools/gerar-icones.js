@@ -7,7 +7,7 @@ const chunk = (t, d) => { const l = Buffer.alloc(4); l.writeUInt32BE(d.length); 
 function icon(N) {
   const px = Buffer.alloc(N * N * 3);
   const set = (x, y, c) => { if (x >= 0 && y >= 0 && x < N && y < N) { const i = (y * N + x) * 3; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; } };
-  const BG = [15, 17, 21], OR = [255, 122, 26], WH = [236, 238, 242];
+  const BG = [10, 11, 13], OR = [200, 245, 60], WH = [236, 238, 242];
   for (let i = 0; i < N * N; i++) set(i % N, (i / N) | 0, BG);
   const u = N / 100;
   const rect = (x, y, w, h, c) => { for (let j = Math.round(y * u); j < Math.round((y + h) * u); j++) for (let i = Math.round(x * u); i < Math.round((x + w) * u); i++) set(i, j, c); };

@@ -39,3 +39,9 @@ Depois de alterar arquivos, publique de novo (`git add -A`, `git commit -m "atua
 - **Academia**: exercícios com carga em `js/data/gym.js`; o treino registra kg por série.
 - **Compartilhar**: Programa → Compartilhar gera um link com o treino inteiro dentro (sem servidor) para mandar pelo WhatsApp.
 - **Modo profissional**: Perfil → "Sou profissional de educação física" libera fichas de alunos, avaliações físicas, treinos por aluno e relatórios recebidos.
+
+## Visual, PDF, primeira vez e diário alimentar
+
+- **Cores e estilo**: topo de `css/style.css`. Tela Hoje, nível/XP e questionário de primeira vez: `js/theme.js`.
+- **PDF do treino**: Programa → Compartilhar → Enviar em PDF (`js/share.js`). O PDF leva um link que importa o treino completo.
+- **Diário alimentar**: `js/diet.js` (a tabela de alimentos fica no começo do arquivo; os valores são aproximados).

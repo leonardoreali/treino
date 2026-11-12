@@ -70,7 +70,7 @@
     const next = it.up ? (it.skill && S.skill(it.skill).steps[S.skillStep(it.skill)].ex === it.ex && S.skillStep(it.skill) < S.skill(it.skill).steps.length - 1
       ? S.skill(it.skill).steps[S.skillStep(it.skill) + 1].ex : NEXT_VARIATION[it.ex]) : null;
     return '<div class="card ex' + (it.done.every(Boolean) ? ' alldone' : '') + '">' +
-      '<div class="ex-head"><button class="vid" data-a="video" data-ex="' + e(it.ex) + '" aria-label="Ver vídeo">▶</button>' +
+      '<div class="ex-head"><button class="vid' + (U.thumb(it.ex) ? ' has" style="background-image:url(' + U.thumb(it.ex) + ')' : '') + '" data-a="video" data-ex="' + e(it.ex) + '" aria-label="Ver vídeo"><span>▶</span></button>' +
       '<div class="grow"><div class="ex-name" data-a="exercise" data-ex="' + e(it.ex) + '">' + e(ex.name) + '</div>' +
       '<div class="muted small">' + U.fmtRange(it) + restTxt + '</div></div>' +
       '<button class="ghost" data-a="w-swap" data-key="' + it.key + '" title="Trocar exercício">⇄</button></div>' +

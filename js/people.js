@@ -33,6 +33,7 @@
     if (U.$('.f-fone')) { p.fone = v('f-fone').trim(); p.kit = v('f-kit'); }
     return p;
   }
+  PE.form = form;
   const imcLine = p => { const i = GEN.imc(p); return i ? '<p class="muted small">IMC: <b>' + i.toFixed(1) + '</b> (' + GEN.imcText(i) + '). O IMC não separa músculo de gordura; use como referência, junto com a medida da cintura.</p>' : ''; };
 
   // ================= PERFIL =================
@@ -52,6 +53,7 @@
     if (p.local !== 'casa' && !S.owned().some(q => ['maquinas', 'halteres', 'barra-livre'].includes(q))) { S.state.equip = [...new Set(S.owned().concat(EQUIP_GYM))]; U.toast('Marquei os equipamentos de academia. Ajuste em Ajustes se precisar.'); }
     S.save(); return p;
   }
+  PE.saveProfile = saveProfile;
   A['pf-save'] = () => { saveProfile(); APP.render(); U.toast('Perfil salvo.'); };
   A['pf-gen'] = () => { const p = saveProfile(); PE.preview = { prog: GEN.generate(p), alunoId: null }; location.hash = '#previa'; };
   document.addEventListener('change', ev => { if (ev.target.id === 'trainer') { S.state.trainer = ev.target.checked; S.save(); APP.render(); } });
