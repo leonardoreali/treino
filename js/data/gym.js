@@ -45,8 +45,51 @@
     ['esteira', 'Esteira', 'cardio', 1, 'Caminhada inclinada ou trote em ritmo de conversa.', 'treadmill beginner workout'],
     ['bicicleta', 'Bicicleta ergométrica', 'cardio', 1, 'Banco na altura do quadril; ritmo constante.', 'stationary bike beginner form'],
     ['eliptico', 'Elíptico', 'cardio', 1, 'Tronco ereto, movimento contínuo.', 'elliptical machine how to use'],
+    // mais exercícios comuns em fichas de academia
+    ['leg-press-horizontal', 'Leg press horizontal (180°)', 'pernas', 1, 'Sentado, empurre a plataforma à frente sem travar os joelhos.', 'horizontal leg press form'],
+    ['hack', 'Agachamento hack', 'pernas', 2, 'Costas no encosto da máquina; desça até ~90° e empurre.', 'hack squat machine form'],
+    ['smith', 'Agachamento no smith (barra guiada)', 'pernas', 2, 'Pés um pouco à frente da barra; desça controlado.', 'smith machine squat form'],
+    ['avanco', 'Avanço', 'pernas', 2, 'Passo à frente e volta; tronco ereto, joelho alinhado com o pé.', 'forward lunge form'],
+    ['gluteo-maquina', 'Glúteo na máquina / coice', 'pernas', 1, 'Empurre para trás com o calcanhar, sem arquear a lombar.', 'glute kickback machine form'],
+    ['gluteo-polia', 'Coice de glúteo na polia', 'pernas', 2, 'Caneleira na polia baixa; estenda a perna para trás.', 'cable glute kickback form'],
+    ['panturrilha-sentado', 'Panturrilha sentado', 'pernas', 1, 'Joelhos a 90° sob o apoio; suba e desça com amplitude total.', 'seated calf raise form'],
+    ['supino-declinado', 'Supino declinado', 'empurrar', 2, 'Banco declinado; barra desce até a parte baixa do peito.', 'decline bench press form'],
+    ['supino-inclinado-barra', 'Supino inclinado com barra', 'empurrar', 3, 'Banco a 30–45°; barra desce até o alto do peito.', 'incline barbell bench press form'],
+    ['crossover', 'Crossover na polia', 'empurrar', 2, 'Um passo à frente; feche os braços em arco à frente do peito.', 'cable crossover form'],
+    ['pullover', 'Pullover', 'puxar', 2, 'Deitado, halter desce atrás da cabeça com os cotovelos quase retos.', 'dumbbell pullover form'],
+    ['elevacao-frontal', 'Elevação frontal', 'empurrar', 1, 'Halteres sobem à frente até a altura dos ombros.', 'front raise form'],
+    ['crucifixo-inverso', 'Crucifixo inverso', 'puxar', 1, 'Tronco inclinado; abra os braços para trás, apertando as escápulas.', 'reverse fly form'],
+    ['arnold', 'Desenvolvimento Arnold', 'empurrar', 3, 'Começa com as palmas para você e gira enquanto empurra.', 'arnold press form'],
+    ['remada-alta', 'Remada alta', 'puxar', 2, 'Barra sobe junto ao corpo até o peito, cotovelos acima das mãos.', 'upright row form'],
+    ['pulldown', 'Pulldown com braços estendidos', 'puxar', 2, 'Polia alta; desça a barra até as coxas com os braços quase retos.', 'straight arm pulldown form'],
+    ['remada-cavalinho', 'Remada cavalinho', 'puxar', 2, 'Tronco inclinado sobre a barra em T; puxe até o peito.', 't bar row form'],
+    ['puxada-triangulo', 'Puxada com triângulo', 'puxar', 1, 'Pegada neutra fechada; puxe até o peito.', 'close grip lat pulldown form'],
+    ['rosca-scott', 'Rosca Scott', 'puxar', 2, 'Braços apoiados no banco Scott; desça até quase estender.', 'preacher curl form'],
+    ['rosca-concentrada', 'Rosca concentrada', 'puxar', 1, 'Sentado, cotovelo apoiado na coxa.', 'concentration curl form'],
+    ['rosca-polia', 'Rosca na polia', 'puxar', 1, 'Polia baixa; cotovelos parados ao lado do corpo.', 'cable bicep curl form'],
+    ['triceps-corda', 'Tríceps na corda', 'empurrar', 1, 'Polia alta com corda; abra as mãos no fim do movimento.', 'triceps rope pushdown form'],
+    ['triceps-inverso', 'Tríceps com pegada inversa', 'empurrar', 2, 'Polia alta, palmas para cima; estenda os cotovelos.', 'reverse grip triceps pushdown form'],
+    ['triceps-coice', 'Tríceps coice', 'empurrar', 1, 'Tronco inclinado, cotovelo alto; estenda o braço para trás.', 'triceps kickback form'],
+    ['abdominal-infra', 'Abdominal infra (elevação de pernas deitado)', 'core', 2, 'Deitado, suba as pernas estendidas sem tirar a lombar do chão.', 'lying leg raise form'],
+    ['abdominal-obliquo', 'Abdominal oblíquo', 'core', 1, 'Suba girando o tronco, cotovelo em direção ao joelho oposto.', 'oblique crunch form'],
+    ['abdominal-bicicleta', 'Abdominal bicicleta', 'core', 2, 'Pedale no ar alternando cotovelo e joelho opostos.', 'bicycle crunch form'],
+    ['russian-twist', 'Giro russo', 'core', 2, 'Sentado, tronco inclinado; gire de um lado para o outro.', 'russian twist form'],
+    ['abdominal-maquina', 'Abdominal na máquina', 'core', 1, 'Enrole o tronco contra a resistência, sem puxar com os braços.', 'ab crunch machine form'],
+    ['escada-maq', 'Escada (simulador)', 'cardio', 2, 'Passos completos, sem apoiar o peso nos braços.', 'stair climber machine workout'],
+    ['remo-ergometro', 'Remo ergômetro', 'cardio', 2, 'Empurre com as pernas, depois puxe com os braços; volte na ordem inversa.', 'rowing machine technique'],
   ];
-  const noLoad = new Set(['abdominal', 'esteira', 'bicicleta', 'eliptico']);
+  const noLoad = new Set(['abdominal', 'esteira', 'bicicleta', 'eliptico', 'avanco', 'abdominal-infra', 'abdominal-obliquo', 'abdominal-bicicleta', 'russian-twist', 'escada-maq', 'remo-ergometro']);
+  // Grupos como nos cartões de academia: usados no modo "marcar na lista".
+  window.SHEET = [
+    ['Membros inferiores', 'extensora leg-press leg-press-horizontal agachamento-barra hack smith avanco afundo-halteres flexora gluteo-maquina gluteo-polia hip-thrust stiff terra abdutora adutora panturrilha-maquina panturrilha-sentado goblet bulgaro agachamento'],
+    ['Peito', 'supino-barra supino-halteres supino-inclinado supino-inclinado-barra supino-declinado supino-maquina peck-deck crucifixo crossover flexao'],
+    ['Costas', 'puxada-alta puxada-triangulo remada-baixa remada-serrote remada-alta remada-curvada remada-cavalinho remada-maquina pulldown pullover barra-pronada'],
+    ['Ombro', 'elevacao-lateral elevacao-frontal crucifixo-inverso encolhimento desenvolvimento-halteres desenvolvimento-maquina arnold face-pull'],
+    ['Bíceps', 'rosca-direta rosca-alternada rosca-scott rosca-concentrada rosca-martelo rosca-polia'],
+    ['Tríceps', 'triceps-polia triceps-corda triceps-testa triceps-frances triceps-inverso triceps-coice mergulho-banco'],
+    ['Abdômen', 'abdominal abdominal-infra abdominal-obliquo abdominal-bicicleta abdominal-maquina abdominal-polia prancha prancha-lateral russian-twist'],
+    ['Cardio', 'esteira bicicleta eliptico escada-maq remo-ergometro corda'],
+  ].map(r => ({ name: r[0], ids: r[1].split(' ') }));
   rows.forEach(r => EXERCISES.push({ id: r[0], name: r[1], cat: r[2], level: r[3], how: r[4], q: r[5], w: !noLoad.has(r[0]), gym: true }));
 
   [['halteres', 'Halteres'], ['barra-livre', 'Barra e anilhas'], ['banco-supino', 'Banco de supino / regulável'], ['polia', 'Polia / cabos'],
@@ -59,5 +102,11 @@
   add('polia', 'triceps-polia puxada-alta remada-baixa face-pull abdominal-polia');
   add('maquinas', 'supino-maquina peck-deck desenvolvimento-maquina remada-maquina leg-press extensora flexora abdutora adutora panturrilha-maquina');
   add('cardio-maq', 'esteira bicicleta eliptico');
+  add('maquinas', 'leg-press-horizontal hack smith gluteo-maquina panturrilha-sentado abdominal-maquina rosca-scott');
+  add('polia', 'gluteo-polia crossover pulldown puxada-triangulo rosca-polia triceps-corda triceps-inverso');
+  add('barra-livre', 'supino-declinado supino-inclinado-barra remada-alta remada-cavalinho');
+  add('banco-supino', 'supino-declinado supino-inclinado-barra pullover');
+  add('halteres', 'pullover elevacao-frontal crucifixo-inverso arnold rosca-concentrada triceps-coice');
+  add('cardio-maq', 'escada-maq remo-ergometro');
   window.EQUIP_GYM = ['halteres', 'barra-livre', 'banco-supino', 'polia', 'maquinas', 'cardio-maq', 'banco', 'barra', 'paralelas', 'colchonete', 'parede', 'degrau'];
 })();

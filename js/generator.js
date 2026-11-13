@@ -129,6 +129,7 @@
       for (let i = 0, c = 0; i < st.length; i++) { plan.push(st[i]); if (c < nCardio) plan.push(c++ % 2 === 0 ? 'cardio' : 'hiit'); }
     }
     const sessions = plan.map(k => k === 'cardio' ? cardioSession(false) : k === 'hiit' ? cardioSession(true) : strength(k.replace('*', ''), k.endsWith('*')));
+    if (p.plano === 'dias') U.autoDays(sessions.length).forEach((d, i) => { sessions[i].days = d; });
     const seen = {}; sessions.forEach(s => { seen[s.name] = (seen[s.name] || 0) + 1; if (seen[s.name] > 1) s.name += ' ' + seen[s.name]; });
 
     const periodized = lvl === 3 && (goal === 'forca' || goal === 'hipertrofia') && !careful;
@@ -141,7 +142,7 @@
       'Este treino é montado por regras gerais, não por um profissional que te avaliou. Dor aguda, tontura ou falta de ar fora do normal: pare e procure atendimento.'].filter(Boolean).join('\n\n');
     return {
       id: 'g-' + S.uid(), name: 'Treino ' + ({ saude: 'de saúde', emagrecer: 'para definir', hipertrofia: 'de hipertrofia', forca: 'de força', habilidades: 'de habilidades' }[goal]) + ' — ' + days + '×/semana',
-      startDate: S.today(), rounds: 12, deloadRounds: [4, 8, 12], generated: true, sessions,
+      startDate: S.today(), rounds: 12, deloadRounds: [4, 8, 12], generated: true, sessions, mode: p.plano || 'fila',
       phases: periodized ? [{ from: 1, to: 4, label: 'Fase 1 — base (mais repetições)', shift: 0 }, { from: 5, to: 8, label: 'Fase 2 — intensificação (mais carga, −2 reps)', shift: 2 }, { from: 9, to: 12, label: 'Fase 3 — pico (carga alta, −4 reps)', shift: 4 }] : undefined,
       tests: [{ id: 'peso', name: 'Peso', unit: 'kg', baseline: +p.peso || null, goal: '', lowerIsBetter: goal === 'emagrecer' || undefined },
         { id: 'flexoes', name: 'Flexões seguidas', unit: 'reps', baseline: p.flexoes === '' || p.flexoes == null ? null : +p.flexoes, goal: '' },

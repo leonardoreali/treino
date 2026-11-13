@@ -45,7 +45,7 @@
     h += '<div class="stats"><div><b>' + streak() + '</b><span>dias seguidos</span></div><div><b>' + logs.filter(l => l.date >= weekAgo).length + '</b><span>treinos em 7 dias</span></div><div><b>' + logs.length + '</b><span>treinos no total</span></div></div>';
     return h;
   };
-  A.start = d => { if (!S.current) W.build(d.type); U.wake(true); location.hash = '#treino'; };
+  A.start = d => { if (!S.current) W.build(d.type, d.si != null && d.si !== '' ? +d.si : undefined); U.wake(true); location.hash = '#treino'; };
 
   // ================= HABILIDADES =================
   V.habilidades = () => {
@@ -146,10 +146,10 @@
     return list.length ? list.map(x => '<button class="tile" data-a="exercise" data-ex="' + e(x.id) + '"><span class="tile-img">' + (EMO[x.cat] || '🏋️') + (U.thumb(x.id) ? '<img alt="" loading="lazy" src="' + U.thumb(x.id) + '" onerror="this.remove()">' : '') +
       '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></span><span class="tile-body"><b>' + e(x.name) + '</b><small>' + e(CATEGORIES[x.cat] || 'Outros') + (x.w ? ' · com carga' : '') + '</small></span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
   }
-  V.biblioteca = () => '<h1>Biblioteca</h1><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
+  V.biblioteca = () => '<div class="row between"><h1>Biblioteca</h1><button class="btn small" data-a="lib-new">+ Exercício</button></div><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
     '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + '</button>').join('') + '</div>' +
     '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button></div>' +
-    '<div class="tiles" id="lib-list">' + libList() + '</div><button class="btn ghosty" data-a="lib-new">+ Adicionar exercício próprio</button>';
+    '<div class="tiles" id="lib-list">' + libList() + '</div>';
   A['lib-cat'] = d => { ui.libCat = d.c; APP.render(); };
   A['lib-lvl'] = d => { ui.libLvl = +d.l; APP.render(); };
   A['lib-own'] = () => { ui.libOwn = !ui.libOwn; APP.render(); };
@@ -184,15 +184,16 @@
     let h = '<h1>Programa</h1><div class="card"><h2>' + e(p.name) + '</h2><div class="muted">' + p.rounds + ' voltas × ' + n + ' sessões' + (p.startDate ? ' · início em ' + U.fmtDate(p.startDate) : '') + '</div>' +
       '<div class="row wrap"><label>Estou na volta <select id="pos-r">' + Array.from({ length: p.rounds }, (_, i) => '<option' + (i + 1 === Math.min(S.round(), p.rounds) ? ' selected' : '') + '>' + (i + 1) + '</option>').join('') + '</select></label>' +
       '<label>sessão <select id="pos-s">' + p.sessions.map((s, i) => '<option value="' + i + '"' + (i === S.sessionIdx() ? ' selected' : '') + '>' + (i + 1) + ' — ' + e(s.name) + '</option>').join('') + '</select></label></div>' +
-      '<p class="muted small">Ajuste aqui se a fila do app estiver diferente de onde você realmente está.</p></div>';
+      '<p class="muted small">Ajuste aqui se a fila do app estiver diferente de onde você realmente está.</p></div>' + V.planCard();
     h += p.sessions.map((s, si) => '<details class="card"><summary><b>Sessão ' + (si + 1) + '</b> — ' + e(s.name) + (s.duration ? ' <span class="muted small">~' + s.duration + ' min</span>' : '') + '</summary>' +
       s.blocks.map((b, bi) => '<h4>' + e(b.title) + (b.phase2 ? ' <span class="tag">fase 2</span>' : '') + '</h4>' + (b.note ? '<p class="muted small">' + e(b.note) + '</p>' : '') +
         '<ul class="plain small">' + (b.items || []).map((it, ii) => '<li>' + describe(it, p.id, si + '.' + bi + '.' + ii) + '</li>').join('') +
         (b.options || []).map(o => '<li>' + e(o.name) + '</li>').join('') + '</ul>').join('') + '</details>').join('');
     h += (p.notes || []).map(nt => '<details class="card"><summary><b>' + e(nt.title) + '</b></summary><p class="pre">' + e(nt.text) + '</p></details>').join('');
-    h += '<h3>Novo treino</h3><div class="card"><p>Suba o PDF do próximo treino e o app monta a rotina. Você revisa antes de salvar.</p>' +
+    h += '<h3>Novo treino</h3><div class="card"><p>PDF e foto funcionam com fichas <b>impressas ou digitadas</b>. Para cartão de academia preenchido à mão, use <b>Marcar na lista</b>.</p>' +
       '<div class="row wrap"><label class="btn">📄 Importar PDF<input type="file" id="pdf-file" accept="application/pdf" hidden></label>' +
       '<label class="btn">📷 Foto da ficha<input type="file" id="img-file" accept="image/*" hidden></label>' +
+      '<a class="btn" href="#ficha">✅ Marcar na lista</a>' +
       '<button class="btn ghosty" data-a="prog-json">Colar texto</button><button class="btn ghosty" data-a="prog-new">Montar à mão</button></div><div id="pdf-status" class="muted small"></div></div>';
     const all = Object.values(S.state.programs).filter(x => !x.alunoId);
     h += '<h3>Meus programas</h3><div class="list">' + all.map(x => '<div class="list-item"><span>' + (x.id === p.id ? '● ' : '') + e(x.name) + '</span><span class="row">' +
@@ -207,9 +208,9 @@
     if (t.id === 'img-file' && t.files[0]) {
       const st = U.$('#pdf-status'); st.textContent = 'Lendo a foto… (na primeira vez baixa o leitor, pode demorar)';
       try {
-        const txt = await OCR.read(t.files[0], pct => { st.textContent = 'Lendo a foto… ' + pct + '%'; });
+        const res = await OCR.read(t.files[0], msg => { st.textContent = msg; }), txt = res.text;
         st.textContent = '';
-        if (txt.trim().length < 10) return void (st.textContent = 'Não consegui ler texto nessa foto. Tente com mais luz, de frente e mais perto.');
+        if (res.words < 4 || !PDFIMPORT.parseText(txt).sessions.length) { t.value = ''; return void (st.innerHTML = 'Não consegui ler essa ficha. O leitor gratuito só entende texto impresso ou digitado, de frente e com boa luz — não lê letra de mão nem cartão com marca-d’água. <a href="#ficha">Use “Marcar na lista”</a>, que é rápido, ou toque em “Colar texto” para digitar.'); }
         A['prog-json']({ text: txt, photo: 1 });
       } catch (err) { console.error(err); st.textContent = 'Erro ao ler a foto: ' + err.message; }
     }
@@ -436,6 +437,7 @@
     '<div class="row wrap"><input id="tok" type="password" autocomplete="off" placeholder="ghp_…" value="' + e(S.cfg.token) + '" class="grow" aria-label="Token do GitHub">' +
     '<button class="btn" data-a="sync-connect">' + (S.cfg.token ? 'Sincronizar agora' : 'Conectar') + '</button>' + (S.cfg.token ? '<button class="btn ghosty" data-a="sync-off">Desligar</button>' : '') + '</div>' +
     '<div class="muted small" id="sync-status">Situação: ' + e(S.syncStatus) + '</div></div>' +
+    V.themeCard() +
     '<div class="card"><h2>Meus equipamentos</h2><p class="muted">Marque o que você tem. O app avisa quando um exercício pede algo que falta, e a Biblioteca pode filtrar só o que dá para fazer.</p>' +
     S.allEquip().map(q => '<label class="chk"><input type="checkbox" data-equip="' + e(q.id) + '"' + (S.owned().includes(q.id) ? ' checked' : '') + '><span class="grow">' + e(q.name) + '</span>' +
       (q.id.startsWith('q-') ? '<button class="link danger" data-a="equip-del" data-id="' + e(q.id) + '">remover</button>' : '') + '</label>').join('') +

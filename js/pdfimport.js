@@ -147,8 +147,14 @@
     const SET2 = /(\d{1,2})\s*(?:[×xX*]|s[ée]ries?\s*(?:de|x)?)\s*(\d{1,3})(?:\s*(?:[–\-—\/]|a|até)\s*(\d{1,3}))?\s*(min\b|s\b|seg\b|")?/;
     const sessions = []; let cur = null;
     for (const raw of String(text).split(/\r?\n/)) {
-      const line = raw.trim(); if (!line) continue;
-      const m = line.match(SET2);
+      let line = raw.trim(); if (!line) continue;
+      // erros comuns de leitura de foto: "3xl0" → "3x10", "3x1O" → "3x10"
+      line = line.replace(/(\d)\s*[xX×*]\s*([lI|oO\d][\dlI|oO]*)/g, (a, d, r) => d + 'x' + r.replace(/[lI|]/g, '1').replace(/[oO]/g, '0'));
+      let m = line.match(SET2);
+      if (!m) { // ficha em tabela, sem "x": "Supino reto 3 12" ou "Supino reto | 3 | 10-12 | 20kg"
+        const t = line.replace(/\d+(?:[.,]\d+)?\s*kg\b/gi, ' ').replace(/[|;\[\]]+/g, ' ').match(/^(.*?[A-Za-zÀ-ÿ)])\s+(\d{1,2})\s+(\d{1,3})(?:\s*[-–\/a]\s*(\d{1,3}))?(?:\s*(s|seg|min)\b)?\D*$/);
+        if (t && +t[2] >= 1 && +t[2] <= 10 && +t[3] <= 60) { line = t[1] + ' ' + t[2] + 'x' + t[3] + (t[4] ? '-' + t[4] : '') + (t[5] || ''); m = line.match(SET2); }
+      }
       if (!m) { if (HEADT.test(line) && line.length < 50) { cur = { name: clean(line) || line, items: [] }; sessions.push(cur); } continue; }
       const sets = +m[1], min = +m[2], max = +(m[3] || m[2]);
       if (sets < 1 || sets > 10 || min < 1 || min > 300 || max < min) continue;

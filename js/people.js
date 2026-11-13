@@ -20,6 +20,7 @@
       '<label class="wide">Experiência com treino ' + sel('f-nivel', GEN.LEVELS, p.nivel || 1) + '</label>' +
       '<label>Dias por semana ' + sel('f-dias', { 2: '2', 3: '3', 4: '4', 5: '5', 6: '6' }, p.dias || 3) + '</label>' +
       '<label>Tempo por treino ' + sel('f-tempo', { 30: '30 min', 45: '45 min', 60: '60 min' }, p.tempo || 45) + '</label>' +
+      '<label class="wide">Como quer seguir o treino ' + sel('f-plano', { fila: 'Em fila: continuo de onde parei', dias: 'Dias fixos da semana', livre: 'Livre: escolho A, B ou C na hora' }, p.plano || 'fila') + '</label>' +
       '<label class="wide">Onde treina ' + sel('f-local', { casa: 'Em casa / ao ar livre', academia: 'Academia', misto: 'Os dois' }, p.local || 'casa') + '</label>' +
       (aluno ? '<label class="wide">Equipamentos disponíveis ' + sel('f-kit', KITS, p.kit || 'casa') + '</label>' : '') +
       '<label>Flexões seguidas ' + num('f-flexoes', p.flexoes, 'opcional') + '</label><label>Barras seguidas ' + num('f-barras', p.barras, 'opcional') + '</label>' +
@@ -29,7 +30,7 @@
   function read(p) {
     const v = c => (U.$('.' + c) || {}).value, n = c => v(c) === '' || v(c) == null ? '' : Number(v(c));
     Object.assign(p, { nome: (v('f-nome') || '').trim(), idade: n('f-idade'), sexo: v('f-sexo'), altura: n('f-altura'), peso: n('f-peso'), objetivo: v('f-objetivo'), nivel: +v('f-nivel'), dias: +v('f-dias'), tempo: +v('f-tempo'),
-      local: v('f-local'), flexoes: n('f-flexoes'), barras: n('f-barras'), limit: [...document.querySelectorAll('.f-limit:checked')].map(x => x.value), obs: (v('f-obs') || '').trim(), t: Date.now() });
+      local: v('f-local'), plano: v('f-plano') || 'fila', flexoes: n('f-flexoes'), barras: n('f-barras'), limit: [...document.querySelectorAll('.f-limit:checked')].map(x => x.value), obs: (v('f-obs') || '').trim(), t: Date.now() });
     if (U.$('.f-fone')) { p.fone = v('f-fone').trim(); p.kit = v('f-kit'); }
     return p;
   }

@@ -1,4 +1,5 @@
-/* Lê o texto de uma foto (ficha de treino) com o Tesseract, que roda no próprio navegador: sem conta e sem custo. */
+/* Lê o texto de uma foto (ficha impressa/digitada) com o Tesseract, que roda no próprio navegador: sem conta e sem custo.
+   Limite conhecido: não lê letra de mão nem cartões pré-impressos com marca-d'água — para esses existe o modo "marcar na lista". */
 (function () {
   const O = window.OCR = {};
   const SRC = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
@@ -10,17 +11,31 @@
       document.head.appendChild(s);
     });
   }
-  // Aumenta fotos pequenas e deixa em tons de cinza com mais contraste: ajuda bastante a leitura.
-  async function prepare(file) {
-    const img = await createImageBitmap(file), k = Math.min(2.5, Math.max(1, 1800 / Math.max(img.width, img.height)));
-    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-    const x = c.getContext('2d'); x.filter = 'grayscale(1) contrast(1.4)'; x.drawImage(img, 0, 0, c.width, c.height);
+  // Gira (0–3 quartos de volta), ajusta o tamanho e deixa em tons de cinza com mais contraste.
+  function prepare(img, rot, maxPx) {
+    const k = Math.min(2.5, maxPx / Math.max(img.width, img.height)), w = Math.round(img.width * k), h = Math.round(img.height * k);
+    const c = document.createElement('canvas'); c.width = rot % 2 ? h : w; c.height = rot % 2 ? w : h;
+    const x = c.getContext('2d'); x.filter = 'grayscale(1) contrast(1.6) brightness(1.05)';
+    x.translate(c.width / 2, c.height / 2); x.rotate(rot * Math.PI / 2); x.drawImage(img, -w / 2, -h / 2, w, h);
     return c;
   }
+  const good = r => r.data.words.filter(w => w.confidence > 70 && /^[A-Za-zÀ-ÿ]{4,}$/.test(w.text)).length;
+  // Devolve { text, words }: words = quantas palavras foram lidas com segurança (0–3 = praticamente nada).
   O.read = async (file, onProgress) => {
     await load();
-    let src = file; try { src = await prepare(file); } catch (e) {}
-    const r = await window.Tesseract.recognize(src, 'por', { logger: m => { if (onProgress && m.status === 'recognizing text') onProgress(Math.round(m.progress * 100)); } });
-    return r.data.text || '';
+    const say = t => onProgress && onProgress(t);
+    const logger = m => say(m.status === 'recognizing text' ? 'Lendo o texto… ' + Math.round(m.progress * 100) + '%' : 'Preparando o leitor… (só demora na primeira vez)');
+    const img = await createImageBitmap(file);
+    let best = await window.Tesseract.recognize(prepare(img, 0, 2000), 'por', { logger }), rot = 0;
+    if (good(best) < 6) { // pouca coisa lida: a foto pode estar deitada ou de cabeça para baixo
+      let top = good(best);
+      for (const r of [1, 3, 2]) {
+        say('Testando a foto em outra posição…');
+        const t = await window.Tesseract.recognize(prepare(img, r, 1500), 'por');
+        if (good(t) > top + 2) { top = good(t); rot = r; }
+      }
+      if (rot) best = await window.Tesseract.recognize(prepare(img, rot, 2200), 'por', { logger });
+    }
+    return { text: best.data.text || '', words: good(best) };
   };
 })();

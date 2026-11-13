@@ -33,8 +33,8 @@
     return { targets: fill(0).map((_, i) => clamp((prev[i] == null ? prev[prev.length - 1] : prev[i]) + step)), hint: txt + (it.min === it.max ? '' : 'Tente +' + step + ' por série.'), up: false };
   };
 
-  W.build = type => {
-    const p = S.program(), round = S.round(), si = S.sessionIdx(), deload = S.isDeload();
+  W.build = (type, forced) => {
+    const p = S.program(), round = S.round(), si = forced != null && p.sessions[forced] ? forced : S.sessionIdx(), deload = S.isDeload();
     let src;
     if (type === 'flex') {
       const all = p.sessions.flatMap(s => s.blocks);
@@ -205,7 +205,7 @@
     U.modal('<h2>Treino registrado 🎉</h2>' +
       (ready.length ? '<div class="hint up">Critério cumprido em 2 treinos seguidos: <b>' + ready.map(s => e(s.name)).join(', ') + '</b>. Avance em <a href="#habilidades" data-a="modal-close-go" data-go="#habilidades">Habilidades</a>.</div>' : '') +
       (S.finished() ? '<p>Você concluiu o programa inteiro! Suba o PDF do próximo treino em <b>Programa</b>.</p>'
-        : '<p>Próxima da fila: <b>' + e(p.sessions[S.sessionIdx()].name) + '</b> (volta ' + S.round() + ').</p>') +
+        : (S.mode() === 'fila' ? '<p>Próxima da fila: <b>' + e(p.sessions[S.sessionIdx()].name) + '</b> (volta ' + S.round() + ').</p>' : '<p>Boa! Treino nº ' + S.pos() + ' deste programa.</p>')) +
       '<button class="btn block" data-a="modal-close">Fechar</button>');
     location.hash = '#hoje';
   };
