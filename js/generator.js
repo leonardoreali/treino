@@ -4,14 +4,19 @@
   const G = window.GEN = {};
   G.GOALS = { saude: 'Saúde e condicionamento geral', emagrecer: 'Emagrecer / definir', hipertrofia: 'Ganhar músculo', forca: 'Ganhar força', habilidades: 'Habilidades de calistenia' };
   G.LEVELS = { 1: 'Iniciante (menos de 6 meses)', 2: 'Intermediário (6 meses a 2 anos)', 3: 'Avançado (mais de 2 anos)' };
-  G.LIMITS = { joelho: 'Joelho', ombro: 'Ombro', lombar: 'Lombar', punho: 'Punho' };
+  G.LIMITS = { joelho: 'Joelho', ombro: 'Ombro', lombar: 'Lombar', punho: 'Punho', cotovelo: 'Cotovelo', quadril: 'Quadril', tornozelo: 'Tornozelo / pé', pescoco: 'Pescoço' };
   // Exercícios evitados por limitação.
   const AVOID = {
-    joelho: 'agachamento-salto salto-grupado burpee pistol pistol-assistido pistol-banco bulgaro passada afundo-halteres shrimp cossack agachamento-barra corda polichinelo joelho-alto',
+    joelho: 'agachamento-salto salto-grupado burpee pistol pistol-assistido pistol-banco bulgaro passada afundo-halteres shrimp cossack agachamento-barra corda polichinelo joelho-alto extensora hack smith avanco nordic',
+    cotovelo: 'dips mergulho-banco triceps-testa triceps-frances triceps-coice flexao-diamante barra-pronada chin-up rosca-direta rosca-scott muscle-up barra-explosiva',
+    quadril: 'cossack pancake espacate-frontal espacate-lateral bulgaro agachamento-barra hack passada avanco afundo-halteres hip-thrust pombo lagarto',
+    tornozelo: 'agachamento-salto salto-grupado burpee corda polichinelo joelho-alto panturrilha panturrilha-unilateral panturrilha-maquina panturrilha-sentado passada avanco caminhada esteira escada escada-maq',
+    pescoco: 'hspu-parede ponte parada-ponte rolamento-frente rolamento-tras encolhimento remada-alta dragon-flag abdominal',
     ombro: 'dips mergulho-banco pike-pushup pike-pushup-elevado hspu-parede desenvolvimento-halteres desenvolvimento-maquina parada-mao-parede supino-barra triceps-frances barra-explosiva',
     lombar: 'terra stiff remada-curvada superman agachamento-barra elevacao-pernas toes-to-bar dragon-flag burpee',
     punho: 'planche-lean tuck-planche parada-mao-parede flexao-diamante flexao-pseudo-planche crow tuck-lsit lsit',
   };
+  G.AVOID = AVOID;
   // Padrões de movimento: [exercício, nível 1-3]. Primeiro os de peso do corpo, depois os de academia.
   const PAT = {
     pushH: [['flexao-inclinada', 1], ['flexao-joelhos', 1], ['flexao', 2], ['flexao-diamante', 3], ['dips', 3], ['flexao-archer', 4], ['flexao-pseudo-planche', 4], ['supino-maquina', 1], ['supino-halteres', 2], ['supino-barra', 3], ['supino-inclinado', 2]],
@@ -51,7 +56,7 @@
     owned = owned || S.owned();
     const goal = p.objetivo || 'saude', days = Math.max(2, Math.min(6, +p.dias || 3)), time = +p.tempo || 45;
     const imc = G.imc(p), age = +p.idade || 0;
-    const careful = (age && (age >= 60 || age < 16)) || (imc && imc >= 35) || (p.limit || []).length > 0;
+    const careful = (age && (age >= 60 || age < 16)) || (imc && imc >= 35) || (p.limit || []).length > 0 || p.lesao === 's';
     let lvl = Math.max(1, Math.min(3, +p.nivel || 1)); if (careful && (age >= 60 || age < 16 || (imc && imc >= 35))) lvl = 1;
     const gymFirst = p.local === 'academia' || (p.local === 'misto' && (goal === 'hipertrofia' || goal === 'forca'));
     const avoid = new Set((p.limit || []).flatMap(l => (AVOID[l] || '').split(' ')));
@@ -138,6 +143,7 @@
       'Exercícios escolhidos pelo seu nível' + (p.flexoes || p.barras ? ' e pelos testes de flexões/barras' : '') + ', usando só os equipamentos marcados' + (gymFirst ? ' (prioridade para academia)' : ' (prioridade para peso do corpo)') + '.',
       (p.limit || []).length ? 'Evitei exercícios que costumam incomodar: ' + p.limit.map(l => G.LIMITS[l].toLowerCase()).join(', ') + '.' : '',
       periodized ? 'Periodização em 3 fases de 4 voltas: a faixa de repetições dos exercícios com carga cai 2 reps a cada fase, para você subir o peso. A 4ª volta de cada fase é leve.' : '',
+      p.lesao === 's' ? 'Você informou fratura, cirurgia recente ou lesão em tratamento: só treine a região afetada com liberação do médico ou fisioterapeuta. Marque a região em "dor ou limitação" para o app evitar os exercícios que a forçam.' : '',
       careful ? 'ATENÇÃO: pelo seu perfil (idade, IMC ou limitação), o treino foi montado na versão mais conservadora. Antes de começar, converse com um médico e, se possível, com um profissional de educação física.' : '',
       'Este treino é montado por regras gerais, não por um profissional que te avaliou. Dor aguda, tontura ou falta de ar fora do normal: pare e procure atendimento.'].filter(Boolean).join('\n\n');
     return {

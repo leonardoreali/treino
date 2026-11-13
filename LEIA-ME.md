@@ -45,3 +45,7 @@ Depois de alterar arquivos, publique de novo (`git add -A`, `git commit -m "atua
 - **Cores e estilo**: topo de `css/style.css`. Tela Hoje, nível/XP e questionário de primeira vez: `js/theme.js`.
 - **PDF do treino**: Programa → Compartilhar → Enviar em PDF (`js/share.js`). O PDF leva um link que importa o treino completo.
 - **Diário alimentar**: `js/diet.js` (a tabela de alimentos fica no começo do arquivo; os valores são aproximados).
+
+## Adaptação automática
+
+As regras ficam em `js/adapt.js`: pergunta antes do treino (bem, cansado, dor ou lesão), avaliação depois (fácil, na medida, pesado, dor) e o que muda no treino seguinte. As listas de exercícios evitados por região do corpo ficam em `js/generator.js` (`AVOID`).

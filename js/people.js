@@ -25,12 +25,13 @@
       (aluno ? '<label class="wide">Equipamentos disponíveis ' + sel('f-kit', KITS, p.kit || 'casa') + '</label>' : '') +
       '<label>Flexões seguidas ' + num('f-flexoes', p.flexoes, 'opcional') + '</label><label>Barras seguidas ' + num('f-barras', p.barras, 'opcional') + '</label>' +
       '<div class="wide"><div class="muted small">Dor ou limitação em:</div><div class="row wrap" style="margin-top:4px">' + Object.entries(GEN.LIMITS).map(l => '<label class="chk" style="border:0"><input type="checkbox" class="f-limit" value="' + l[0] + '"' + ((p.limit || []).includes(l[0]) ? ' checked' : '') + '><span>' + l[1] + '</span></label>').join('') + '</div></div>' +
+      '<label class="wide">Fratura, cirurgia recente ou lesão em tratamento? ' + sel('f-lesao', { n: 'Não', s: 'Sim' }, p.lesao || 'n') + '</label>' +
       '<label class="wide">Observações' + (aluno ? ' / anamnese' : '') + ' <textarea class="f-obs" rows="2">' + e(p.obs || '') + '</textarea></label></div>';
   }
   function read(p) {
     const v = c => (U.$('.' + c) || {}).value, n = c => v(c) === '' || v(c) == null ? '' : Number(v(c));
     Object.assign(p, { nome: (v('f-nome') || '').trim(), idade: n('f-idade'), sexo: v('f-sexo'), altura: n('f-altura'), peso: n('f-peso'), objetivo: v('f-objetivo'), nivel: +v('f-nivel'), dias: +v('f-dias'), tempo: +v('f-tempo'),
-      local: v('f-local'), plano: v('f-plano') || 'fila', flexoes: n('f-flexoes'), barras: n('f-barras'), limit: [...document.querySelectorAll('.f-limit:checked')].map(x => x.value), obs: (v('f-obs') || '').trim(), t: Date.now() });
+      local: v('f-local'), plano: v('f-plano') || 'fila', lesao: v('f-lesao') || 'n', flexoes: n('f-flexoes'), barras: n('f-barras'), limit: [...document.querySelectorAll('.f-limit:checked')].map(x => x.value), obs: (v('f-obs') || '').trim(), t: Date.now() });
     if (U.$('.f-fone')) { p.fone = v('f-fone').trim(); p.kit = v('f-kit'); }
     return p;
   }
