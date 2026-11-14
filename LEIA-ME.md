@@ -49,3 +49,7 @@ Depois de alterar arquivos, publique de novo (`git add -A`, `git commit -m "atua
 ## Adaptação automática
 
 As regras ficam em `js/adapt.js`: pergunta antes do treino (bem, cansado, dor ou lesão), avaliação depois (fácil, na medida, pesado, dor) e o que muda no treino seguinte. As listas de exercícios evitados por região do corpo ficam em `js/generator.js` (`AVOID`).
+
+## Rastreio de evolução
+
+`js/progress.js`: mede cada exercício por treino (força estimada com carga, média por série sem carga), marca recordes, detecta estagnação (3 treinos sem recorde → recuo de 10% ou ritmo lento), promove sozinho para a próxima variação (topo da faixa em 2 treinos seguidos) e trata tempo parado (7 dias: mais leve; 14 dias: 2 treinos de recondicionamento; 30 dias: exige treino novo).
