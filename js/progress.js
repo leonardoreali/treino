@@ -145,7 +145,7 @@
       }
       // estagnou: 3 treinos sem recorde
       const st = P.status(P.series(ex));
-      if (st === 'estagnado' && !(pr && pr.cool > 0) && !snap.returnLevel) {
+      if (st === 'estagnado' && !(pr && pr.cool > 0) && !snap.returnLevel && !snap.health) { // treino reduzido por saúde não conta como estagnação
         const top = Math.max(...item.kg || [0]), kg = weighted(item) ? Math.min(kgRound(top * 0.9), top - (top >= 20 ? 2.5 : 1)) : 0;
         prog()[ex] = { reset: kg ? { kg } : { tempo: true }, cool: 3, since: S.today() };
         stalls.push({ ex, kg });

@@ -53,3 +53,7 @@ As regras ficam em `js/adapt.js`: pergunta antes do treino (bem, cansado, dor ou
 ## Rastreio de evolução
 
 `js/progress.js`: mede cada exercício por treino (força estimada com carga, média por série sem carga), marca recordes, detecta estagnação (3 treinos sem recorde → recuo de 10% ou ritmo lento), promove sozinho para a próxima variação (topo da faixa em 2 treinos seguidos) e trata tempo parado (7 dias: mais leve; 14 dias: 2 treinos de recondicionamento; 30 dias: exige treino novo).
+
+## Saúde e lesões
+
+`js/health.js`: condições registradas pela pessoa (dor temporária, lesão/fratura/cirurgia com fases de proteção, retorno e fortalecimento, ou condição crônica), com regras gerais por região quando não há diagnóstico e regras específicas quando há. Cada treino é adaptado na hora de começar; a dor é registrada a cada treino; orientações do profissional (texto, exercícios proibidos e carga máxima) valem para todos os treinos. As listas ficam no começo do arquivo (`SPEC`, `CHRONIC`, `FLAG_EX`).

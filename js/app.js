@@ -2,8 +2,8 @@
 (function () {
   const APP = window.APP = {};
   const TABS = [['hoje', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>', 'Hoje'], ['habilidades', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>', 'Skills'], ['evolucao', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', 'Evolução'], ['biblioteca', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>', 'Exercícios'], ['programa', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>', 'Programa'], ['perfil', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>', 'Perfil']];
-  const views = { hoje: V.hoje, treino: W.view, habilidades: V.habilidades, evolucao: V.evolucao, biblioteca: V.biblioteca, programa: V.programa, ajustes: V.ajustes, perfil: V.perfil, previa: V.previa, alunos: V.alunos, aluno: V.aluno, inicio: V.inicio, dieta: V.dieta, ficha: V.ficha };
-  const PARENT = { treino: 'hoje', dieta: 'hoje', ficha: 'programa', ajustes: 'perfil', previa: 'perfil', alunos: 'perfil', aluno: 'perfil' };
+  const views = { hoje: V.hoje, treino: W.view, habilidades: V.habilidades, evolucao: V.evolucao, biblioteca: V.biblioteca, programa: V.programa, ajustes: V.ajustes, perfil: V.perfil, previa: V.previa, alunos: V.alunos, aluno: V.aluno, inicio: V.inicio, dieta: V.dieta, ficha: V.ficha, saude: V.saude };
+  const PARENT = { treino: 'hoje', dieta: 'hoje', ficha: 'programa', ajustes: 'perfil', saude: 'perfil', previa: 'perfil', alunos: 'perfil', aluno: 'perfil' };
 
   APP.render = function () {
     const name = (location.hash || '#hoje').slice(1), fn = views[name] || views.hoje;
