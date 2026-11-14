@@ -7,6 +7,11 @@
   const e = U.esc, H = window.HEALTH = {};
   const conds = () => S.state.conditions || (S.state.conditions = []);
   const active = () => conds().filter(c => !c.resolved);
+  const alunos = () => S.state.alunos || [];
+  const ownerOf = id => alunos().find(a => (a.conditions || []).some(c => c.id === id)) || null;
+  // Acha a condição (do usuário ou de um aluno) e marca o dono como alterado, para sincronizar.
+  const findC = id => { const own = conds().find(x => x.id === id); if (own) return own; const a = ownerOf(id); if (!a) return null; a.t = Date.now(); return a.conditions.find(x => x.id === id); };
+  const rerender = () => { if (['#saude', '#aluno'].includes(location.hash)) APP.render(); };
   const ids = s => (s || '').split(' ').filter(Boolean);
 
   H.AREAS = { joelho: 'Joelho', ombro: 'Ombro', lombar: 'Coluna lombar', pescoco: 'Pescoço', punho: 'Punho e mão', cotovelo: 'Cotovelo', braco: 'Braço / antebraço', quadril: 'Quadril', perna: 'Coxa / canela', tornozelo: 'Tornozelo e pé', costela: 'Costela / tórax' };
@@ -80,10 +85,10 @@
   const painNow = c => c.pains && c.pains.length ? c.pains[c.pains.length - 1].v : (c.pain0 || 0);
 
   // ---------- regras somadas de todas as condições ativas ----------
-  H.rules = () => {
+  H.rules = list => {
     const r = { avoid: new Set(), removeCats: new Set(), caps: {}, setsCap: {}, load: {}, maxKg: {}, flags: new Set(), rpeMax: 10, why: {}, tips: [], checks: [], clearance: [], names: [] };
     const add = (list, why) => list.forEach(x => { r.avoid.add(x); if (!r.why[x]) r.why[x] = why; });
-    active().forEach(c => {
+    (list || active()).forEach(c => {
       const sp = specOf(c) || {}, reg = REGION[c.area], name = H.title(c);
       r.names.push(name + (c.kind === 'lesao' ? ' · fase de ' + PHASES[c.phase].toLowerCase() : ''));
       add(ids(sp.avoid), name); (sp.flags || []).forEach(f => r.flags.add(f));
@@ -188,11 +193,104 @@
   // gerar treino já considerando as condições
   const gen0 = GEN.generate;
   GEN.generate = (p, owned) => {
-    const act = active(), areas = act.filter(c => c.area && c.kind !== 'cronica').map(c => BASE_AVOID[c.area] ? BASE_AVOID[c.area] : [c.area]).flat().filter(a => GEN.LIMITS[a]);
+    const forAluno = Array.isArray(p.conditions), act = forAluno ? p.conditions.filter(c => !c.resolved) : active(), areas = act.filter(c => c.area && c.kind !== 'cronica').map(c => BASE_AVOID[c.area] ? BASE_AVOID[c.area] : [c.area]).flat().filter(a => GEN.LIMITS[a]);
     const p2 = Object.assign({}, p, { limit: [...new Set((p.limit || []).concat(areas))], lesao: act.some(c => c.kind === 'lesao') ? 's' : p.lesao });
     const prog = gen0(p2, owned);
-    if (act.length && prog.notes && prog.notes[0]) prog.notes[0].text += '\n\nCondições de saúde consideradas: ' + act.map(H.title).join('; ') + '. Cada treino é ajustado a elas na hora de começar.';
+    if (act.length && prog.notes && prog.notes[0]) prog.notes[0].text += '\n\nCondições de saúde consideradas: ' + act.map(H.title).join('; ') + (forAluno ? '. Exercícios já trocados para respeitar as condições de hoje: gere de novo quando a situação do aluno mudar.' : '. Cada treino é ajustado a elas na hora de começar.');
+    if (forAluno && act.length) adaptProgram(prog, H.rules(act));
     return prog;
+  };
+
+  // Versão fixa da adaptação, para programas montados para um aluno (que vão impressos ou por link).
+  function adaptProgram(prog, r) {
+    prog.sessions.forEach(s => {
+      const used = new Set();
+      s.blocks.forEach(b => {
+        if (b.kind === 'forca') b.items = b.items.filter(it => {
+          const id = it.skill ? W.resolve(it, '', '') : it.ex, ex = S.ex(id), cap = r.caps[ex.cat];
+          if (!(r.avoid.has(id) || r.removeCats.has(ex.cat) || (cap && ex.level > cap))) { used.add(id); return true; }
+          const alt = r.removeCats.has(ex.cat) ? null : pickAlt({ ex: id, unit: it.unit }, r, used, cap);
+          if (!alt) return false;
+          used.add(alt.id); it.ex = alt.id; delete it.skill; it.note = 'Adaptado: ' + (r.why[id] || 'condição de saúde') + '. ' + (it.note || '');
+          if (r.setsCap[alt.cat]) it.sets = Math.min(it.sets, r.setsCap[alt.cat]);
+          return true;
+        });
+        if (b.kind === 'intervalado' && (r.flags.has('noHIIT') || r.removeCats.has('pernas'))) b.drop = true;
+      });
+      s.blocks = s.blocks.filter(b => !b.drop && (b.kind !== 'forca' || b.items.length));
+    });
+  }
+
+  // ---------- consulta com profissional e diagnóstico ----------
+  const LESAO_SPECS = new Set(['fratura', 'cirurgia', 'lca', 'luxacao_ombro', 'entorse', 'lesao_muscular']);
+  const consulted = c => c.consult === 'sim' || !!c.spec;
+  // Lembrete: a cada 7 dias (3 se a dor for forte); quem marcou consulta é perguntado em 14 dias.
+  H.nudgeDue = c => {
+    if (c.resolved || c.kind === 'cronica' || consulted(c)) return false;
+    const every = c.consult === 'agendado' ? 14 : painNow(c) >= 6 ? 3 : 7;
+    return S.daysBetween(c.lastNudge || c.since, S.today()) >= every;
+  };
+  const nudgeHtml = c => {
+    const n = S.daysBetween(c.since, S.today()), where = H.AREAS[c.area] ? H.AREAS[c.area].toLowerCase() : 'corpo';
+    return '<div class="hint warn"><b>' + (c.consult === 'agendado' ? 'Como foi a consulta?' : 'Procure um profissional de saúde') + '</b><br>' +
+      (c.consult === 'agendado' ? 'Você marcou consulta para a dor em ' + e(where) + '. Já foi?' : 'Você registrou ' + (c.kind === 'lesao' ? 'uma lesão' : 'dor') + ' em ' + e(where) + (n ? ' há ' + n + ' dia' + (n > 1 ? 's' : '') : '') + ' e ainda não passou por avaliação. Um médico ou fisioterapeuta descobre a causa, e com o diagnóstico o app adapta o treino com muito mais precisão. A UBS atende de graça.') +
+      (painNow(c) >= 6 ? '<br><b>Com dor forte, não espere:</b> procure atendimento logo.' : '') +
+      '<div class="row wrap"><button class="btn small" data-a="hl-diag" data-id="' + c.id + '">Já fui</button>' + (c.consult !== 'agendado' ? '<button class="btn small ghosty" data-a="hl-consult" data-id="' + c.id + '">Marquei consulta</button>' : '') + '<button class="btn small ghosty" data-a="hl-snooze" data-id="' + c.id + '">Lembrar depois</button></div></div>';
+  };
+  A['hl-consult'] = d => { const c = findC(d.id); c.consult = 'agendado'; c.lastNudge = S.today(); c.t = Date.now(); S.save(); U.closeModal(); U.toast('Ótimo! Daqui a 2 semanas pergunto como foi.'); rerender(); if (location.hash === '#hoje') APP.render(); };
+  A['hl-snooze'] = d => { const c = findC(d.id); c.lastNudge = S.today(); c.t = Date.now(); S.save(); U.toast('Ok, lembro de novo em alguns dias.'); APP.render(); };
+  // Interpreta o diagnóstico escrito com as palavras do profissional.
+  const DIAG = [
+    [/condromal|patelofemoral|frente do joelho|patela/, 'pfps', 'joelho'], [/menisco/, 'menisco', 'joelho'], [/\blca\b|cruzado|ligamento/, 'lca', 'joelho'],
+    [/tendin\w* patelar|joelho de saltador/, 'tendinite_patelar', 'joelho'], [/artros|desgaste|osteoartr/, 'artrose_joelho', 'joelho'], [/artros|desgaste|osteoartr/, 'artrose_quadril', 'quadril'],
+    [/manguito|supraespinh|impacto|tendin/, 'manguito', 'ombro'], [/luxa|instabil|deslocou|desloca/, 'luxacao_ombro', 'ombro'], [/bursit/, 'bursite_ombro', 'ombro'],
+    [/hernia|protrus|abaulament/, 'hernia', 'lombar'], [/ciatic/, 'ciatica', 'lombar'], [/lombalg|muscular|contratur|mecanic|postur/, 'lombalgia', 'lombar'],
+    [/hernia|protrus|cervical|cervicalg|torcicol/, 'cervical', 'pescoco'], [/tunel|carpo|tendin|quervain/, 'tendinite_punho', 'punho'], [/epicondil|tenista|golfista|tendin/, 'epicondilite', 'cotovelo'],
+    [/entorse|torcao|torceu|torci/, 'entorse', 'tornozelo'], [/fascit|esporao/, 'fascite', 'tornozelo'],
+    [/fratur|quebr|fissur/, 'fratura', null], [/cirurg|operou|operacao/, 'cirurgia', null], [/estiramento|distensao|lesao muscular|ruptura parcial|rompimento parcial/, 'lesao_muscular', null],
+  ];
+  const NOTHING = /nada grave|sem lesao|nao tem nada|so inflama|inflamacao|cansaco muscular|normal|nada de mais/;
+  const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  H.evaluate = (text, area) => {
+    const t = norm(text); if (!t.trim()) return null;
+    for (const [re, spec, ar] of DIAG) if ((ar === area || ar === null) && re.test(t)) return { spec };
+    if (NOTHING.test(t)) return { nothing: true };
+    for (const [re, spec, ar] of DIAG) if (ar && re.test(t)) return { spec, otherArea: ar };
+    return { unknown: true };
+  };
+  A['hl-diag'] = d => {
+    const c = findC(d.id), opts = ANY_LESAO.concat(SPEC[c.area] || []);
+    U.modal('<h2>O que o profissional disse?</h2><p class="muted small">Escreva o diagnóstico como o médico ou fisioterapeuta falou (ou como está no laudo). O app interpreta e ajusta o treino.</p>' +
+      '<label>Diagnóstico<textarea id="hl-dx" rows="3" placeholder="Ex.: tendinite no manguito rotador; condromalácia patelar grau 2; nada grave, só inflamação">' + e(c.diagnosis || '') + '</textarea></label>' +
+      '<label>Orientações que ele deu (opcional)<textarea id="hl-dxn" rows="2" placeholder="Ex.: evitar agachamento profundo por 30 dias">' + e(c.notes || '') + '</textarea></label>' +
+      '<button class="btn block" data-a="hl-dx-go" data-id="' + c.id + '">Avaliar diagnóstico</button>' +
+      '<details style="margin-top:10px"><summary class="muted small">Ou escolha da lista</summary><div class="list">' + opts.map(x => '<button class="list-item" data-a="hl-dx-pick" data-id="' + c.id + '" data-spec="' + x.id + '"><span>' + e(x.name) + '</span></button>').join('') + '</div></details>');
+  };
+  const dxResult = (c, res, text) => {
+    const tmp = Object.assign({}, c, { spec: res.spec || null, kind: res.spec ? (LESAO_SPECS.has(res.spec) ? 'lesao' : (SPEC[c.area] || []).some(x => x.id === res.spec && x.cronica) ? 'cronica' : 'dor') : c.kind, phase: c.phase || 'retorno' });
+    let h = '<h2>Avaliação do diagnóstico</h2>' + (text ? '<p class="muted small">Você escreveu: “' + e(text) + '”</p>' : '');
+    if (res.spec) {
+      h += '<div class="hint up">Entendi como: <b>' + e(specOf(tmp).name) + '</b>' + (res.otherArea ? ' (parece ser em ' + e(H.AREAS[res.otherArea].toLowerCase()) + ', não em ' + e(H.AREAS[c.area].toLowerCase()) + ')' : '') + '.</div><b class="small">O treino passa a:</b><ul class="small" style="padding-left:18px">' + H.effects(Object.assign({}, tmp, { area: res.otherArea || c.area })).map(x => '<li>' + e(x) + '</li>').join('') + '</ul>' +
+        ((specOf(tmp).tips || []).length ? '<b class="small">Dicas gerais para esse diagnóstico</b><ul class="small muted" style="padding-left:18px">' + specOf(tmp).tips.map(t => '<li>' + e(t) + '</li>').join('') + '</ul>' : '') +
+        (tmp.kind === 'lesao' && c.kind !== 'lesao' ? '<label>Situação com o profissional <select id="hl-dx-phase"><option value="protecao">Ainda sem liberação para usar a região</option><option value="retorno" selected>Liberado com cuidado</option><option value="fortalecimento">Liberado; recuperando a força</option></select></label>' : '') +
+        '<button class="btn block" data-a="hl-dx-ok" data-id="' + c.id + '" data-spec="' + res.spec + '" data-area="' + (res.otherArea || c.area || '') + '">Confirmar e adaptar</button><button class="btn ghosty block" data-a="hl-diag" data-id="' + c.id + '">Não é isso</button>';
+    } else if (res.nothing) h += '<div class="hint up">Que bom que não é nada grave.</div><p class="small">Sigo com as regras gerais para a região enquanto houver dor e paro de lembrar da consulta. Se a dor durar mais de 6 semanas, volte ao profissional.</p><button class="btn block" data-a="hl-dx-ok" data-id="' + c.id + '" data-spec="">Confirmar</button>';
+    else h += '<div class="hint warn">Não reconheci esse diagnóstico na minha lista.</div><p class="small">Sigo com as regras gerais para ' + e((H.AREAS[c.area] || 'a região').toLowerCase()) + ' e paro de lembrar da consulta. Para o treino respeitar exatamente o que o profissional pediu, registre os <b>exercícios proibidos</b> e a <b>carga máxima</b> nas orientações.</p><button class="btn block" data-a="hl-dx-ok" data-id="' + c.id + '" data-spec="" data-pro="1">Confirmar e abrir orientações</button><button class="btn ghosty block" data-a="hl-diag" data-id="' + c.id + '">Escolher da lista</button>';
+    U.modal(h);
+  };
+  A['hl-dx-go'] = d => { const c = findC(d.id), text = U.$('#hl-dx').value.trim(), notes = U.$('#hl-dxn').value.trim(); if (!text) return U.toast('Escreva o que o profissional disse.'); c._dx = text; if (notes) c.notes = notes; dxResult(c, H.evaluate(text, c.area), text); };
+  A['hl-dx-pick'] = d => { const c = findC(d.id); dxResult(c, { spec: d.spec }, ''); };
+  A['hl-dx-ok'] = d => {
+    const c = findC(d.id), ph = U.$('#hl-dx-phase');
+    c.consult = 'sim'; c.diagDate = S.today(); if (c._dx) c.diagnosis = c._dx; delete c._dx;
+    if (d.spec) {
+      c.spec = d.spec; if (d.area) c.area = d.area;
+      if (LESAO_SPECS.has(d.spec)) { if (c.kind !== 'lesao') { c.kind = 'lesao'; c.phase = ph ? ph.value : 'retorno'; c.phaseSince = S.today(); if (c.phase !== 'protecao') c.cleared = S.today(); } }
+      else if ((SPEC[c.area] || []).some(x => x.id === d.spec && x.cronica)) c.kind = 'cronica';
+    }
+    c.t = Date.now(); S.save();
+    if (d.pro) return A['hl-pro']({ id: c.id });
+    U.closeModal(); U.toast('Diagnóstico registrado: os treinos já seguem as novas regras.'); APP.render();
   };
 
   // ---------- antes do treino ----------
@@ -205,10 +303,11 @@
       '<p class="muted small">Sem liberação, faça só caminhada leve ou alongamento e marque uma consulta (UBS atende de graça).</p>');
     start0(d);
     const h2 = U.$('#modal .modal-box h2');
+    const due = active().filter(H.nudgeDue)[0]; if (h2 && due) h2.insertAdjacentHTML('afterend', nudgeHtml(due));
     if (h2 && r.names.length) h2.insertAdjacentHTML('afterend', '<div class="hint">🩹 O treino já vem adaptado para: <b>' + e(r.names.join('; ')) + '</b>.' + (r.checks.length ? '<br>' + r.checks.map(e).join('<br>') : '') + ' <a href="#saude" data-a="modal-close-go" data-go="#saude">Ver saúde</a></div>');
     const pain = U.$('#modal #pre-inj'); if (pain) pain.closest('label').insertAdjacentHTML('afterend', '<p class="small"><a href="#saude" data-a="hl-new-go">Lesão, fratura ou problema que vai durar? Registre em Saúde</a> para o app acompanhar até você se recuperar.</p>');
   };
-  A['hl-clear'] = d => { d.ids.split(',').forEach(id => { const c = conds().find(x => x.id === id); if (c) { c.cleared = S.today(); c.t = Date.now(); } }); S.save(); U.closeModal(); A.start({ type: 'session' }); };
+  A['hl-clear'] = d => { d.ids.split(',').forEach(id => { const c = findC(id); if (c) { c.cleared = S.today(); c.t = Date.now(); } }); S.save(); U.closeModal(); A.start({ type: 'session' }); };
   A['hl-new-go'] = () => { U.closeModal(); location.hash = '#saude'; setTimeout(() => A['hl-new'](), 150); };
 
   // ---------- depois do treino: dor de cada condição ----------
@@ -227,7 +326,7 @@
     save0(d, el, ev);
     if (!vals.length) return;
     const msgs = [];
-    vals.forEach(({ id, v }) => { const c = conds().find(x => x.id === id); if (!c) return; (c.pains = c.pains || []).push({ date: S.today(), v }); c.t = Date.now(); msgs.push(...review(c)); });
+    vals.forEach(({ id, v }) => { const c = findC(id); if (!c) return; (c.pains = c.pains || []).push({ date: S.today(), v }); c.t = Date.now(); msgs.push(...review(c)); });
     S.save();
     const close = U.$('#modal .modal-box [data-a="modal-close"].btn');
     if (close && msgs.length) close.insertAdjacentHTML('beforebegin', '<div class="hint"><b>🩹 Acompanhamento</b><ul style="margin:6px 0 0;padding-left:18px">' + msgs.map(m => '<li>' + m + '</li>').join('') + '</ul></div>');
@@ -241,14 +340,15 @@
       if (c.phase === 'retorno' && days >= 14) out.push(name + ': 2 treinos com pouca dor depois de ' + days + ' dias no retorno. Se o profissional concordar: <button class="link" data-a="hl-phase" data-id="' + c.id + '" data-dir="1">avançar para fortalecimento</button>.');
       if (c.phase === 'fortalecimento' && days >= 28) out.push(name + ': pouca dor há ' + days + ' dias no fortalecimento. <button class="link" data-a="hl-resolve" data-id="' + c.id + '">Marcar como recuperado</button> quando o profissional liberar.');
     }
+    if (!consulted(c) && c.kind !== 'cronica' && (last >= 6 || (last >= 3 && H.nudgeDue(c)))) { out.push(name + ': ainda sem avaliação profissional. Procure um médico ou fisioterapeuta (UBS atende de graça). <button class="link" data-a="hl-diag" data-id="' + c.id + '">Já fui</button>'); c.lastNudge = S.today(); }
     if (c.kind === 'dor') {
       if (last <= 1 && prev != null && prev <= 1) out.push(name + ': 2 treinos quase sem dor. <button class="link" data-a="hl-resolve" data-id="' + c.id + '">Marcar como resolvida</button>?');
       else if (last >= 3 && S.daysBetween(c.since, S.today()) >= 42) out.push(name + ': a dor dura mais de 6 semanas. Vale procurar um médico ou fisioterapeuta (UBS atende de graça).');
     }
     return out;
   }
-  A['hl-phase'] = d => { const c = conds().find(x => x.id === d.id); if (!c) return; const i = Math.max(0, Math.min(2, PH_ORDER.indexOf(c.phase) + +d.dir)); c.phase = PH_ORDER[i]; c.phaseSince = S.today(); c.t = Date.now(); if (i > 0) c.cleared = c.cleared || S.today(); S.save(); U.toast('Fase: ' + PHASES[c.phase]); if (location.hash === '#saude') APP.render(); };
-  A['hl-resolve'] = d => { const c = conds().find(x => x.id === d.id); if (!c) return; c.resolved = S.today(); c.t = Date.now(); S.save(); U.toast('Marcado como resolvido. Os treinos voltam ao normal.'); if (location.hash === '#saude') APP.render(); };
+  A['hl-phase'] = d => { const c = findC(d.id); if (!c) return; const i = Math.max(0, Math.min(2, PH_ORDER.indexOf(c.phase) + +d.dir)); c.phase = PH_ORDER[i]; c.phaseSince = S.today(); c.t = Date.now(); if (i > 0) c.cleared = c.cleared || S.today(); S.save(); U.toast('Fase: ' + PHASES[c.phase]); rerender(); };
+  A['hl-resolve'] = d => { const c = findC(d.id); if (!c) return; c.resolved = S.today(); c.t = Date.now(); S.save(); U.toast('Marcado como resolvido. Os treinos voltam ao normal.'); rerender(); };
 
   // ================= TELA SAÚDE =================
   const spark = p => { if (!p || p.length < 2) return ''; const v = p.slice(-12).map(x => x.v), W2 = 120, Hh = 30; return '<svg viewBox="0 0 ' + W2 + ' ' + Hh + '" width="' + W2 + '" height="' + Hh + '" aria-label="Dor ao longo do tempo"><polyline points="' + v.map((y, i) => (i * W2 / (v.length - 1)).toFixed(1) + ',' + (Hh - 3 - y / 10 * (Hh - 6)).toFixed(1)).join(' ') + '" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round"/></svg>'; };
@@ -260,6 +360,7 @@
         '<p class="muted small">' + (c.phase === 'protecao' ? 'Até o médico ou fisioterapeuta liberar o uso da região.' : c.phase === 'retorno' ? 'Primeiras semanas depois da liberação: o mais leve possível, sem dor.' : 'Recuperando a força, ainda sem o máximo e sem explosão.') + '</p>' : '') +
       '<b class="small">O que muda no seu treino</b><ul class="small" style="margin:4px 0;padding-left:18px">' + H.effects(c).map(x => '<li>' + e(x) + '</li>').join('') + '</ul>' +
       ((sp.tips || []).length ? '<b class="small">Dicas gerais</b><ul class="small muted" style="margin:4px 0;padding-left:18px">' + sp.tips.map(t => '<li>' + e(t) + '</li>').join('') + '</ul>' : '') +
+      (c.kind !== 'cronica' ? (consulted(c) ? (c.diagnosis ? '<div class="small"><b>Diagnóstico:</b> ' + e(c.diagnosis) + (c.diagDate ? ' <span class="muted">(' + U.fmtDate(c.diagDate) + ')</span>' : '') + '</div>' : '') : H.nudgeDue(c) ? nudgeHtml(c) : '<div class="small muted">' + (c.consult === 'agendado' ? 'Consulta marcada. ' : 'Sem avaliação profissional ainda. ') + '<button class="link" data-a="hl-diag" data-id="' + c.id + '">Já passei por um profissional</button></div>') : '') +
       (c.notes ? '<div class="hint small"><b>Orientação do profissional:</b> ' + e(c.notes) + '</div>' : '') +
       (c.kind !== 'cronica' ? '<div class="row between"><div class="small">Dor agora: <b>' + painNow(c) + '/10</b></div>' + spark(c.pains) + '</div><div class="chips" style="flex-wrap:wrap">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => '<button data-a="hl-pain" data-id="' + c.id + '" data-v="' + n + '" class="' + (painNow(c) === n ? 'on' : '') + '">' + n + '</button>').join('') + '</div>' : '') +
       '<div class="row wrap">' + (c.kind === 'lesao' && c.phase === 'protecao' ? '<button class="btn small" data-a="hl-phase" data-id="' + c.id + '" data-dir="1">Recebi liberação</button>' : '') +
@@ -277,23 +378,27 @@
         : '<div class="card"><p>Nenhuma condição registrada. Se você tem uma <b>dor</b>, uma <b>lesão ou fratura</b> (ou está voltando de uma), ou uma <b>condição crônica</b> como pressão alta, diabetes ou hérnia, registre aqui: todos os treinos passam a ser adaptados até você se recuperar.</p><button class="btn" data-a="hl-new">Registrar agora</button></div>') +
       (old.length ? '<details class="card"><summary><b>Já resolvidas (' + old.length + ')</b></summary><ul class="small">' + old.map(c => '<li>' + e(H.title(c)) + ' — ' + U.fmtDate(c.since) + ' a ' + U.fmtDate(c.resolved) + ' <button class="link" data-a="hl-reopen" data-id="' + c.id + '">reabrir</button></li>').join('') + '</ul></details>' : '');
   };
-  A['hl-pain'] = d => { const c = conds().find(x => x.id === d.id); (c.pains = c.pains || []).push({ date: S.today(), v: +d.v }); c.t = Date.now(); S.save(); const m = review(c); APP.render(); if (m.length) U.modal('<h2>Acompanhamento</h2><ul>' + m.map(x => '<li>' + x + '</li>').join('') + '</ul><button class="btn block" data-a="modal-close">Ok</button>'); };
-  A['hl-clear1'] = d => { const c = conds().find(x => x.id === d.id); c.cleared = S.today(); c.t = Date.now(); S.save(); APP.render(); };
-  A['hl-reopen'] = d => { const c = conds().find(x => x.id === d.id); delete c.resolved; c.t = Date.now(); S.save(); APP.render(); };
+  A['hl-pain'] = d => { const c = findC(d.id); (c.pains = c.pains || []).push({ date: S.today(), v: +d.v }); c.t = Date.now(); S.save(); const m = review(c); APP.render(); if (m.length) U.modal('<h2>Acompanhamento</h2><ul>' + m.map(x => '<li>' + x + '</li>').join('') + '</ul><button class="btn block" data-a="modal-close">Ok</button>'); };
+  A['hl-clear1'] = d => { const c = findC(d.id); c.cleared = S.today(); c.t = Date.now(); S.save(); APP.render(); };
+  A['hl-reopen'] = d => { const c = findC(d.id); delete c.resolved; c.t = Date.now(); S.save(); APP.render(); };
   A['hl-pro'] = d => {
-    const c = conds().find(x => x.id === d.id), list = S.allExercises().filter(x => Object.values(S.program().sessions).some(s => s.blocks.some(b => (b.items || []).some(it => it.ex === x.id || (it.skill && W.resolve(it, S.program().id, 'x') === x.id))))).sort((a, b) => a.name.localeCompare(b.name));
+    const c = findC(d.id), own = ownerOf(d.id), progs = own ? Object.values(S.state.programs).filter(p => p.alunoId === own.id) : [S.program()];
+    let list = S.allExercises().filter(x => progs.some(p => p.sessions.some(s => s.blocks.some(b => (b.items || []).some(it => it.ex === x.id || (it.skill && W.resolve(it, p.id, 'x') === x.id))))));
+    if (!list.length) list = S.allExercises().filter(x => x.level <= 3);
+    list.sort((a, b) => a.name.localeCompare(b.name));
     U.modal('<h2>Orientações do profissional</h2><p class="muted small">' + e(H.title(c)) + '. Anote o que o médico, fisioterapeuta ou professor orientou. Os exercícios marcados saem de todos os treinos.</p>' +
       '<label>Orientações<textarea id="hl-notes" rows="4" placeholder="Ex.: sem carga acima de 5 kg no braço esquerdo por 4 semanas">' + e(c.notes || '') + '</textarea></label>' +
       (c.area ? '<label>Carga máxima na região, em kg (opcional) <input type="number" id="hl-maxkg" inputmode="decimal" min="0" step="0.5" value="' + (c.maxKg || '') + '" placeholder="sem limite"></label>' : '') +
       '<p><b class="small">Exercícios proibidos</b></p><div class="list" style="max-height:40vh;overflow:auto">' + list.map(x => '<label class="chk"><input type="checkbox" class="hl-blk" value="' + e(x.id) + '"' + ((c.blocked || []).includes(x.id) ? ' checked' : '') + '><span>' + e(x.name) + '</span></label>').join('') + '</div>' +
       '<button class="btn block" data-a="hl-pro-save" data-id="' + c.id + '">Salvar</button>');
   };
-  A['hl-pro-save'] = d => { const c = conds().find(x => x.id === d.id); c.notes = U.$('#hl-notes').value.trim(); c.maxKg = U.$('#hl-maxkg') ? +U.$('#hl-maxkg').value || 0 : 0; c.blocked = [...document.querySelectorAll('.hl-blk:checked')].map(x => x.value); c.t = Date.now(); S.save(); U.closeModal(); APP.render(); U.toast('Orientações salvas: valem para todos os treinos.'); };
+  A['hl-pro-save'] = d => { const c = findC(d.id); c.notes = U.$('#hl-notes').value.trim(); c.maxKg = U.$('#hl-maxkg') ? +U.$('#hl-maxkg').value || 0 : 0; c.blocked = [...document.querySelectorAll('.hl-blk:checked')].map(x => x.value); c.t = Date.now(); S.save(); U.closeModal(); APP.render(); U.toast('Orientações salvas: valem para todos os treinos.'); };
 
   // ---------- cadastro guiado ----------
   let wz = {};
   const wzDraw = () => {
-    let h = '<h2>Registrar condição</h2>';
+    const al = wz.al && alunos().find(a => a.id === wz.al);
+    let h = '<h2>Registrar condição</h2>' + (al ? '<p class="muted small">Na ficha de <b>' + e(al.nome) + '</b></p>' : '');
     if (!wz.kind) h += '<p class="muted">O que você quer registrar?</p>' +
       '<button class="choice" data-a="wz" data-k="kind" data-v="dor"><span class="em">🤕</span><span><b>Uma dor que apareceu</b><small>Algo temporário que o app vai acompanhar até passar.</small></span></button>' +
       '<button class="choice" data-a="wz" data-k="kind" data-v="lesao"><span class="em">🦴</span><span><b>Lesão, fratura ou cirurgia</b><small>Inclusive se você está voltando de uma. O treino segue fases até a recuperação.</small></span></button>' +
@@ -304,30 +409,44 @@
       const opts = (wz.kind === 'lesao' ? ANY_LESAO.concat((SPEC[wz.area] || []).filter(x => x.lesao)) : []).concat((SPEC[wz.area] || []).filter(x => !x.lesao && !x.cronica));
       h += '<p class="muted">Tem diagnóstico? Com ele o treino segue regras específicas; sem ele, regras gerais para ' + e(H.AREAS[wz.area].toLowerCase()) + '.</p><div class="list"><button class="list-item" data-a="wz-spec" data-v=""><span><b>Não sei / sem diagnóstico</b></span></button>' +
         opts.map(x => '<button class="list-item" data-a="wz-spec" data-v="' + x.id + '"><span>' + e(x.name) + '</span></button>').join('') + '</div>';
+    } else if (wz.kind !== 'cronica' && wz.spec === null && !wz.consult) {
+      h += '<p class="muted">Já passou por um médico ou fisioterapeuta por isso?</p>' +
+        '<button class="choice" data-a="wz" data-k="consult" data-v="sim"><span class="em">✅</span><span><b>Já fui</b><small>Você conta o que ele disse e o app interpreta o diagnóstico.</small></span></button>' +
+        '<button class="choice" data-a="wz" data-k="consult" data-v="agendado"><span class="em">📅</span><span><b>Marquei consulta</b><small>O app pergunta como foi daqui a 2 semanas.</small></span></button>' +
+        '<button class="choice" data-a="wz" data-k="consult" data-v="nao"><span class="em">⏳</span><span><b>Ainda não</b><small>O app usa regras gerais e lembra você de procurar um profissional.</small></span></button>';
     } else {
       h += '<p><b>' + e(H.title(Object.assign({ side: 'na' }, wz))) + '</b></p>' +
         (wz.area ? '<label>Lado <select id="wz-side"><option value="na">Não se aplica</option><option value="esq">Esquerdo</option><option value="dir">Direito</option><option value="ambos">Os dois</option></select></label>' : '') +
         '<label>Desde quando <input type="date" id="wz-since" value="' + S.today() + '"></label>' +
         (wz.kind !== 'cronica' ? '<label>Dor agora (0 a 10) <span id="wz-pv">3</span><input type="range" id="wz-pain" min="0" max="10" value="3"></label>' : '') +
         (wz.kind === 'lesao' ? '<label>Situação com o médico/fisioterapeuta <select id="wz-phase"><option value="protecao">Ainda em recuperação, sem liberação para usar a região</option><option value="retorno">Liberado há pouco, com cuidado</option><option value="fortalecimento">Liberado; recuperando a força</option></select></label>' : '') +
+        (wz.consult === 'sim' ? '<label>O que o profissional disse (diagnóstico) <textarea id="wz-dx" rows="2" placeholder="Ex.: tendinite no manguito rotador"></textarea></label>' : '') +
         '<label>Orientações do profissional (opcional) <textarea id="wz-notes" rows="3" placeholder="O que o médico ou fisioterapeuta orientou"></textarea></label>' +
         '<button class="btn block" data-a="wz-save">Salvar e adaptar meus treinos</button>';
     }
     if (wz.kind) h += '<div class="row"><button class="link" data-a="wz-back">← Voltar</button></div>';
     U.modal(h);
   };
-  A['hl-new'] = () => { wz = {}; wzDraw(); };
+  A['hl-new'] = d => { wz = { al: (d && d.al) || null }; wzDraw(); };
   A.wz = d => { wz[d.k] = d.v; wzDraw(); };
   A['wz-spec'] = d => { wz.spec = d.v || null; if (d.area) wz.area = d.area; wzDraw(); };
-  A['wz-back'] = () => { if (wz.spec !== undefined) { delete wz.spec; if (wz.kind === 'cronica') delete wz.area; } else if (wz.area) delete wz.area; else delete wz.kind; wzDraw(); };
+  A['wz-back'] = () => { if (wz.consult) delete wz.consult; else if (wz.spec !== undefined) { delete wz.spec; if (wz.kind === 'cronica') delete wz.area; } else if (wz.area) delete wz.area; else delete wz.kind; wzDraw(); };
   document.addEventListener('input', ev => { if (ev.target.id === 'wz-pain') U.$('#wz-pv').textContent = ev.target.value; });
   A['wz-save'] = () => {
     const v = id => (U.$('#' + id) || {}).value;
     const c = { id: 'h-' + S.uid(), t: Date.now(), kind: wz.kind, area: wz.area || null, spec: wz.spec || null, side: v('wz-side') || 'na', since: v('wz-since') || S.today(), notes: (v('wz-notes') || '').trim(), blocked: [] };
     if (c.kind !== 'cronica') { c.pain0 = +v('wz-pain'); c.pains = [{ date: S.today(), v: c.pain0 }]; }
     if (c.kind === 'lesao') { c.phase = v('wz-phase'); c.phaseSince = S.today(); if (c.phase !== 'protecao') c.cleared = S.today(); }
-    conds().push(c); S.save(); U.closeModal(); location.hash = '#saude'; APP.render();
-    U.toast('Registrado. Todos os treinos agora são adaptados.');
+    const dx = (v('wz-dx') || '').trim(); // lido antes de fechar a janela
+    c.consult = c.spec ? 'sim' : (wz.consult || 'nao'); c.lastNudge = S.today();
+    const al = wz.al && alunos().find(a => a.id === wz.al);
+    if (al) { (al.conditions = al.conditions || []).push(c); al.t = Date.now(); } else conds().push(c);
+    S.save(); U.closeModal();
+    if (!al) location.hash = '#saude';
+    APP.render();
+    if (dx) { c._dx = dx; return dxResult(c, H.evaluate(dx, c.area), dx); }
+    if (c.consult === 'nao' && c.kind !== 'cronica') return U.modal('<h2>Registrado</h2><p>' + (al ? 'Os treinos de ' + e(al.nome) + ' vão respeitar essa condição.' : 'Seus treinos já estão adaptados.') + '</p>' + nudgeHtml(Object.assign({}, c, { consult: 'nao' })).replace('Lembrar depois', 'Ok, entendi'));
+    U.toast(al ? 'Registrado na ficha de ' + al.nome + '.' : 'Registrado. Todos os treinos agora são adaptados.');
   };
 
   // ---------- relatório para o profissional ----------
@@ -348,10 +467,58 @@
   const hoje0 = V.hoje;
   V.hoje = () => {
     const h = hoje0(), act = active(); if (!act.length) return h;
-    const b = '<a class="hint" href="#saude" style="display:block;text-decoration:none;color:inherit">🩹 Treinos adaptados para: <b>' + e(act.map(c => H.title(c) + (c.kind === 'lesao' ? ' (' + PHASES[c.phase].toLowerCase() + ')' : '')).join('; ')) + '</b> ›</a>';
+    const due = act.filter(H.nudgeDue)[0];
+    const b = (due ? nudgeHtml(due) : '') + '<a class="hint" href="#saude" style="display:block;text-decoration:none;color:inherit">🩹 Treinos adaptados para: <b>' + e(act.map(c => H.title(c) + (c.kind === 'lesao' ? ' (' + PHASES[c.phase].toLowerCase() + ')' : '')).join('; ')) + '</b> ›</a>';
     const i = h.indexOf('<div class="hero'); return i >= 0 ? h.slice(0, i) + b + h.slice(i) : h.replace('</h1>', '</h1>' + b);
   };
   const perfil0 = V.perfil;
   V.perfil = () => perfil0().replace('</h1>', '</h1><a class="card lvl-card" href="#saude" style="text-decoration:none;color:inherit"><div class="lvl-badge" style="background:var(--card2)">🩹</div><div class="grow"><b>Saúde e lesões</b><div class="muted small">' +
     (active().length ? active().length + ' condição(ões) ativa(s): ' + e(active().map(H.title).join('; ')) : 'Dor, lesão, fratura ou condição crônica: registre para adaptar os treinos') + '</div></div><span class="muted">›</span></a>');
+
+  // ---------- ficha do aluno ----------
+  const aluno0 = V.aluno;
+  V.aluno = () => {
+    const h = aluno0(), a = alunos().find(x => x.id === PEOPLE.alunoId); if (!a) return h;
+    const act = (a.conditions || []).filter(c => !c.resolved), old = (a.conditions || []).filter(c => c.resolved);
+    const sec = '<div class="card"><div class="row between"><h2>Saúde e lesões</h2><button class="btn small" data-a="hl-new" data-al="' + e(a.id) + '">+ Registrar</button></div>' +
+      '<p class="muted small">Dores, lesões e condições crônicas do aluno. Os treinos gerados para ele já respeitam estas condições, e elas vão junto quando você envia o treino. Para liberar a volta de uma lesão, siga o médico ou fisioterapeuta dele.</p>' +
+      (act.length ? act.map(card).join('') : '<p class="small">Nenhuma condição registrada.</p>') +
+      (old.length ? '<details><summary class="small muted">Já resolvidas (' + old.length + ')</summary><ul class="small">' + old.map(c => '<li>' + e(H.title(c)) + ' <button class="link" data-a="hl-reopen" data-id="' + c.id + '">reabrir</button></li>').join('') + '</ul></details>' : '') + '</div>';
+    const i = h.indexOf('<div class="card"><h2>Treinos</h2>');
+    return i >= 0 ? h.slice(0, i) + sec + h.slice(i) : h + sec;
+  };
+  // enviar treino de aluno: as condições dele vão junto no link
+  const send0 = SHARE.program;
+  SHARE.program = async (progId, fone, toName) => {
+    const src = S.state.programs[progId], a = src && src.alunoId && alunos().find(x => x.id === src.alunoId), act = a ? (a.conditions || []).filter(c => !c.resolved) : [];
+    if (act.length) src.conds = act.map(c => Object.assign({}, c, { pains: (c.pains || []).slice(-6) }));
+    try { return await send0(progId, fone, toName); } finally { if (src) delete src.conds; }
+  };
+  // o link do treino troca o endereço para #hoje antes de abrir a janela: observa por alguns instantes depois de cada troca
+  window.addEventListener('hashchange', () => { let n = 0; const iv = setInterval(() => {
+    const inc = SHARE.incoming, h2 = U.$('#modal .modal-box h2');
+    if (h2 && /Treino recebido/.test(h2.textContent) && inc && inc.p && inc.p.conds && !U.$('#modal .hl-inc')) h2.insertAdjacentHTML('afterend', '<div class="hint hl-inc">🩹 O professor registrou condições de saúde: <b>' + e(inc.p.conds.map(H.title).join('; ')) + '</b>. Ao aceitar, elas entram na sua área de Saúde e os treinos são adaptados.</div>');
+    if (++n > 30 || U.$('#modal .hl-inc')) clearInterval(iv); }, 100); });
+  const accept0 = A['sh-accept'];
+  A['sh-accept'] = d => {
+    const inc = SHARE.incoming, cs = (inc && inc.p && inc.p.conds) || []; if (inc && inc.p) delete inc.p.conds;
+    accept0(d);
+    const key = c => [c.kind, c.area, c.spec].join('|'); let added = 0;
+    cs.forEach(c => { if (!active().some(x => key(x) === key(c))) { conds().push(Object.assign({}, c, { id: 'h-' + S.uid(), t: Date.now() })); added++; } });
+    if (added) { S.save(); U.toast(added + ' condição(ões) de saúde adicionada(s) em Saúde.'); }
+  };
+  // relatório do aluno ao professor: leva as condições e a dor
+  H.reportConds = () => active().map(c => ({ kind: c.kind, area: c.area, spec: c.spec, side: c.side, since: c.since, phase: c.phase, consult: c.consult, diagnosis: c.diagnosis, pains: (c.pains || []).slice(-8), notes: c.notes }));
+  H.reportText = () => active().length ? '\n\nSaúde:\n' + active().map(c => '  • ' + H.title(c) + (c.kind === 'lesao' ? ' · fase ' + PHASES[c.phase].toLowerCase() : '') + (c.kind !== 'cronica' ? ' · dor ' + painNow(c) + '/10' : '') + (c.diagnosis ? ' · diagnóstico: ' + c.diagnosis : c.kind !== 'cronica' && !consulted(c) ? ' · sem avaliação profissional' : '')).join('\n') : '';
+  const rhtml0 = SHARE.reportHtml;
+  SHARE.reportHtml = d => (d.conds && d.conds.length ? '<div class="hint"><b>🩹 Saúde</b><ul class="small" style="margin:4px 0 0;padding-left:18px">' + d.conds.map(c => '<li>' + e(H.title(c)) + (c.kind === 'lesao' ? ' · fase ' + e(PHASES[c.phase] || '') : '') + (c.pains && c.pains.length ? ' · dor ' + c.pains.map(x => x.v).join(' → ') : '') + (c.diagnosis ? ' · ' + e(c.diagnosis) : '') + '</li>').join('') + '</ul></div>' : '') + rhtml0(d);
+  const rsave0 = A['sh-report-save'];
+  A['sh-report-save'] = () => {
+    const a = alunos().find(x => x.id === U.$('#sh-aluno').value), cs = (SHARE.incoming && SHARE.incoming.conds) || [];
+    rsave0();
+    if (!a || !cs.length) return;
+    const key = c => [c.area, c.spec || ''].join('|'); a.conditions = a.conditions || [];
+    cs.forEach(c => { const m = a.conditions.find(x => !x.resolved && key(x) === key(c)); if (m) Object.assign(m, { kind: c.kind, phase: c.phase, consult: c.consult, diagnosis: c.diagnosis, pains: c.pains, notes: c.notes || m.notes, t: Date.now() }); else a.conditions.push(Object.assign({}, c, { id: 'h-' + S.uid(), t: Date.now(), blocked: [] })); });
+    a.t = Date.now(); S.save(); U.toast('Relatório e condições de saúde atualizados na ficha de ' + a.nome + '.');
+  };
 })();

@@ -110,8 +110,8 @@
       items: (l.items || []).map(i => ({ name: S.ex(i.ex).name, sets: i.sets, kg: i.kg, unit: i.unit })) }));
     if (!logs.length) return U.toast('Nenhum treino registrado nos últimos 14 dias.');
     const line = l => U.fmtDate(l.date) + ' — ' + l.n + (l.rpe ? ' (esforço ' + l.rpe + ')' : '') + '\n' + l.items.map(i => '  • ' + i.name + ': ' + i.sets.join(', ') + U.unit(i.unit) + (i.kg && i.kg.some(Number) ? ' @ ' + Math.max(...i.kg) + ' kg' : '')).join('\n') + (l.notes ? '\n  Obs.: ' + l.notes : '');
-    const link = BASE + '#t=' + await SH.encode({ k: 'r', nome, d: S.today(), peso: (S.state.profile || {}).peso, logs });
-    dialog('Relatório para o professor', 'Relatório de treino — ' + nome + ' (últimos 14 dias)\n\n' + logs.map(line).join('\n\n') + '\n\nAbrir no app do professor:\n' + link, fone);
+    const link = BASE + '#t=' + await SH.encode({ k: 'r', nome, d: S.today(), peso: (S.state.profile || {}).peso, logs, conds: window.HEALTH ? HEALTH.reportConds() : undefined });
+    dialog('Relatório para o professor', 'Relatório de treino — ' + nome + ' (últimos 14 dias)\n\n' + logs.map(line).join('\n\n') + (window.HEALTH ? HEALTH.reportText() : '') + '\n\nAbrir no app do professor:\n' + link, fone);
   };
   A['report-share'] = () => SH.report();
 

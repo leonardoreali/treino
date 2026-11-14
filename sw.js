@@ -1,5 +1,5 @@
 /* Service worker: deixa o app abrir sem internet. Mude VERSION ao publicar mudanças grandes. */
-const VERSION = 'treino-v11';
+const VERSION = 'treino-v12';
 const SHELL = ['./', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'js/data/exercises.js', 'js/data/videos.js', 'js/data/program.js', 'js/data/equip.js', 'js/data/gym.js', 'js/music.js', 'js/generator.js', 'js/share.js', 'js/people.js', 'js/ocr.js', 'js/theme.js', 'js/diet.js', 'js/plans.js', 'js/adapt.js', 'js/progress.js', 'js/health.js', 'js/store.js', 'js/ui.js', 'js/workout.js', 'js/pdfimport.js', 'js/views.js', 'js/app.js'];
 
