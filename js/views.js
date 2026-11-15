@@ -190,10 +190,28 @@
     '<label>Nível <select id="nx-lvl">' + LEVELS.slice(1).map((l, i) => '<option value="' + (i + 1) + '">' + l + '</option>').join('') + '</select></label>' +
     '<label>Equipamento necessário <select id="nx-eq"><option value="">Nenhum (peso do corpo)</option>' + S.allEquip().map(q => '<option value="' + e(q.id) + '">' + e(q.name) + '</option>').join('') + '</select></label>' +
     '<label>Padrão de movimento <select id="nx-pat"><option value="">Nenhum / não sei</option>' + Object.entries(PATTERNS).map(p => '<option value="' + p[0] + '">' + p[1] + '</option>').join('') + '</select></label>' +
-    '<div><div class="small">Articulações que o exercício exige <span class="muted">(usadas para proteger lesões registradas em Saúde; o app também soma as típicas da categoria)</span></div><div class="row wrap" style="margin-top:4px">' + Object.entries(JOINTS).map(j => '<label class="chk" style="border:0"><input type="checkbox" class="nx-joint" value="' + j[0] + '"><span>' + j[1] + '</span></label>').join('') + '</div></div>' +
-    '<label>Como fazer <textarea id="nx-how" rows="2"></textarea></label><label>Link do short no YouTube (opcional) <input id="nx-vid" placeholder="https://youtube.com/shorts/…"></label><button class="btn block" data-a="lib-save">Salvar</button>');
+    '<label>Como fazer <textarea id="nx-how" rows="2" placeholder="Ex.: De quatro, com as mãos no chão…"></textarea></label>' +
+    '<div class="card"><div class="small"><b>Articulações que o exercício exige (obrigatório)</b> <span class="muted">— usadas para proteger lesões registradas em Saúde. Já vêm marcadas pela categoria, padrão, equipamento e descrição; acrescente o que faltar.</span></div><div class="row wrap" style="margin-top:4px">' + Object.entries(JOINTS).map(j => '<label class="chk" style="border:0"><input type="checkbox" class="nx-joint" value="' + j[0] + '"><span>' + j[1] + '</span></label>').join('') + '</div>' +
+    '<div id="nx-jwarn" class="small"></div><label class="chk" style="border:0"><input type="checkbox" id="nx-jok"><span>Conferi as articulações marcadas</span></label></div>' +
+    '<label>Link do short no YouTube (opcional) <input id="nx-vid" placeholder="https://youtube.com/shorts/…"></label><button class="btn block" data-a="lib-save">Salvar</button>');
+  // sugere as articulações enquanto a pessoa preenche (até ela mexer nas caixas) e avisa quando o equipamento ou a posição pedem atenção
+  let nxTouched = false;
+  const nxDraft = () => ({ id: 'c-novo', name: (U.$('#nx-name') || {}).value || '', cat: U.$('#nx-cat').value, pat: U.$('#nx-pat').value || undefined, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, how: U.$('#nx-how').value, jointsManual: [] });
+  function nxSuggest() {
+    if (!U.$('#nx-cat')) return; const d = nxDraft(), j = jointsOf(d), eq = U.$('#nx-eq').value;
+    if (!nxTouched) document.querySelectorAll('.nx-joint').forEach(c => { c.checked = j.includes(c.value); });
+    const w = [];
+    if (eq && (/^q-/.test(eq) || ['elastico', 'superband', 'maquinas'].includes(eq))) w.push('O equipamento escolhido pode carregar articulações diferentes conforme o uso (onde prende, onde apoia): confira a lista.');
+    if (!d.how.trim()) w.push('Sem descrição, o app só sabe o que a categoria indica. Apoio nas mãos, de joelhos, pendurado ou saltando muda as articulações.');
+    U.$('#nx-jwarn').innerHTML = w.map(t => '<p class="warn-box"><span aria-hidden="true">⚠️</span> <span>' + e(t) + '</span></p>').join('');
+  }
+  document.addEventListener('change', ev => { if (['nx-cat', 'nx-pat', 'nx-eq'].includes(ev.target.id)) nxSuggest(); if (ev.target.classList && ev.target.classList.contains('nx-joint')) nxTouched = true; });
+  document.addEventListener('input', ev => { if (['nx-how', 'nx-name'].includes(ev.target.id)) nxSuggest(); });
+  const libNew0 = A['lib-new']; A['lib-new'] = () => { nxTouched = false; libNew0(); nxSuggest(); };
   A['lib-save'] = () => {
     const name = U.$('#nx-name').value.trim(); if (!name) return U.toast('Dê um nome ao exercício.');
+    if (!document.querySelectorAll('.nx-joint:checked').length) return U.toast('Marque pelo menos uma articulação que o exercício exige.');
+    if (!U.$('#nx-jok').checked) return U.toast('Confira as articulações marcadas e marque "Conferi".');
     S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined, pat: U.$('#nx-pat').value || undefined, jointsManual: [...document.querySelectorAll('.nx-joint:checked')].map(c => c.value) });
     S.save(); U.closeModal(); APP.render();
   };

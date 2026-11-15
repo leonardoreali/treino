@@ -2225,5 +2225,14 @@
 "Articulações que o exercício exige": "Articulaciones que exige el ejercicio",
 "(usadas para proteger lesões registradas em Saúde; o app também soma as típicas da categoria)": "(se usan para proteger lesiones registradas en Salud; la app también suma las típicas de la categoría)",
 "exercícios no total (": "ejercicios en total (",
-"criados por você).": "creados por ti)."
+"criados por você).": "creados por ti).",
+"Ex.: De quatro, com as mãos no chão…": "Ej.: En cuatro apoyos, con las manos en el suelo…",
+"Articulações que o exercício exige (obrigatório)": "Articulaciones que exige el ejercicio (obligatorio)",
+"— usadas para proteger lesões registradas em Saúde. Já vêm marcadas pela categoria, padrão, equipamento e descrição; acrescente o que faltar.": "— se usan para proteger lesiones registradas en Salud. Ya vienen marcadas por la categoría, el patrón, el equipamiento y la descripción; agrega lo que falte.",
+"Conferi as articulações marcadas": "Revisé las articulaciones marcadas",
+"O equipamento escolhido pode carregar articulações diferentes conforme o uso (onde prende, onde apoia): confira a lista.": "El equipamiento elegido puede cargar articulaciones distintas según el uso (dónde se sujeta, dónde se apoya): revisa la lista.",
+"Sem descrição, o app só sabe o que a categoria indica. Apoio nas mãos, de joelhos, pendurado ou saltando muda as articulações.": "Sin descripción, la app solo sabe lo que indica la categoría. Apoyo en las manos, de rodillas, colgado o saltando cambia las articulaciones.",
+"Marque pelo menos uma articulação que o exercício exige.": "Marca al menos una articulación que exija el ejercicio.",
+"Confira as articulações marcadas e marque \"Conferi\".": "Revisa las articulaciones marcadas y marca \"Revisé\".",
+"(exercício criado antes da escolha de articulações: o app considera todas)": "(ejercicio creado antes de la elección de articulaciones: la app considera todas)"
 };

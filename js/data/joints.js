@@ -47,18 +47,23 @@
   // posição descrita no texto
   const BY_TEXT = [
     [/ajoelhad|de joelhos|meio ajoelhado|joelho de trás no chão|joelhos no chão|de quatro|quatro apoios/, 'joelho'],
-    [/de quatro|quatro apoios|mãos no chão|apoie as mãos|apoiar as mãos|posição de flexão|prancha alta|parada de mão|peso nas mãos/, 'punho'],
+    [/de quatro|quatro apoios|mãos no chão|apoie as mãos|apoiar as mãos|apoiado nas mãos|posição de flexão|prancha alta|parada de mão|peso nas mãos|braços estendidos no chão/, 'punho cotovelo ombro'],
+    [/prancha|antebraço|antebraços|cotovelos no chão|cotovelo sob o ombro|cotovelos sob os ombros/, 'ombro cotovelo'],
+    [/cabeça no chão|apoio na cabeça|apoie a cabeça|parada de cabeça|cabeça para baixo|rolamento|cambalhota/, 'pescoco'],
+    [/salt|pul(e|ar)\b|corr(a|er|ida)/, 'quadril joelho tornozelo'],
     [/pendurad|segure na barra|na barra com/, 'ombro cotovelo punho'], [/agach/, 'joelho tornozelo'],
   ];
   const add = (set, s) => s.split(' ').forEach(j => set.add(j));
   // também vale para exercícios criados pelo usuário (calculado na hora)
   window.jointsOf = x => {
     if (!x) return [];
-    const j = new Set(x.jointsManual || []), how = (x.how || '').toLowerCase();
+    const j = new Set(x.jointsManual || []), how = ((x.name || '') + ' ' + (x.how || '')).toLowerCase();
     if (BY_PAT[x.pat]) add(j, BY_PAT[x.pat]);
     if (BY_REG[x.reg]) add(j, BY_REG[x.reg]);
     const custom = /^c-/.test(x.id || '');
     if (((!x.pat && !x.reg) || custom) && BY_CAT[x.cat]) add(j, BY_CAT[x.cat]);
+    // exercício personalizado antigo, criado antes de existir a escolha de articulações: tratado como se exigisse todas
+    if (custom && !Array.isArray(x.jointsManual)) add(j, 'punho cotovelo ombro coluna quadril joelho tornozelo' + (x.cat === 'acrobacia' ? ' pescoco' : ''));
     BY_ID.forEach(([re, s]) => { if (re.test(x.id)) add(j, s); });
     BY_TEXT.forEach(([re, s]) => { if (re.test(how)) add(j, s); });
     (x.equip || (window.EQUIP_NEEDS || {})[x.id] || []).forEach(q => { if (BY_EQUIP[q]) add(j, BY_EQUIP[q]); });

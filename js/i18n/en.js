@@ -2225,5 +2225,14 @@
 "Articulações que o exercício exige": "Joints the exercise involves",
 "(usadas para proteger lesões registradas em Saúde; o app também soma as típicas da categoria)": "(used to protect injuries recorded in Health; the app also adds the typical ones for the category)",
 "exercícios no total (": "exercises in total (",
-"criados por você).": "created by you)."
+"criados por você).": "created by you).",
+"Ex.: De quatro, com as mãos no chão…": "E.g.: On all fours, hands on the floor…",
+"Articulações que o exercício exige (obrigatório)": "Joints the exercise involves (required)",
+"— usadas para proteger lesões registradas em Saúde. Já vêm marcadas pela categoria, padrão, equipamento e descrição; acrescente o que faltar.": "— used to protect injuries recorded in Health. They come pre-checked from the category, pattern, equipment and description; add anything missing.",
+"Conferi as articulações marcadas": "I've checked the selected joints",
+"O equipamento escolhido pode carregar articulações diferentes conforme o uso (onde prende, onde apoia): confira a lista.": "The chosen equipment can load different joints depending on how it's used (where it's attached, where you lean on it): check the list.",
+"Sem descrição, o app só sabe o que a categoria indica. Apoio nas mãos, de joelhos, pendurado ou saltando muda as articulações.": "Without a description, the app only knows what the category suggests. Hands on the floor, kneeling, hanging or jumping changes the joints.",
+"Marque pelo menos uma articulação que o exercício exige.": "Check at least one joint the exercise involves.",
+"Confira as articulações marcadas e marque \"Conferi\".": "Check the selected joints and tick \"I've checked\".",
+"(exercício criado antes da escolha de articulações: o app considera todas)": "(exercise created before joint selection existed: the app assumes all of them)"
 };
