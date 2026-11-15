@@ -62,8 +62,8 @@
     if (BY_REG[x.reg]) add(j, BY_REG[x.reg]);
     const custom = /^c-/.test(x.id || '');
     if (((!x.pat && !x.reg) || custom) && BY_CAT[x.cat]) add(j, BY_CAT[x.cat]);
-    // exercício personalizado antigo, criado antes de existir a escolha de articulações: tratado como se exigisse todas
-    if (custom && !Array.isArray(x.jointsManual)) add(j, 'punho cotovelo ombro coluna quadril joelho tornozelo' + (x.cat === 'acrobacia' ? ' pescoco' : ''));
+    // exercício personalizado antigo, criado antes de existir a escolha de articulações: tratado como se exigisse todas (inclusive pescoço)
+    if (custom && !Array.isArray(x.jointsManual)) add(j, 'punho cotovelo ombro pescoco coluna quadril joelho tornozelo');
     BY_ID.forEach(([re, s]) => { if (re.test(x.id)) add(j, s); });
     BY_TEXT.forEach(([re, s]) => { if (re.test(how)) add(j, s); });
     (x.equip || (window.EQUIP_NEEDS || {})[x.id] || []).forEach(q => { if (BY_EQUIP[q]) add(j, BY_EQUIP[q]); });

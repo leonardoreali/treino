@@ -195,23 +195,33 @@
     '<div id="nx-jwarn" class="small"></div><label class="chk" style="border:0"><input type="checkbox" id="nx-jok"><span>Conferi as articulações marcadas</span></label></div>' +
     '<label>Link do short no YouTube (opcional) <input id="nx-vid" placeholder="https://youtube.com/shorts/…"></label><button class="btn block" data-a="lib-save">Salvar</button>');
   // sugere as articulações enquanto a pessoa preenche (até ela mexer nas caixas) e avisa quando o equipamento ou a posição pedem atenção
-  let nxTouched = false;
+  // escolhas manuais: o que a pessoa marcou (on) e desmarcou (off) por cima da sugestão; a sugestão continua acompanhando o resto
+  const nxMan = { on: new Set(), off: new Set() }; let nxSig = '';
+  const nxSigNow = () => JSON.stringify([nxDraft(), [...document.querySelectorAll('.nx-joint:checked')].map(c => c.value)]);
+  // qualquer mudança no exercício ou nas articulações desfaz o "Conferi"
+  const nxInvalidate = () => { const ok = U.$('#nx-jok'); if (ok && ok.checked) { ok.checked = false; nxSig = ''; U.toast('Algo mudou: confira as articulações de novo.'); } };
   const nxDraft = () => ({ id: 'c-novo', name: (U.$('#nx-name') || {}).value || '', cat: U.$('#nx-cat').value, pat: U.$('#nx-pat').value || undefined, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, how: U.$('#nx-how').value, jointsManual: [] });
   function nxSuggest() {
     if (!U.$('#nx-cat')) return; const d = nxDraft(), j = jointsOf(d), eq = U.$('#nx-eq').value;
-    if (!nxTouched) document.querySelectorAll('.nx-joint').forEach(c => { c.checked = j.includes(c.value); });
+    document.querySelectorAll('.nx-joint').forEach(c => { c.checked = !nxMan.off.has(c.value) && (j.includes(c.value) || nxMan.on.has(c.value)); });
     const w = [];
     if (eq && (/^q-/.test(eq) || ['elastico', 'superband', 'maquinas'].includes(eq))) w.push('O equipamento escolhido pode carregar articulações diferentes conforme o uso (onde prende, onde apoia): confira a lista.');
     if (!d.how.trim()) w.push('Sem descrição, o app só sabe o que a categoria indica. Apoio nas mãos, de joelhos, pendurado ou saltando muda as articulações.');
     U.$('#nx-jwarn').innerHTML = w.map(t => '<p class="warn-box"><span aria-hidden="true">⚠️</span> <span>' + e(t) + '</span></p>').join('');
   }
-  document.addEventListener('change', ev => { if (['nx-cat', 'nx-pat', 'nx-eq'].includes(ev.target.id)) nxSuggest(); if (ev.target.classList && ev.target.classList.contains('nx-joint')) nxTouched = true; });
-  document.addEventListener('input', ev => { if (['nx-how', 'nx-name'].includes(ev.target.id)) nxSuggest(); });
-  const libNew0 = A['lib-new']; A['lib-new'] = () => { nxTouched = false; libNew0(); nxSuggest(); };
+  document.addEventListener('change', ev => {
+    const t = ev.target;
+    if (['nx-cat', 'nx-pat', 'nx-eq'].includes(t.id)) { nxSuggest(); nxInvalidate(); }
+    if (t.classList && t.classList.contains('nx-joint')) { const v = t.value; if (t.checked) { nxMan.on.add(v); nxMan.off.delete(v); } else { nxMan.off.add(v); nxMan.on.delete(v); } nxInvalidate(); }
+    if (t.id === 'nx-jok') nxSig = t.checked ? nxSigNow() : '';
+  });
+  document.addEventListener('input', ev => { if (['nx-how', 'nx-name'].includes(ev.target.id)) { nxSuggest(); nxInvalidate(); } });
+  const libNew0 = A['lib-new']; A['lib-new'] = () => { nxMan.on.clear(); nxMan.off.clear(); nxSig = ''; libNew0(); nxSuggest(); };
   A['lib-save'] = () => {
     const name = U.$('#nx-name').value.trim(); if (!name) return U.toast('Dê um nome ao exercício.');
     if (!document.querySelectorAll('.nx-joint:checked').length) return U.toast('Marque pelo menos uma articulação que o exercício exige.');
     if (!U.$('#nx-jok').checked) return U.toast('Confira as articulações marcadas e marque "Conferi".');
+    if (nxSig !== nxSigNow()) { U.$('#nx-jok').checked = false; nxSig = ''; return U.toast('Algo mudou: confira as articulações de novo.'); }
     S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined, pat: U.$('#nx-pat').value || undefined, jointsManual: [...document.querySelectorAll('.nx-joint:checked')].map(c => c.value) });
     S.save(); U.closeModal(); APP.render();
   };

@@ -2234,5 +2234,6 @@
 "Sem descrição, o app só sabe o que a categoria indica. Apoio nas mãos, de joelhos, pendurado ou saltando muda as articulações.": "Sin descripción, la app solo sabe lo que indica la categoría. Apoyo en las manos, de rodillas, colgado o saltando cambia las articulaciones.",
 "Marque pelo menos uma articulação que o exercício exige.": "Marca al menos una articulación que exija el ejercicio.",
 "Confira as articulações marcadas e marque \"Conferi\".": "Revisa las articulaciones marcadas y marca \"Revisé\".",
-"(exercício criado antes da escolha de articulações: o app considera todas)": "(ejercicio creado antes de la elección de articulaciones: la app considera todas)"
+"(exercício criado antes da escolha de articulações: o app considera todas)": "(ejercicio creado antes de la elección de articulaciones: la app considera todas)",
+"Algo mudou: confira as articulações de novo.": "Algo cambió: revisa las articulaciones de nuevo."
 };

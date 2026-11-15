@@ -63,7 +63,7 @@ caso('equipamento próprio em puxar', { cat: 'puxar', equip: ['q-meu'] }, ['punh
 caso('apoio na cabeça (habilidade)', { cat: 'habilidade', how: 'Cabeça no chão formando um triângulo com as mãos.' }, ['pescoco', 'punho']);
 caso('saltos (cardio)', { cat: 'cardio', how: 'Salte no lugar.' }, ['quadril', 'joelho', 'tornozelo']);
 caso('articulação marcada à mão', { cat: 'puxar', jointsManual: ['pescoco'] }, ['pescoco', 'ombro']);
-caso('exercício antigo sem articulações conferidas', { cat: 'mobilidade', jointsManual: undefined }, ['punho', 'cotovelo', 'ombro', 'coluna', 'quadril', 'joelho', 'tornozelo']);
+caso('exercício antigo sem articulações conferidas', { cat: 'mobilidade', jointsManual: undefined }, Object.keys(ctx.JOINTS));
 
 if (fails.length) { console.log(fails.length + ' problema(s):\n' + fails.join('\n')); process.exit(1); }
 console.log('OK: ' + E.length + ' exercícios conferidos (ids, instruções, vídeos, articulações, mobilidade, progressões, árvores e ' + 15 + ' casos de exercícios personalizados).');

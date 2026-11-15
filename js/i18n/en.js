@@ -2234,5 +2234,6 @@
 "Sem descrição, o app só sabe o que a categoria indica. Apoio nas mãos, de joelhos, pendurado ou saltando muda as articulações.": "Without a description, the app only knows what the category suggests. Hands on the floor, kneeling, hanging or jumping changes the joints.",
 "Marque pelo menos uma articulação que o exercício exige.": "Check at least one joint the exercise involves.",
 "Confira as articulações marcadas e marque \"Conferi\".": "Check the selected joints and tick \"I've checked\".",
-"(exercício criado antes da escolha de articulações: o app considera todas)": "(exercise created before joint selection existed: the app assumes all of them)"
+"(exercício criado antes da escolha de articulações: o app considera todas)": "(exercise created before joint selection existed: the app assumes all of them)",
+"Algo mudou: confira as articulações de novo.": "Something changed: check the joints again."
 };
