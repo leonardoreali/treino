@@ -36,7 +36,8 @@
   W.build = (type, forced) => {
     const p = S.program(), round = S.round(), si = forced != null && p.sessions[forced] ? forced : S.sessionIdx(), deload = S.isDeload();
     let src;
-    if (type === 'flex') {
+    if (type === 'flex' && W.flexOverride) { src = W.flexOverride; W.flexOverride = null; }
+    else if (type === 'flex') {
       const all = p.sessions.flatMap(s => s.blocks);
       const b = all.find(b => b.kind === 'check' && /rotina curta/i.test(b.title)) || all.find(b => b.kind === 'check' && /flexib|along/i.test(b.title)) || FLEX_PADRAO;
       src = { name: 'Rotina curta de flexibilidade', blocks: [b] };
@@ -100,7 +101,7 @@
   function block(b, bi) {
     let body = '';
     if (b.kind === 'forca') body = b.items.map(itemForca).join('');
-    else if (b.kind === 'check') body = '<div class="card">' + b.items.map(itemCheck).join('') + '</div>';
+    else if (b.kind === 'check') body = '<div class="card">' + (b.note ? '<p class="muted small">' + e(b.note) + '</p>' : '') + b.items.map(itemCheck).join('') + '</div>';
     else if (b.kind === 'cardio') body = '<div class="card">' + (b.note ? '<p class="muted">' + e(b.note) + '</p>' : '') +
       '<div class="row"><button class="btn" data-a="w-cardio" data-b="' + bi + '">⏱ Iniciar ' + b.min + ' min</button>' +
       '<label class="inline">Minutos feitos <input type="number" inputmode="numeric" min="0" value="' + (b.minutes || '') + '" data-cardio="' + bi + '" placeholder="' + b.min + '–' + b.max + '"></label></div></div>';

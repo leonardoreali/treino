@@ -91,12 +91,13 @@
       if (goal === 'habilidades' && SKILL_OF[pat] && S.skill(SKILL_OF[pat]).steps.some(s => s.ex === ex)) { o.skill = SKILL_OF[pat]; }
       return o;
     };
-    const aquec = () => ({ title: 'Aquecimento (5–8 min)', kind: 'check', items: [
+    let seedN = 0; const mctx = () => ({ lvl, goal, time, seed: seedN, can: id => can(id) && !MOB.avoidFor(p.limit).has(id) });
+    // aquecimento: cardio leve + mobilidade ativa das articulações que a sessão mais usa (nada de alongamento estático antes de força)
+    const aquec = regs => ({ title: 'Aquecimento (5–8 min)', kind: 'check', items: [
       can('corda') ? { ex: 'corda', sets: 1, min: 120, max: 120, unit: 's' } : (avoid.has('polichinelo') ? { text: 'Marcha parada ou caminhada leve — 2 min' } : { ex: 'polichinelo', sets: 1, min: 60, max: 60, unit: 's' }),
-      { ex: 'rotacao-ombros', sets: 1, min: 30, max: 30, unit: 's' }, { ex: 'gato-vaca', sets: 1, min: 10, max: 10, unit: 'reps' },
-      ...(goal === 'habilidades' || lv.push >= 3 ? [{ ex: 'punho-circulos', sets: 1, min: 30, max: 30, unit: 's', note: 'Punhos aquecidos antes de apoiar o peso nas mãos' }] : []),
+      ...MOB.warmup(regs, mctx()),
       { ex: 'agachamento', sets: 1, min: 10, max: 10, unit: 'reps', note: 'Lento' }, { text: '1 série leve do primeiro exercício' }] });
-    const flex = () => JSON.parse(JSON.stringify(DEFAULT_PROGRAM.sessions[0].blocks.slice(-1)[0]));
+    const flex = regs => MOB.cooldown(regs, mctx());
     const hiit = () => {
       const labels = ['polichinelo', 'joelho-alto', 'mountain-climber', 'agachamento-salto', 'burpee'].filter(x => !avoid.has(x) && (lvl > 1 || x !== 'burpee')).map(x => S.ex(x).name);
       const o = lvl === 1 ? { work: 20, rest: 40, rounds: 8 } : lvl === 2 ? { work: 30, rest: 30, rounds: 10 } : { work: 20, rest: 10, rounds: 8 };
@@ -118,14 +119,15 @@
         const ex = pick(pat, used, alt); if (!ex) continue;
         used.add(ex); items.push(item(ex, items.length, pat));
       }
-      const blocks = [aquec(), { title: name, kind: 'forca', items: skills.concat(items) }];
+      const regs = MOB.demand(skills.concat(items)); seedN++;
+      const blocks = [aquec(regs), { title: name, kind: 'forca', items: skills.concat(items) }];
       if ((goal === 'emagrecer' || goal === 'saude') && time >= 45 && days <= 3) blocks.push(goal === 'emagrecer' ? hiit() : cardio(false));
-      blocks.push(flex());
+      blocks.push(flex(regs));
       return { name: name + (alt ? ' (variação)' : ''), duration: time, blocks };
     };
     const cardioSession = hard => ({ name: hard ? 'Cardio intervalado + core' : 'Cardio contínuo + core', duration: Math.min(time, 45), blocks: [
-      aquec(), hard ? hiit() : cardio(true),
-      { title: 'Core', kind: 'forca', items: ['coreA', 'coreB'].map((pt, n) => { const ex = pick(pt, new Set(), false); return ex ? item(ex, n + 2, pt) : null; }).filter(Boolean) }, flex()] });
+      aquec(['tornozelo', 'quadril', 'coluna']), hard ? hiit() : cardio(true),
+      { title: 'Core', kind: 'forca', items: ['coreA', 'coreB'].map((pt, n) => { const ex = pick(pt, new Set(), false); return ex ? item(ex, n + 2, pt) : null; }).filter(Boolean) }, flex(['quadril', 'posterior', 'coluna'])] });
 
     const S_ = { 2: ['fullA', 'fullB'], 3: ['fullA', 'fullB', 'fullC'], 4: ['upper', 'lower', 'upper*', 'lower*'], 5: ['push', 'pull', 'legs', 'upper', 'lower'], 6: ['push', 'pull', 'legs', 'push*', 'pull*', 'legs*'] };
     let plan = S_[days].slice();

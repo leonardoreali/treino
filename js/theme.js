@@ -32,7 +32,7 @@
     } else if (mode === 'dias' && ti < 0) {
       const nx = S.nextDay(), feito = logs.some(l => l.date === today && l.type === 'session');
       h += '<div class="hero"><div class="eyebrow">' + (feito ? 'Treino de hoje concluído' : 'Dia de descanso') + '</div><h2>' + (feito ? 'Mandou bem! 💪' : 'Hoje é descanso 😌') + '</h2><p>' + (nx ? 'Próximo treino: <b>' + e(nx.name) + '</b> — ' + (nx.k === 1 ? 'amanhã' : nx.day) + '.' : 'Nenhum dia marcado: escolha os dias em Programa.') + '</p>' +
-        (S.current ? '' : '<div class="row wrap"><button class="btn" data-a="start" data-type="flex">Só alongar (10 min)</button><a class="btn ghosty" href="#programa">Mudar os dias</a></div>') + '</div>';
+        (S.current ? '' : '<div class="row wrap"><button class="btn" data-a="mob-menu">🧘 Mobilidade e alongamento</button><a class="btn ghosty" href="#programa">Mudar os dias</a></div>') + '</div>';
     } else {
       const s = p.sessions[si], pct = Math.round(100 * S.pos() / (p.rounds * n)), C = 2 * Math.PI * 30;
       // Queda: compara cada exercício com ele mesmo (mesma unidade), só com 3 ou mais registros.
@@ -48,7 +48,7 @@
         '<div class="ring" title="Progresso do programa"><svg viewBox="0 0 74 74"><circle class="bg" cx="37" cy="37" r="30"/>' + (pct ? '<circle class="fg" cx="37" cy="37" r="30" stroke-dasharray="' + (C * pct / 100).toFixed(1) + ' ' + C.toFixed(1) + '"/>' : '') + '</svg><b>' + pct + '%<small>do programa</small></b></div></div>' +
         '<div class="pills">' + (s.duration ? '<span>⏱ ~' + s.duration + ' min</span>' : '') + (nEx ? '<span>' + nEx + ' exercícios</span>' : '') + blocks.filter(b => b.kind === 'cardio' || b.kind === 'intervalado').map(b => '<span>' + e(b.title) + '</span>').join('') +
         (S.isDeload() ? '<span>volta leve</span>' : '') + '</div>' +
-        (S.current ? '' : '<div class="row wrap"><button class="btn big" data-a="start" data-type="session" data-si="' + si + '">▶ Começar treino</button><button class="btn ghosty" data-a="start" data-type="flex">Só alongar (10 min)</button></div>') +
+        (S.current ? '' : '<div class="row wrap"><button class="btn big" data-a="start" data-type="session" data-si="' + si + '">▶ Começar treino</button><button class="btn ghosty" data-a="mob-menu">🧘 Mobilidade e alongamento</button></div>') +
         '<div class="muted small" style="margin-top:10px">' + e(p.name) + '</div></div>';
       if (fase) h += '<div class="hint">' + e(fase.label) + '</div>';
       if (S.isDeload()) h += '<div class="hint up">Volta leve: metade das séries e <a href="#evolucao" data-a="evo-tab" data-tab="testes">reteste dos números do início</a>.</div>';

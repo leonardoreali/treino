@@ -8,7 +8,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..'), out = path.join(root, 'js', 'data', 'videos.js');
 const ctx = {}; ctx.window = ctx; vm.createContext(ctx);
-for (const f of ['exercises.js', 'equip.js', 'gym.js', 'more.js', 'program.js', 'more2.js', 'meta.js']) vm.runInContext(fs.readFileSync(path.join(root, 'js', 'data', f), 'utf8'), ctx);
+for (const f of ['exercises.js', 'equip.js', 'gym.js', 'more.js', 'program.js', 'more2.js', 'meta.js', 'mobility.js']) vm.runInContext(fs.readFileSync(path.join(root, 'js', 'data', f), 'utf8'), ctx);
 const args = process.argv.slice(2), all = args.includes('--todos'), only = args.filter(a => !a.startsWith('--'));
 if (fs.existsSync(out)) vm.runInContext(fs.readFileSync(out, 'utf8'), ctx);
 const have = (all ? {} : ctx.window.VIDEOS) || {}, titles = (all ? {} : ctx.window.VIDEO_TITLES) || {}, wide = (all ? {} : ctx.window.VIDEO_WIDE) || {};

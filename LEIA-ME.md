@@ -76,3 +76,9 @@ O app é escrito em português; `js/i18n.js` traduz o que aparece na tela usando
 Para achar textos sem tradução: abra o app em inglês no navegador, digite no console `I18N.collect = true`, use as telas e depois veja `I18N.missing`. O seletor de idioma fica na primeira tela e em Perfil → Ajustes.
 
 Ainda ficam em português: o PDF de treino gerado para compartilhar e os nomes/observações escritos pelo próprio usuário ou professor.
+
+## Mobilidade e flexibilidade (versão 18)
+
+- **Modalidades** (`js/data/mobility.js`): flexibilidade estática e PNF, mobilidade articular ativa e controlada, e flexibilidade ativa/força em amplitude final. Cada exercício de mobilidade ou flexibilidade tem dose recomendada (`dose`) e, quando há risco, um alerta (`warn`).
+- **Gerador** (`js/mobility.js`): o aquecimento usa só mobilidade ativa das articulações que a sessão mais exige (pelos padrões de movimento e habilidades: parada de mão → punhos, ombros e coluna; pistol → tornozelos, quadril e posterior etc.). A volta à calma usa alongamento estático dessas regiões e, em treino de habilidades, um exercício de força em amplitude final. Limitações cadastradas tiram os alongamentos que forçam a região (`AVOID_MOB`).
+- **Rotinas avulsas**: tela Hoje → "Mobilidade e alongamento" (ou Biblioteca → Mobilidade/Flexibilidade). Mobilidade (5–10 min), flexibilidade (10–20 min) ou sessão completa (20–30 min), com foco no corpo todo, numa região, nas habilidades ou no treino do dia. Não contam como treino da fila.

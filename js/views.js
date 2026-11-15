@@ -2,7 +2,7 @@
 (function () {
   const V = window.V = {}, after = V.after = {};
   const e = U.esc;
-  const ui = V.ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, libPat: '', libReg: '', libSup: false, draft: null };
+  const ui = V.ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, libPat: '', libReg: '', libMod: '', libSup: false, draft: null };
 
 
   // ================= HOJE =================
@@ -134,7 +134,7 @@
   // ================= BIBLIOTECA =================
   function libFiltered() {
     const q = ui.libQ.trim().toLowerCase();
-    return S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libPat || x.pat === ui.libPat) && (!ui.libReg || x.reg === ui.libReg) && (!ui.libSup || !x.sup) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
+    return S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libPat || x.pat === ui.libPat) && (!ui.libReg || x.reg === ui.libReg) && (!ui.libMod || x.mod === ui.libMod) && (!ui.libSup || !x.sup) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
   }
   function libList() {
@@ -149,7 +149,8 @@
     '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + cnt(c[0] ? all.filter(x => x.cat === c[0]).length : all.length) + '</button>').join('') + '</div>' +
     '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + cnt(i ? inCat.filter(x => x.level === i).length : inCat.length) + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button><button data-a="lib-sup" class="' + (ui.libSup ? 'on' : '') + '">🛡️ Sem os que exigem supervisão' + cnt(inCat.filter(x => !x.sup).length) + '</button></div>' +
     '<div class="lib-filters"><label>Padrão de movimento <select id="lib-pat"><option value="">Todos' + '</option>' + Object.entries(PATTERNS).map(p => '<option value="' + p[0] + '"' + (ui.libPat === p[0] ? ' selected' : '') + '>' + p[1] + ' (' + inCat.filter(x => x.pat === p[0]).length + ')</option>').join('') + '</select></label>' +
-    (!ui.libCat || ui.libCat === 'mobilidade' || ui.libCat === 'flexibilidade' ? '<label>Região (mobilidade e flexibilidade) <select id="lib-reg"><option value="">Todas</option>' + Object.entries(REGIONS).map(r => '<option value="' + r[0] + '"' + (ui.libReg === r[0] ? ' selected' : '') + '>' + r[1] + ' (' + inCat.filter(x => x.reg === r[0]).length + ')</option>').join('') + '</select></label>' : '') + '</div>' +
+    (!ui.libCat || ui.libCat === 'mobilidade' || ui.libCat === 'flexibilidade' ? '<label>Região (mobilidade e flexibilidade) <select id="lib-reg"><option value="">Todas</option>' + Object.entries(REGIONS).map(r => '<option value="' + r[0] + '"' + (ui.libReg === r[0] ? ' selected' : '') + '>' + r[1] + ' (' + inCat.filter(x => x.reg === r[0]).length + ')</option>').join('') + '</select></label>' : '') + (!ui.libCat || ui.libCat === 'mobilidade' || ui.libCat === 'flexibilidade' ? '<label>Modalidade <select id="lib-mod"><option value="">Todas</option>' + Object.entries(MODALITIES).map(m => '<option value="' + m[0] + '"' + (ui.libMod === m[0] ? ' selected' : '') + '>' + m[1] + ' (' + inCat.filter(x => x.mod === m[0]).length + ')</option>').join('') + '</select></label>' : '') + '</div>' +
+    (ui.libCat === 'mobilidade' || ui.libCat === 'flexibilidade' || ui.libReg || ui.libMod ? '<button class="btn block ghosty" data-a="mob-menu">🧘 Montar uma rotina de mobilidade ou alongamento</button>' : '') +
     '<p class="muted small" id="lib-count">' + libCountText() + '</p><div class="tiles" id="lib-list">' + libList() + '</div>'; };
   function libCountText() { const n = libFiltered().length, t = S.allExercises().length; return n === t ? 'Mostrando todos os ' + t + ' exercícios' : 'Mostrando ' + n + ' de ' + t + ' exercícios'; }
   // Lista completa: quantos exercícios há em cada categoria e em cada nível
@@ -160,17 +161,18 @@
       '<tr><td><b>Total</b></td><td><b>' + all.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td><b>' + all.filter(x => x.level === n).length + '</b></td>').join('') + '</tr></table></div>' +
       '<h3>Por padrão de movimento</h3><div style="overflow-x:auto"><table class="tbl"><tr><th>Padrão</th><th>Total</th>' + LEVELS.slice(1).map(l => '<th>' + l + '</th>').join('') + '</tr>' +
       Object.entries(PATTERNS).map(p => { const xs = all.filter(x => x.pat === p[0]); return '<tr><td><a href="#" data-a="lib-pat-go" data-p="' + p[0] + '">' + e(p[1]) + '</a></td><td><b>' + xs.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td>' + (xs.filter(x => x.level === n).length || '·') + '</td>').join('') + '</tr>'; }).join('') + '</table></div>' +
-      '<h3>Mobilidade e flexibilidade por região</h3><p class="small">' + Object.entries(REGIONS).map(r => '<a href="#" data-a="lib-reg-go" data-r="' + r[0] + '">' + e(r[1]) + '</a>: <b>' + all.filter(x => x.reg === r[0]).length + '</b>').join(' · ') + '</p>' +
+      '<h3>Mobilidade e flexibilidade por região</h3><div style="overflow-x:auto"><table class="tbl"><tr><th>Região</th><th>Total</th>' + Object.values(MODALITIES).map(m => '<th>' + m + '</th>').join('') + '</tr>' +
+      Object.entries(REGIONS).map(r => { const xs = all.filter(x => x.reg === r[0]); return '<tr><td><a href="#" data-a="lib-reg-go" data-r="' + r[0] + '">' + e(r[1]) + '</a></td><td><b>' + xs.length + '</b></td>' + Object.keys(MODALITIES).map(m => '<td>' + (xs.filter(x => x.mod === m).length || '·') + '</td>').join('') + '</tr>'; }).join('') + '</table></div>' +
       '<p class="muted small">Unilaterais: ' + all.filter(x => x.uni).length + ' · Exigem supervisão (fora dos treinos automáticos): ' + all.filter(x => x.sup).length + ' · Com vídeo: ' + all.filter(x => S.videoFor(x.id)).length + ' · Com carga (academia): ' + all.filter(x => x.w).length + ' · Só com peso do corpo: ' + all.filter(x => !S.needs(x.id).length).length + '</p>');
   };
-  A['lib-pat-go'] = d => { Object.assign(ui, { libCat: '', libLvl: 0, libReg: '', libPat: d.p }); U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
-  A['lib-reg-go'] = d => { Object.assign(ui, { libCat: '', libLvl: 0, libPat: '', libReg: d.r }); U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
+  A['lib-pat-go'] = d => { Object.assign(ui, { libCat: '', libLvl: 0, libReg: '', libMod: '', libPat: d.p }); U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
+  A['lib-reg-go'] = d => { Object.assign(ui, { libCat: '', libLvl: 0, libPat: '', libMod: '', libReg: d.r }); U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
   A['lib-cat-go'] = d => { ui.libCat = d.c === 'outros' ? '' : d.c; ui.libLvl = 0; U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
-  A['lib-cat'] = d => { ui.libCat = d.c; if (d.c && d.c !== 'mobilidade' && d.c !== 'flexibilidade') ui.libReg = ''; APP.render(); };
+  A['lib-cat'] = d => { ui.libCat = d.c; if (d.c && d.c !== 'mobilidade' && d.c !== 'flexibilidade') { ui.libReg = ''; ui.libMod = ''; } APP.render(); };
   A['lib-lvl'] = d => { ui.libLvl = +d.l; APP.render(); };
   A['lib-own'] = () => { ui.libOwn = !ui.libOwn; APP.render(); };
   A['lib-sup'] = () => { ui.libSup = !ui.libSup; APP.render(); };
-  document.addEventListener('change', ev => { if (ev.target.id === 'lib-pat') { ui.libPat = ev.target.value; APP.render(); } if (ev.target.id === 'lib-reg') { ui.libReg = ev.target.value; APP.render(); } });
+  document.addEventListener('change', ev => { if (ev.target.id === 'lib-pat') { ui.libPat = ev.target.value; APP.render(); } if (ev.target.id === 'lib-reg') { ui.libReg = ev.target.value; APP.render(); } if (ev.target.id === 'lib-mod') { ui.libMod = ev.target.value; APP.render(); } });
   // equipamentos (Ajustes)
   document.addEventListener('change', ev => {
     const q = ev.target.dataset && ev.target.dataset.equip; if (!q) return;
