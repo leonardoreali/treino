@@ -57,3 +57,10 @@ As regras ficam em `js/adapt.js`: pergunta antes do treino (bem, cansado, dor ou
 ## Saúde e lesões
 
 `js/health.js`: condições registradas pela pessoa (dor temporária, lesão/fratura/cirurgia com fases de proteção, retorno e fortalecimento, ou condição crônica), com regras gerais por região quando não há diagnóstico e regras específicas quando há. Cada treino é adaptado na hora de começar; a dor é registrada a cada treino; orientações do profissional (texto, exercícios proibidos e carga máxima) valem para todos os treinos. As listas ficam no começo do arquivo (`SPEC`, `CHRONIC`, `FLAG_EX`).
+
+## Sincronização, backup e atualizações (versão 13)
+
+- **Sincronização** (`js/store.js`): mesclagem em três vias (aparelho × nuvem × última versão comum), campo a campo. Mudanças em campos diferentes nos dois aparelhos ficam todas; no mesmo campo, fica a mais recente e o app avisa. Um contador de versão (`rev`) detecta gravações simultâneas e refaz a mesclagem. A fila de treino nunca volta para trás. No primeiro contato de um aparelho novo, a nuvem prevalece.
+- **Backup**: formato `treino-backup` versão 2 (o antigo continua sendo aceito). Restaurar valida o arquivo, descarta registros com defeito e guarda uma cópia do estado anterior (dá para voltar em Ajustes). Uma cópia de segurança dos dados válidos é atualizada a cada minuto e usada automaticamente se os dados do aparelho corromperem.
+- **Atualizações**: `sw.js` guarda cada versão inteira e só troca quando a pessoa toca em "Atualizar" (nunca durante um treino). **Ao publicar mudanças, aumente `VERSION` em `sw.js`** (a lista de arquivos é a dos `<script>` de `index.html` mais CSS, ícones e manifesto). Em `localhost` o service worker fica desligado; use `?sw=1` para testar.
+- **Regras de saúde**: origem, versão e revisão ficam em `HEALTH.RULES_INFO` (`js/health.js`).

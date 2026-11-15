@@ -4,47 +4,9 @@
   const e = U.esc;
   const ui = V.ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, draft: null };
 
-  function streak() {
-    const days = new Set(S.state.logs.map(l => l.date));
-    let n = 0; const d = new Date();
-    const iso = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
-    if (!days.has(iso(d))) d.setDate(d.getDate() - 1);
-    while (days.has(iso(d))) { n++; d.setDate(d.getDate() - 1); }
-    return n;
-  }
-  const volume = l => (l.items || []).reduce((a, i) => a + i.sets.reduce((x, y) => x + y, 0), 0);
 
   // ================= HOJE =================
-  V.hoje = () => {
-    const p = S.program(), n = p.sessions.length, si = S.sessionIdx(), round = S.round(), logs = S.sortedLogs();
-    const doneToday = logs.some(l => l.date === S.today() && l.type === 'session');
-    const weekAgo = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
-    let h = '<h1>Hoje</h1>';
-    if (!S.state.profile && !logs.length) h += '<div class="card hl"><h2>Bem-vindo! 👋</h2><p>Crie seu perfil e o app monta um treino sob medida para você — em casa ou na academia. Se preferir, importe um treino em PDF, receba um do seu professor ou use o programa de exemplo abaixo.</p>' +
-      '<div class="row wrap"><a class="btn big" href="#perfil">Criar meu perfil</a><a class="btn ghosty" href="#programa">Importar PDF</a></div></div>';
-    if (S.current) h += '<div class="card hl"><b>Treino em andamento:</b> ' + e(S.current.name) + '<div class="row"><a class="btn" href="#treino">Continuar</a></div></div>';
-    if (S.finished()) {
-      h += '<div class="card hl"><h2>Programa concluído! 🏆</h2><p>Você fechou as ' + p.rounds + ' voltas. Suba o PDF do próximo treino para montar a nova rotina.</p><a class="btn" href="#programa">Ir para Programa</a></div>';
-    } else {
-      const s = p.sessions[si], pct = Math.round(100 * S.pos() / (p.rounds * n));
-      const same = logs.filter(l => l.type === 'session' && l.programId === p.id && l.sessionIdx === si).slice(0, 3);
-      const caindo = same.length === 3 && volume(same[0]) < volume(same[1]) && volume(same[1]) < volume(same[2]);
-      const pesado = logs.filter(l => l.rpe).slice(0, 2), exausto = pesado.length === 2 && pesado.every(l => l.rpe >= 9);
-      h += '<div class="card"><div class="muted small">' + e(p.name) + '</div><div class="row between"><b>Volta ' + round + ' de ' + p.rounds + '</b><span class="muted">Sessão ' + (si + 1) + ' de ' + n + '</span></div>' +
-        '<div class="bar"><i style="width:' + pct + '%"></i></div></div>';
-      const fase = (p.phases || []).find(f => round >= f.from && round <= f.to); if (fase) h += '<div class="hint">' + e(fase.label) + '</div>';
-      if (S.isDeload()) h += '<div class="hint up">Volta leve: metade das séries e <a href="#evolucao" data-a="evo-tab" data-tab="testes">reteste dos números do início</a>.</div>';
-      if (caindo || exausto) h += '<div class="hint warn">' + (caindo ? 'Seu desempenho nesta sessão caiu 2 vezes seguidas. ' : 'Seus 2 últimos treinos foram esforço 9–10. ') + 'Considere descansar hoje: faça só a flexibilidade.</div>';
-      if (doneToday) h += '<div class="hint">Você já treinou hoje. O plano é uma sessão por dia — a próxima fica para amanhã.</div>';
-      h += '<div class="card next"><div class="muted small">Sessão da vez</div><h2>' + e(s.name) + '</h2><div class="muted">' + (s.duration ? '~' + s.duration + ' min' : '') + '</div>' +
-        '<ul class="plain small">' + s.blocks.filter(b => !b.phase2 || S.state.phase2).map(b => '<li>' + e(b.title) + '</li>').join('') + '</ul>' +
-        (S.current ? '' : '<div class="row"><button class="btn big" data-a="start" data-type="session">Começar treino</button>' +
-          '<button class="btn ghosty" data-a="start" data-type="flex">Dia ruim: só flexibilidade (10 min)</button></div>') + '</div>';
-      h += '<h3>Fila</h3><div class="card queue">' + p.sessions.map((x, i) => '<div class="q' + (i === si ? ' cur' : i < si ? ' past' : '') + '"><span class="q-n">' + (i + 1) + '</span><span>' + e(x.name) + '</span></div>').join('') + '</div>';
-    }
-    h += '<div class="stats"><div><b>' + streak() + '</b><span>dias seguidos</span></div><div><b>' + logs.filter(l => l.date >= weekAgo).length + '</b><span>treinos em 7 dias</span></div><div><b>' + logs.length + '</b><span>treinos no total</span></div></div>';
-    return h;
-  };
+  // A tela Hoje fica em js/theme.js (V.hoje). Aqui só ficam as ações usadas por ela.
   A.start = d => { if (!S.current) W.build(d.type, d.si != null && d.si !== '' ? +d.si : undefined); U.wake(true); location.hash = '#treino'; };
 
   // ================= HABILIDADES =================
@@ -79,7 +41,7 @@
       const days = new Set(logs.map(l => l.date)), cells = [];
       for (let i = 34; i >= 0; i--) { const d = new Date(Date.now() - i * 864e5), iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); cells.push('<i class="' + (days.has(iso) ? 'on' : '') + '" title="' + U.fmtDate(iso) + '"></i>'); }
       h += '<div class="card"><div class="muted small">Últimos 35 dias</div><div class="heat">' + cells.join('') + '</div></div>';
-      h += logs.length ? logs.map(l => '<details class="card log"><summary><b>' + U.fmtDate(l.date) + '</b> · ' + e(l.sessionName || '') + (l.rpe ? ' <span class="tag">esforço ' + l.rpe + '</span>' : '') + (l.type === 'flex' ? ' <span class="tag">dia leve</span>' : '') + '</summary>' +
+      h += logs.length ? logs.map(l => '<details class="card log"><summary><b>' + U.fmtDate(l.date) + '</b> · ' + e(l.sessionName || '') + (l.rpe ? ' <span class="tag">esforço ' + l.rpe + '</span>' : '') + (l.type === 'flex' ? ' <span class="tag">dia leve</span>' : '') + (l.partial ? ' <span class="tag warn">parcial ' + l.pct + '%</span>' : l.type === 'session' ? ' <span class="tag good">completo</span>' : '') + '</summary>' +
         '<ul class="plain">' + (l.items || []).map(i => '<li><span data-a="exercise" data-ex="' + e(i.ex) + '" class="ex-name">' + e(S.ex(i.ex).name) + '</span>: ' + i.sets.join(', ') + U.unit(i.unit) + (i.kg && i.kg.some(Number) ? ' @ ' + [...new Set(i.kg)].join('/') + ' kg' : '') + '</li>').join('') +
         (l.interval ? '<li>Intervalado: ' + e(l.interval) + '</li>' : '') + '</ul>' + (l.notes ? '<p class="muted">' + e(l.notes) + '</p>' : '') +
         '<div class="muted small">' + (l.round ? 'Volta ' + l.round : '') + (l.minutes ? ' · ' + l.minutes + ' min' : '') + '</div><button class="link danger" data-a="log-del" data-id="' + l.id + '">Apagar registro</button></details>').join('')
@@ -87,9 +49,17 @@
     } else if (ui.evoTab === 'graficos') {
       const ids = [...new Set(logs.flatMap(l => (l.items || []).map(i => i.ex)))].sort((a, b) => S.ex(a).name.localeCompare(S.ex(b).name));
       if (!ids.includes(ui.chartEx)) ui.chartEx = ids[0] || null;
-      h += ids.length ? '<div class="card"><label>Exercício <select id="chart-ex">' + ids.map(id => '<option value="' + e(id) + '"' + (id === ui.chartEx ? ' selected' : '') + '>' + e(S.ex(id).name) + '</option>').join('') + '</select></label>' +
-        '<canvas id="chart" class="chart"></canvas><div class="legend"><span><i style="background:var(--accent)"></i>' + (S.ex(ui.chartEx).w ? 'Carga máxima (kg)' : 'Melhor série') + '</span><span><i style="background:var(--blue)"></i>Total do treino</span></div><div id="chart-info" class="muted small"></div></div>'
-        : '<div class="empty">Registre treinos para ver os gráficos.</div>';
+      if (!ids.length) h += '<div class="empty">Registre treinos para ver os gráficos.</div>';
+      else {
+        const ms = V.metricsFor(ui.chartEx); if (!ms.find(m => m.id === ui.chartMetric)) ui.chartMetric = ms[0].id;
+        const m = ms.find(x => x.id === ui.chartMetric), data = V.chartData(ui.chartEx, m);
+        h += '<div class="card"><label>Exercício <select id="chart-ex">' + ids.map(id => '<option value="' + e(id) + '"' + (id === ui.chartEx ? ' selected' : '') + '>' + e(S.ex(id).name) + '</option>').join('') + '</select></label>' +
+          '<div class="chips" role="group" aria-label="O que mostrar">' + ms.map(x => '<button data-a="chart-m" data-m="' + x.id + '" class="' + (x.id === m.id ? 'on' : '') + '" aria-pressed="' + (x.id === m.id) + '">' + x.label + '</button>').join('') + '</div>' +
+          '<div class="chips" role="group" aria-label="Período">' + [['30', '30 dias'], ['90', '3 meses'], ['365', '1 ano'], ['all', 'Tudo']].map(x => '<button data-a="chart-p" data-p="' + x[0] + '" class="' + ((ui.chartPeriod || 'all') === x[0] ? 'on' : '') + '" aria-pressed="' + ((ui.chartPeriod || 'all') === x[0]) + '">' + x[1] + '</button>').join('') + '</div>' +
+          '<p class="small" style="margin:8px 0 0"><b>' + m.label + (m.unit ? ' (' + m.unit + ')' : '') + ':</b> <span class="muted">' + m.desc + '</span></p>' +
+          '<canvas id="chart" class="chart" role="img" aria-label="' + e(V.chartSummary(m, data)) + '"></canvas><div id="chart-info" class="small">' + e(V.chartSummary(m, data)) + '</div>' +
+          (data.length ? '<details><summary class="small muted">Ver os valores (' + data.length + ')</summary><table class="tbl"><tr><th>Data</th><th>' + m.label + '</th><th>Séries</th></tr>' + data.slice().reverse().map(d => '<tr><td>' + d.date.split('-').reverse().join('/') + '</td><td><b>' + d.y + '</b></td><td class="small muted">' + d.sets.join(', ') + U.unit(d.unit) + (d.kg ? ' @ ' + d.kg + ' kg' : '') + '</td></tr>').join('') + '</table></details>' : '') + '</div>';
+      }
     } else {
       const p = S.program(), tests = V.tests();
       if (!tests.find(t => t.id === ui.chartTest)) ui.chartTest = tests[0] ? tests[0].id : null;
@@ -110,11 +80,8 @@
     const cv = U.$('#chart'); if (!cv) return;
     const css = getComputedStyle(document.documentElement);
     if (ui.evoTab === 'graficos') {
-      const hs = S.logsFor(ui.chartEx), wt = S.ex(ui.chartEx).w;
-      U.chart(cv, [{ color: css.getPropertyValue('--accent'), points: hs.map(x => ({ x: U.fmtDate(x.log.date), y: wt ? (x.item.kg && x.item.kg.length ? Math.max(...x.item.kg) : null) : Math.max(...x.item.sets) })) },
-        { color: css.getPropertyValue('--blue'), points: hs.map(x => ({ x: U.fmtDate(x.log.date), y: x.item.sets.reduce((a, b) => a + b, 0) })) }], { zero: true });
-      const best = Math.max(...hs.flatMap(x => x.item.sets));
-      U.$('#chart-info').textContent = 'Recorde em uma série: ' + best + U.unit(hs[0].item.unit) + ' · ' + hs.length + ' treino(s)';
+      const m = V.metricsFor(ui.chartEx).find(x => x.id === ui.chartMetric), data = V.chartData(ui.chartEx, m);
+      U.chart(cv, [{ color: css.getPropertyValue('--accent'), points: data.map(d => ({ x: U.fmtDate(d.date), t: new Date(d.date + 'T12:00').getTime(), y: d.y })) }], { zero: m.zero });
     } else if (ui.evoTab === 'testes') {
       const t = V.tests().find(x => x.id === ui.chartTest); if (!t) return;
       const ms = S.state.measures.filter(m => m.test === t.id).sort((a, b) => a.date < b.date ? -1 : 1);
@@ -122,6 +89,33 @@
       U.chart(cv, [{ color: css.getPropertyValue('--accent'), points: pts }]);
     }
   };
+  // Métricas por tipo de exercício. Cada uma mede uma coisa diferente: o texto explica qual.
+  const r1 = v => Math.round(v * 10) / 10;
+  V.metricsFor = ex => {
+    const hs = S.logsFor(ex), last = hs.length ? hs[hs.length - 1].item : { unit: 'reps' };
+    if (last.unit === 'min') return [{ id: 'min', label: 'Minutos', unit: 'min', zero: true, desc: 'quanto tempo de cardio em cada treino.', f: i => i.sets.reduce((a, b) => a + b, 0) }];
+    if (hs.some(h => h.item.kg && h.item.kg.some(Number))) return [
+      { id: 'maxkg', label: 'Carga máxima', unit: 'kg', desc: 'o maior peso usado no treino, em qualquer série.', f: i => i.kg && i.kg.some(Number) ? Math.max(...i.kg.map(Number)) : null },
+      { id: 'e1rm', label: 'Força estimada', unit: 'kg', desc: 'quanto você levantaria uma única vez, calculado pelo peso e pelas repetições (fórmula de Epley). Sobe com mais peso ou mais repetições.', f: i => i.kg && i.kg.some(Number) ? r1(Math.max(...i.sets.map((r, k) => (Number(i.kg[k]) || 0) * (1 + Math.min(r, 15) / 30)))) : null },
+      { id: 'vol', label: 'Volume', unit: 'kg', zero: true, desc: 'soma de peso × repetições de todas as séries: o trabalho total do treino.', f: i => i.kg ? Math.round(i.sets.reduce((a, r, k) => a + r * (Number(i.kg[k]) || 0), 0)) : null },
+      { id: 'reps', label: 'Repetições', unit: 'reps', zero: true, desc: 'total de repetições somando todas as séries, sem considerar o peso.', f: i => i.sets.reduce((a, b) => a + b, 0) }];
+    const u = last.unit === 's' ? 's' : 'reps';
+    return [
+      { id: 'best', label: 'Melhor série', unit: u, desc: 'a melhor série do treino' + (u === 's' ? ' (o maior tempo segurando).' : ' (o máximo de repetições numa série).'), f: i => Math.max(...i.sets) },
+      { id: 'avg', label: 'Média por série', unit: u, desc: 'média das séries do treino. Não muda quando o número de séries muda (como na volta leve).', f: i => r1(i.sets.reduce((a, b) => a + b, 0) / i.sets.length) },
+      { id: 'total', label: u === 's' ? 'Tempo total' : 'Repetições totais', unit: u, zero: true, desc: 'soma de todas as séries do treino.', f: i => i.sets.reduce((a, b) => a + b, 0) }];
+  };
+  V.chartData = (ex, m) => {
+    const p = ui.chartPeriod || 'all', since = p === 'all' ? '' : new Date(Date.now() - (+p) * 864e5).toISOString().slice(0, 10);
+    return S.logsFor(ex).filter(h => h.log.date >= since && h.item.unit === (m.id === 'min' ? 'min' : h.item.unit)).map(h => ({ date: h.log.date, y: m.f(h.item), sets: h.item.sets, unit: h.item.unit, kg: h.item.kg && h.item.kg.some(Number) ? Math.max(...h.item.kg.map(Number)) : null })).filter(d => d.y != null);
+  };
+  V.chartSummary = (m, data) => {
+    if (!data.length) return 'Sem registros nesse período.';
+    const f = data[0], l = data[data.length - 1], best = data.reduce((a, d) => d.y > a.y ? d : a), u = m.unit ? ' ' + m.unit : '';
+    return data.length + ' treino(s) de ' + f.date.split('-').reverse().join('/') + ' a ' + l.date.split('-').reverse().join('/') + '. ' + (data.length > 1 ? 'Primeiro: ' + f.y + u + '; último: ' + l.y + u + ' (' + (l.y - f.y >= 0 ? '+' : '') + r1(l.y - f.y) + u + '). ' : '') + 'Melhor: ' + best.y + u + ' em ' + best.date.split('-').reverse().join('/') + '.';
+  };
+  A['chart-m'] = d => { ui.chartMetric = d.m; APP.render(); };
+  A['chart-p'] = d => { ui.chartPeriod = d.p; APP.render(); };
   A['evo-tab'] = d => { ui.evoTab = d.tab; if (location.hash !== '#evolucao') location.hash = '#evolucao'; else APP.render(); };
   A['log-del'] = d => { if (confirm('Apagar este registro? Não dá para desfazer.')) { S.removeLog(d.id); APP.render(); } };
   A['m-pick'] = d => { ui.chartTest = d.id; APP.render(); };
@@ -431,12 +425,19 @@
 
   // ================= AJUSTES =================
   V.ajustes = () => '<a href="#perfil" class="muted small">← Perfil</a><h1>Ajustes</h1>' +
+    (S.recovered ? '<div class="hint warn">' + e(S.recovered) + ' <button class="link" data-a="rec-ok">Ok</button></div>' : '') +
     '<div class="card"><h2>Sincronização PC ↔ celular</h2><p class="muted">Seus dados ficam num Gist <b>privado</b> da sua conta do GitHub. Faça isto uma vez em cada aparelho:</p>' +
     '<ol class="small"><li>Abra <a target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?description=App%20de%20treino&scopes=gist">github.com → Settings → Tokens (classic) → Generate new token</a>.</li>' +
-    '<li>Marque <b>apenas</b> a permissão <code>gist</code>, escolha "No expiration" e gere.</li><li>Cole o token abaixo e toque em Conectar. Use o mesmo token no PC e no celular.</li></ol>' +
+    '<li>Marque <b>apenas</b> a permissão <code>gist</code>. Em validade, escolha <b>90 dias</b> (ou 1 ano): quando vencer, o app avisa e você gera outro.</li><li>Cole o token abaixo e toque em Conectar. Use o mesmo token no PC e no celular.</li></ol>' +
+    '<details class="small"><summary class="muted">Riscos e cuidados com o token</summary><ul><li>O token fica guardado <b>neste navegador</b>. Quem tiver acesso a ele (aparelho destravado, extensões maliciosas) pode usar o token.</li>' +
+    '<li>Com só a permissão <code>gist</code>, o token não mexe nos seus repositórios nem na sua conta: só lê e grava gists.</li><li>Não use o token em aparelho de outra pessoa nem compartilhe prints dele.</li>' +
+    '<li>Perdeu o celular ou desconfia de algo? <a target="_blank" rel="noopener" href="https://github.com/settings/tokens">revogue o token no GitHub</a>: ele para de funcionar na hora em todos os aparelhos.</li></ul></details>' +
     '<div class="row wrap"><input id="tok" type="password" autocomplete="off" placeholder="ghp_…" value="' + e(S.cfg.token) + '" class="grow" aria-label="Token do GitHub">' +
-    '<button class="btn" data-a="sync-connect">' + (S.cfg.token ? 'Sincronizar agora' : 'Conectar') + '</button>' + (S.cfg.token ? '<button class="btn ghosty" data-a="sync-off">Desligar</button>' : '') + '</div>' +
-    '<div class="muted small" id="sync-status">Situação: ' + e(S.syncStatus) + '</div></div>' +
+    '<button class="btn" data-a="sync-connect">' + (S.cfg.token ? 'Sincronizar agora' : 'Conectar') + '</button></div>' +
+    '<div class="muted small" id="sync-status" role="status">Situação: ' + e(S.syncStatus) + '</div>' +
+    (S.cfg.tokenExp ? '<div class="small ' + (new Date(S.cfg.tokenExp) - Date.now() < 14 * 864e5 ? 'bad' : 'muted') + '">Token vence em ' + new Date(S.cfg.tokenExp).toLocaleDateString('pt-BR') + '.</div>' : '') +
+    (S.cfg.token ? '<div class="row wrap"><button class="btn small ghosty" data-a="sync-off">Desligar neste aparelho</button><button class="btn small ghosty danger" data-a="sync-del">Apagar backup na nuvem</button></div>' +
+      '<p class="muted small"><b>Desligar</b> esquece o token só aqui: o backup na nuvem e os outros aparelhos continuam. <b>Apagar backup na nuvem</b> exclui o Gist; os dados deste aparelho ficam. Para invalidar o token em todo lugar, revogue no GitHub.</p>' : '') + '</div>' +
     V.themeCard() +
     '<div class="card"><h2>Meus equipamentos</h2><p class="muted">Marque o que você tem. O app avisa quando um exercício pede algo que falta, e a Biblioteca pode filtrar só o que dá para fazer.</p>' +
     S.allEquip().map(q => '<label class="chk"><input type="checkbox" data-equip="' + e(q.id) + '"' + (S.owned().includes(q.id) ? ' checked' : '') + '><span class="grow">' + e(q.name) + '</span>' +
@@ -448,8 +449,9 @@
     '<li>Vá em <b>Credenciais → Criar credenciais → Chave de API</b>.</li><li>Em <b>Restrições</b>, limite a chave à "YouTube Data API v3" e ao site <code>' + e(location.hostname || 'leonardoreali.github.io') + '</code>.</li><li>Cole a chave abaixo. O limite gratuito dá cerca de 100 buscas por dia.</li></ol></details>' +
     '<div class="row wrap"><input id="ytkey" type="password" autocomplete="off" placeholder="AIza…" value="' + e(S.cfg.ytKey || '') + '" class="grow" aria-label="Chave da API do YouTube"><button class="btn" data-a="ytkey-save">Salvar</button></div>' +
     '<p class="muted small">A chave fica só neste aparelho.</p></div>' +
-    '<div class="card"><h2>Backup manual</h2><p class="muted">Baixe um arquivo com tudo (treinos, programas, medidas) ou restaure um backup.</p><div class="row wrap"><button class="btn" data-a="backup">⬇ Baixar backup</button>' +
-    '<label class="btn ghosty">⬆ Restaurar backup<input type="file" id="restore" accept="application/json,.json" hidden></label></div></div>' +
+    '<div class="card"><h2>Backup manual</h2><p class="muted">Baixe um arquivo com tudo (treinos, programas, medidas) ou restaure um backup. Antes de restaurar, o app guarda uma cópia do que está aqui.</p><div class="row wrap"><button class="btn" data-a="backup">⬇ Baixar backup</button>' +
+    '<label class="btn ghosty">⬆ Restaurar backup<input type="file" id="restore" accept="application/json,.json" hidden></label></div>' +
+    (S.previous() ? '<p class="small">Cópia anterior guardada em ' + new Date(S.previous().d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) + '. <button class="link" data-a="undo-restore">Voltar para ela</button></p>' : '') + '</div>' +
     '<div class="card"><h2>Preferências</h2><label class="chk"><input type="checkbox" id="snd"' + (S.cfg.sound ? ' checked' : '') + '><span>Sons dos timers</span></label></div>' +
     '<div class="card"><h2>Instalar no celular</h2><p class="muted">Abra este mesmo endereço no Chrome do Android → menu ⋮ → <b>Adicionar à tela inicial / Instalar app</b>. Depois de aberto uma vez, funciona sem internet (só os vídeos precisam de conexão).</p></div>' +
     '<div class="card"><h2>Zona de perigo</h2><button class="btn danger ghosty" data-a="reset">Apagar todos os dados deste aparelho</button></div>';
@@ -459,10 +461,16 @@
     if (!S.cfg.ytKey) return U.toast('Chave removida.');
     try { await U.ytSearch('push up shorts'); U.toast('Chave funcionando!'); } catch (err) { U.toast('A chave não funcionou: ' + err.message); }
   };
-  A['sync-off'] = () => { S.cfg.token = ''; S.cfg.gistId = ''; S.saveCfg(); S.syncStatus = 'Desligada'; APP.render(); };
+  A['sync-off'] = () => { if (!confirm('Desligar a sincronização neste aparelho? O backup na nuvem e os outros aparelhos continuam como estão.')) return; S.disconnect(); APP.render(); U.toast('Sincronização desligada neste aparelho.'); };
+  A['sync-del'] = async () => {
+    if (!confirm('Apagar o backup da nuvem (o Gist no GitHub)? Os dados deste aparelho ficam, mas os outros aparelhos param de sincronizar. Não dá para desfazer.')) return;
+    try { await S.deleteRemote(); APP.render(); U.toast('Backup na nuvem apagado e sincronização desligada.'); } catch (err) { U.toast('Não consegui apagar: ' + err.message); }
+  };
+  A['rec-ok'] = () => { S.recovered = null; APP.render(); };
+  A['undo-restore'] = () => { if (confirm('Trocar os dados atuais pela cópia anterior? Os atuais viram a nova cópia anterior.')) { S.undoRestore(); APP.render(); U.toast('Dados trocados pela cópia anterior.'); } };
   A.backup = () => {
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(S.state, null, 1)], { type: 'application/json' }));
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(S.exportData(), null, 1)], { type: 'application/json' }));
     a.download = 'treino-backup-' + S.today() + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
   A.reset = () => { if (confirm('Apagar TODOS os dados deste aparelho (treinos, programas, medidas)? Não dá para desfazer.') && confirm('Tem certeza? Faça um backup antes se tiver dúvida.')) { S.reset(); APP.render(); } };
@@ -471,7 +479,12 @@
     if (t.id === 'snd') { S.cfg.sound = t.checked; S.saveCfg(); }
     if (t.id === 'restore' && t.files[0]) {
       const r = new FileReader();
-      r.onload = () => { try { const d = JSON.parse(r.result); if (!d.v || !d.programs) throw 0; if (confirm('Substituir os dados deste aparelho pelo backup?')) { S.state = d; S.save(); APP.render(); U.toast('Backup restaurado.'); } } catch (err) { U.toast('Arquivo de backup inválido.'); } };
+      r.onload = () => {
+        let m; try { m = S.parseBackup(r.result); } catch (err) { t.value = ''; return U.modal('<h2>Não restaurei</h2><p>' + e(err.message) + '.</p><p class="muted small">Seus dados atuais não foram alterados.</p><button class="btn block" data-a="modal-close">Ok</button>'); }
+        const st = m.state, n = st.logs.length, np = Object.keys(st.programs).length;
+        if (!confirm('Restaurar este backup (' + n + ' treino(s), ' + np + ' programa(s))? Os dados atuais deste aparelho serão substituídos, mas ficam guardados como cópia anterior.')) { t.value = ''; return; }
+        S.restore(st); APP.render(); U.toast('Backup restaurado' + (m.fixed ? ' (' + m.fixed + ' registro(s) com defeito descartados)' : '') + '.');
+      };
       r.readAsText(t.files[0]);
     }
   });

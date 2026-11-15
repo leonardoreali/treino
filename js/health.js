@@ -5,6 +5,9 @@
    Não é orientação médica: serve para apoiar o acompanhamento de um profissional de saúde. */
 (function () {
   const e = U.esc, H = window.HEALTH = {};
+  // Origem e revisão das regras. Atualize aqui quando um profissional revisar ou quando as regras mudarem.
+  H.RULES_INFO = { versao: '1.1', data: '14/11/2026', origem: 'Regras gerais de atividade física para dor, lesão e condições crônicas, escritas pelo desenvolvedor do app com base em orientações amplamente divulgadas (evitar impacto, carga e amplitude que provocam dor; retorno gradual depois da liberação).', revisao: 'Ainda não revisadas por médico, fisioterapeuta ou profissional de educação física.' };
+  H.rulesNote = () => 'Regras v' + H.RULES_INFO.versao + ' (' + H.RULES_INFO.data + '). ' + H.RULES_INFO.revisao;
   const conds = () => S.state.conditions || (S.state.conditions = []);
   const active = () => conds().filter(c => !c.resolved);
   const alunos = () => S.state.alunos || [];
@@ -148,8 +151,8 @@
         const bad = r.avoid.has(it.ex) || r.removeCats.has(ex.cat), cap = r.caps[ex.cat];
         if (bad || (cap && ex.level > cap)) {
           const alt = r.removeCats.has(ex.cat) ? null : pickAlt(it, r, used, cap);
-          if (!alt) { removed.push(ex.name); return false; }
-          swapped.push(ex.name + ' → ' + alt.name); used.add(alt.id); it.ex = alt.id; delete it.skill; ex = alt;
+          if (!alt) { removed.push(ex.name + ' (' + (r.removeCats.has(ex.cat) ? 'usa a região em recuperação' : r.why[ex.id] || 'sua condição') + ')'); return false; }
+          swapped.push(ex.name + ' → ' + alt.name + ' (' + (r.why[ex.id] || (cap ? 'dificuldade limitada na recuperação' : 'sua condição')) + ')'); used.add(alt.id); it.ex = alt.id; delete it.skill; ex = alt;
           const s = W.suggest(alt.id, it, 0); Object.assign(it, { vals: s.targets, up: false, done: Array(it.sets).fill(false), kgs: alt.w ? Array(it.sets).fill(s.kg || '') : null, hint: 'Adaptado à sua condição (' + (r.why[S.ex(it.ex).id] || 'saúde') + '). ' + (s.hint || '') });
         }
         if (r.setsCap[ex.cat] && it.sets > r.setsCap[ex.cat]) resize(it, r.setsCap[ex.cat]);
@@ -363,7 +366,7 @@
       (c.kind !== 'cronica' ? (consulted(c) ? (c.diagnosis ? '<div class="small"><b>Diagnóstico:</b> ' + e(c.diagnosis) + (c.diagDate ? ' <span class="muted">(' + U.fmtDate(c.diagDate) + ')</span>' : '') + '</div>' : '') : H.nudgeDue(c) ? nudgeHtml(c) : '<div class="small muted">' + (c.consult === 'agendado' ? 'Consulta marcada. ' : 'Sem avaliação profissional ainda. ') + '<button class="link" data-a="hl-diag" data-id="' + c.id + '">Já passei por um profissional</button></div>') : '') +
       (c.notes ? '<div class="hint small"><b>Orientação do profissional:</b> ' + e(c.notes) + '</div>' : '') +
       (c.kind !== 'cronica' ? '<div class="row between"><div class="small">Dor agora: <b>' + painNow(c) + '/10</b></div>' + spark(c.pains) + '</div><div class="chips" style="flex-wrap:wrap">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => '<button data-a="hl-pain" data-id="' + c.id + '" data-v="' + n + '" class="' + (painNow(c) === n ? 'on' : '') + '">' + n + '</button>').join('') + '</div>' : '') +
-      '<div class="row wrap">' + (c.kind === 'lesao' && c.phase === 'protecao' ? '<button class="btn small" data-a="hl-phase" data-id="' + c.id + '" data-dir="1">Recebi liberação</button>' : '') +
+      '<div class="row wrap">' + (c.kind === 'lesao' && c.phase === 'protecao' ? '<button class="btn small" data-a="hl-phase" data-id="' + c.id + '" data-dir="1">O profissional me liberou</button>' : '') +
       (c.kind === 'lesao' && c.phase === 'retorno' ? '<button class="btn small ghosty" data-a="hl-phase" data-id="' + c.id + '" data-dir="1">Avançar para fortalecimento</button>' : '') +
       (c.kind === 'lesao' && c.phase !== 'protecao' ? '<button class="btn small ghosty" data-a="hl-phase" data-id="' + c.id + '" data-dir="-1">Voltar uma fase</button>' : '') +
       (sp.clearance && !c.cleared ? '<button class="btn small" data-a="hl-clear1" data-id="' + c.id + '">Tenho liberação médica</button>' : '') +
@@ -376,6 +379,7 @@
       '<div class="hint warn small"><b>O app não substitui médico, fisioterapeuta nem profissional de educação física.</b> Ele aplica regras gerais e as orientações que você registrar, para apoiar o acompanhamento de um profissional. Dor forte, inchaço, formigamento, dor no peito ou falta de ar: pare e procure atendimento.</div>' +
       (act.length ? act.map(card).join('') + '<button class="btn ghosty block" data-a="hl-report">📋 Relatório para o profissional de saúde</button>'
         : '<div class="card"><p>Nenhuma condição registrada. Se você tem uma <b>dor</b>, uma <b>lesão ou fratura</b> (ou está voltando de uma), ou uma <b>condição crônica</b> como pressão alta, diabetes ou hérnia, registre aqui: todos os treinos passam a ser adaptados até você se recuperar.</p><button class="btn" data-a="hl-new">Registrar agora</button></div>') +
+      '<details class="card small"><summary><b>Sobre estas regras</b></summary><p>' + e(H.RULES_INFO.origem) + '</p><p><b>Revisão:</b> ' + e(H.RULES_INFO.revisao) + '</p><p class="muted">Versão ' + H.RULES_INFO.versao + ', de ' + H.RULES_INFO.data + '. O app nunca libera uma fase sozinho: toda liberação é informada por você, a partir do que o profissional disse.</p></details>' +
       (old.length ? '<details class="card"><summary><b>Já resolvidas (' + old.length + ')</b></summary><ul class="small">' + old.map(c => '<li>' + e(H.title(c)) + ' — ' + U.fmtDate(c.since) + ' a ' + U.fmtDate(c.resolved) + ' <button class="link" data-a="hl-reopen" data-id="' + c.id + '">reabrir</button></li>').join('') + '</ul></details>' : '');
   };
   A['hl-pain'] = d => { const c = findC(d.id); (c.pains = c.pains || []).push({ date: S.today(), v: +d.v }); c.t = Date.now(); S.save(); const m = review(c); APP.render(); if (m.length) U.modal('<h2>Acompanhamento</h2><ul>' + m.map(x => '<li>' + x + '</li>').join('') + '</ul><button class="btn block" data-a="modal-close">Ok</button>'); };
@@ -457,7 +461,7 @@
         '\n  Adaptações aplicadas pelo app: ' + H.effects(c).join(' ') + (c.notes ? '\n  Orientação registrada: ' + c.notes : '')).join('\n\n') +
       '\n\nTreinos nos últimos 28 dias: ' + logs.length + (logs.length ? ' (último em ' + U.fmtDate(logs[0].date) + ')' : '') + '\n' +
       logs.slice(0, 8).map(l => '  ' + U.fmtDate(l.date) + ' — ' + (l.sessionName || '') + (l.rpe ? ' · esforço ' + l.rpe + '/10' : '') + (l.feel ? ' · achou ' + { facil: 'fácil', ok: 'na medida', pesado: 'pesado' }[l.feel] : '') + (l.pain ? ' · dor em ' + l.pain.join(', ') : '')).join('\n') +
-      '\n\nGerado pelo app de treino (regras gerais, sem avaliação clínica). Por favor, indique o que deve ser mudado.';
+      '\n\nGerado pelo app de treino (regras gerais, sem avaliação clínica). ' + H.rulesNote() + ' As fases e liberações registradas foram informadas pelo próprio usuário. Por favor, indique o que deve ser mudado.';
     SHARE.last = { text: txt, fone: '' };
     U.modal('<h2>Relatório para o profissional</h2><p class="muted small">Mostre ao médico, fisioterapeuta ou professor. As orientações deles você registra em cada condição.</p><textarea readonly rows="12" id="sh-text">' + e(txt) + '</textarea>' +
       '<button class="btn block" data-a="sh-wa">Enviar pelo WhatsApp</button><button class="btn ghosty block" data-a="sh-copy">Copiar</button>');

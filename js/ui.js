@@ -201,12 +201,19 @@
     if (lo === hi) { lo -= 1; hi += 1; }
     const padv = (hi - lo) * 0.15; lo = opts.zero ? 0 : Math.max(0, lo - padv); hi += padv;
     const L = 34, R = 10, Tp = 10, B = 22, pw = w - L - R, ph = h - Tp - B;
-    const X = i => L + (labels.length < 2 ? pw / 2 : pw * i / (labels.length - 1)), Y = v => Tp + ph * (1 - (v - lo) / (hi - lo));
+    // Com datas (p.t), o eixo horizontal é proporcional ao tempo: intervalos maiores entre treinos aparecem maiores.
+    const pts0 = series[0] ? series[0].points : [], withT = pts0.length > 1 && pts0.every(q => q.t != null), timed = withT && pts0[pts0.length - 1].t - pts0[0].t >= 864e5, t0 = timed ? pts0[0].t : 0, t1 = timed ? pts0[pts0.length - 1].t : 1; // tudo no mesmo dia: espaça por ordem
+    const X = i => L + (labels.length < 2 ? pw / 2 : timed ? pw * (pts0[i].t - t0) / Math.max(1, t1 - t0) : pw * i / (labels.length - 1)), Y = v => Tp + ph * (1 - (v - lo) / (hi - lo));
     c.strokeStyle = css.getPropertyValue('--line'); c.lineWidth = 1; c.textAlign = 'right';
     for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, y = Y(v); c.beginPath(); c.moveTo(L, y); c.lineTo(w - R, y); c.stroke(); c.fillText(Math.round(v * 10) / 10, L - 5, y + 4); }
     c.textAlign = 'center';
-    const stepL = Math.ceil(labels.length / Math.max(2, Math.floor(pw / 46)));
-    labels.forEach((l, i) => { if (i % stepL === 0 || i === labels.length - 1) c.fillText(l, X(i), h - 6); });
+    if (timed) { // marcas de data espaçadas no tempo; com mais de um ano, mostra mês/ano
+      const long = t1 - t0 > 330 * 864e5, nT = Math.max(2, Math.min(6, Math.floor(pw / 60)));
+      for (let k = 0; k <= nT; k++) { const t = t0 + (t1 - t0) * k / nT, d = new Date(t); c.fillText(long ? String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getFullYear()).slice(2) : String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'), L + pw * k / nT, h - 6); }
+    } else {
+      const stepL = Math.ceil(labels.length / Math.max(2, Math.floor(pw / 46)));
+      labels.forEach((l, i) => { if (i % stepL === 0 || i === labels.length - 1) c.fillText(l, X(i), h - 6); });
+    }
     series.forEach(s => {
       c.strokeStyle = c.fillStyle = s.color; c.lineWidth = 2; c.beginPath();
       let started = false;

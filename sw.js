@@ -1,17 +1,57 @@
-/* Service worker: deixa o app abrir sem internet. Mude VERSION ao publicar mudanças grandes. */
-const VERSION = 'treino-v12';
-const SHELL = ['./', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
-  'js/data/exercises.js', 'js/data/videos.js', 'js/data/program.js', 'js/data/equip.js', 'js/data/gym.js', 'js/music.js', 'js/generator.js', 'js/share.js', 'js/people.js', 'js/ocr.js', 'js/theme.js', 'js/diet.js', 'js/plans.js', 'js/adapt.js', 'js/progress.js', 'js/health.js', 'js/store.js', 'js/ui.js', 'js/workout.js', 'js/pdfimport.js', 'js/views.js', 'js/app.js'];
+/* Service worker: o app abre sem internet e só troca de versão quando a pessoa aceita.
+   Ao publicar mudanças, aumente VERSION: a versão nova é baixada inteira em segundo plano e fica esperando;
+   o app mostra "Nova versão disponível" e só troca quando a pessoa toca em Atualizar (nunca no meio de um treino). */
+const VERSION = 'treino-v13';
+const RUNTIME = 'treino-bibliotecas';
+const SHELL = [
+  './',
+  'index.html',
+  'css/style.css',
+  'manifest.webmanifest',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'js/data/exercises.js',
+  'js/data/videos.js',
+  'js/data/equip.js',
+  'js/data/gym.js',
+  'js/data/program.js',
+  'js/store.js',
+  'js/ui.js',
+  'js/workout.js',
+  'js/music.js',
+  'js/pdfimport.js',
+  'js/ocr.js',
+  'js/views.js',
+  'js/generator.js',
+  'js/share.js',
+  'js/people.js',
+  'js/theme.js',
+  'js/diet.js',
+  'js/plans.js',
+  'js/adapt.js',
+  'js/progress.js',
+  'js/health.js',
+  'js/app.js',
+];
 
-self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
-self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('install', e => {
+  // cache: 'reload' evita pegar arquivos antigos do cache do navegador; se faltar internet, a instalação falha e a versão atual continua.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== RUNTIME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('message', e => { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  const isPdfLib = url.hostname === 'cdnjs.cloudflare.com' || url.hostname === 'cdn.jsdelivr.net'; // leitores de PDF e de imagem
-  if (e.request.method !== 'GET' || (url.origin !== location.origin && !isPdfLib)) return;
-  // rede primeiro (para pegar atualizações), cache quando estiver offline
-  e.respondWith(fetch(e.request).then(r => {
-    if (r.ok) { const copy = r.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); }
-    return r;
-  }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html'))));
+  const req = e.request, url = new URL(req.url);
+  if (req.method !== 'GET') return;
+  if (url.origin === location.origin) {
+    if (req.mode === 'navigate') { e.respondWith(caches.match('index.html').then(r => r || fetch(req))); return; }
+    e.respondWith(caches.match(req, { ignoreSearch: true }).then(r => r || fetch(req)));
+    return;
+  }
+  // leitores de PDF e de imagem (baixados na primeira vez que são usados): guardados para funcionar sem internet
+  if (url.hostname === 'cdnjs.cloudflare.com' || url.hostname === 'cdn.jsdelivr.net') {
+    e.respondWith(caches.open(RUNTIME).then(c => c.match(req).then(r => r || fetch(req).then(res => { if (res.ok) c.put(req, res.clone()); return res; }))));
+  }
 });

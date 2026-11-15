@@ -59,6 +59,7 @@
       blocks.push(nb);
     });
     S.current = { type, programId: p.id, round, sessionIdx: si, name: src.name, startedAt: Date.now(), date: S.today(), blocks, deload, phase: ph ? ph.label : '' };
+    if (S.cfg.focus && type === 'session') S.current.focus = { idx: 0 };
     S.saveCurrent();
   };
 
@@ -111,13 +112,39 @@
     return '<section><h3>' + e(b.title) + '</h3>' + (b.note && b.kind === 'forca' ? '<p class="muted small">' + e(b.note) + '</p>' : '') + body + '</section>';
   }
 
+  // ---------- modo foco: um passo por vez (cada exercício de força é um passo; aquecimento, cardio e alongamento também) ----------
+  function steps(c) { const out = []; c.blocks.forEach((b, bi) => { if (b.kind === 'forca') b.items.forEach(it => out.push({ b, bi, it })); else out.push({ b, bi }); }); return out; }
+  const stepDone = st => st.it ? st.it.done.every(Boolean) : st.b.kind === 'check' ? st.b.items.every(i => i.checked) : !!(st.b.minutes || st.b.doneOpt);
+  function focusView(c) {
+    const st = steps(c); let idx = Math.min(c.focus.idx || 0, st.length - 1); c.focus.idx = idx;
+    const cur = st[idx], doneN = st.filter(stepDone).length;
+    let body;
+    if (cur.it) {
+      const it = cur.it, next = it.done.indexOf(false), last = S.logsFor(it.ex).filter(h => h.item.unit === it.unit).pop();
+      body = '<div class="focus-now">' + (next >= 0 ? '<div class="eyebrow">Série ' + (next + 1) + ' de ' + it.sets + '</div><div class="focus-goal">' + it.vals[next] + (it.unit === 's' ? ' s' : it.unit === 'min' ? ' min' : ' reps') + (it.kgs && it.kgs[next] ? ' · ' + it.kgs[next] + ' kg' : '') + '</div>' : '<div class="eyebrow">Exercício concluído ✓</div>') +
+        '<div class="muted small">' + (last ? 'Última vez (' + U.fmtDate(last.log.date) + '): ' + last.item.sets.join(', ') + U.unit(it.unit) + (last.item.kg && last.item.kg.some(Number) ? ' @ ' + Math.max(...last.item.kg) + ' kg' : '') : 'Primeira vez neste exercício') + (it.rest ? ' · descanso ' + U.fmtSec(it.rest) : '') + '</div></div>' +
+        '<section>' + itemForca(it) + '</section>';
+    } else body = block(cur.b, cur.bi);
+    if (idx > 0) body = body.replace('<section>', '<section class="f">'); // avisos de adaptação só no primeiro passo
+    return '<header class="wk-head"><div><div class="muted small">Modo foco · passo ' + (idx + 1) + ' de ' + st.length + (cur.it ? ' · ' + e(cur.b.title) : '') + '</div><h1>' + e(c.name) + '</h1></div><button class="btn small ghosty" data-a="w-full">☰ Sessão completa</button></header>' +
+      '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + st.length + '" aria-valuenow="' + doneN + '" aria-label="Passos concluídos"><i style="width:' + Math.round(100 * doneN / st.length) + '%"></i></div>' +
+      '<div class="focus-steps" aria-hidden="true">' + st.map((x, i) => '<i class="' + (i === idx ? 'cur' : stepDone(x) ? 'ok' : '') + '"></i>').join('') + '</div>' + body +
+      '<div class="row between focus-nav"><button class="btn ghosty" data-a="w-step" data-d="-1"' + (idx ? '' : ' disabled') + '>◀ Anterior</button>' +
+      (idx < st.length - 1 ? '<button class="btn' + (stepDone(cur) ? '' : ' ghosty') + '" data-a="w-step" data-d="1">Próximo ▶</button>' : '<button class="btn" data-a="w-finish">Concluir treino</button>') + '</div>' +
+      (idx < st.length - 1 ? '<p class="muted small" style="text-align:center">A seguir: ' + e(st[idx + 1].it ? S.ex(st[idx + 1].it.ex).name : st[idx + 1].b.title) + '</p>' : '');
+  }
+  A['w-focus'] = () => { const st = steps(S.current); S.current.focus = { idx: Math.max(0, st.findIndex(x => !stepDone(x))) }; S.cfg.focus = true; S.saveCfg(); rerender(); window.scrollTo(0, 0); };
+  A['w-full'] = () => { delete S.current.focus; S.cfg.focus = false; S.saveCfg(); rerender(); };
+  A['w-step'] = d => { const n = steps(S.current).length; S.current.focus.idx = Math.max(0, Math.min(n - 1, (S.current.focus.idx || 0) + +d.d)); rerender(); window.scrollTo(0, 0); };
+
   W.view = () => {
     const c = S.current;
     if (!c) return '<div class="empty"><p>Nenhum treino em andamento.</p><a class="btn" href="#hoje">Ir para Hoje</a></div>';
+    if (c.focus) return focusView(c);
     const tot = c.blocks.flatMap(b => b.kind === 'forca' ? b.items.flatMap(i => i.done) : b.kind === 'check' ? b.items.map(i => i.checked) : [!!(b.minutes || b.doneOpt)]);
     const pct = Math.round(100 * tot.filter(Boolean).length / Math.max(1, tot.length));
     return '<header class="wk-head"><div><div class="muted small">' + (c.type === 'flex' ? 'Dia leve — a fila não anda' : 'Volta ' + c.round + ' · Sessão ' + (c.sessionIdx + 1)) + (c.deload ? ' · <b>volta leve (metade das séries)</b>' : '') + (c.phase ? '<br>' + e(c.phase) : '') + '</div>' +
-      '<h1>' + e(c.name) + '</h1></div></header><div class="bar"><i style="width:' + pct + '%"></i></div>' +
+      '<h1>' + e(c.name) + '</h1></div><button class="btn small ghosty" data-a="w-focus" title="Mostrar um exercício por vez">🎯 Modo foco</button></header><div class="bar"><i style="width:' + pct + '%"></i></div>' +
       c.blocks.map(block).join('') +
       '<div class="row end"><button class="btn danger ghosty" data-a="w-cancel">Descartar</button><button class="btn big" data-a="w-finish">Concluir treino</button></div>';
   };
@@ -141,6 +168,8 @@
     const it = findItem(d.key), i = +d.i;
     it.done[i] = !it.done[i];
     if (it.done[i]) { U.beep(880, 80); if (!(i === it.sets - 1 && !it.rest)) U.rest(it.rest || 60, S.ex(it.ex).name + (i < it.sets - 1 ? ' (série ' + (i + 2) + ')' : ' — próximo exercício')); }
+    // modo foco: terminou todas as séries → vai para o próximo exercício (o descanso continua contando na barra)
+    if (S.current.focus && it.done.every(Boolean)) { const st = steps(S.current), cur = S.current.focus.idx; if (st[cur] && st[cur].it === it && cur < st.length - 1) S.current.focus.idx = cur + 1; }
     rerender();
   };
   A['w-hold'] = d => {
@@ -180,16 +209,39 @@
     const orig = si === 'f' ? it : p.sessions[+si].blocks[+bi].items[+ii];
     swapInPlace(it, d.ex || W.resolve(orig, p.id, d.key));
   };
-  A['w-cancel'] = () => { if (confirm('Descartar este treino? Nada será registrado.')) { S.current = null; S.saveCurrent(); U.stopTimer(); U.wake(false); location.hash = '#hoje'; } };
+  A['w-cancel'] = () => { if (confirm('Descartar este treino? Nada será registrado.')) { U.closeModal(); S.current = null; S.saveCurrent(); U.stopTimer(); U.wake(false); location.hash = '#hoje'; } };
+  // O que foi feito na sessão: séries de força, cardio e intervalado contam; aquecimento e alongamento são só informativos.
+  W.completion = c => {
+    let total = 0, done = 0; const pending = [], info = [];
+    c.blocks.forEach(b => {
+      if (b.kind === 'forca') b.items.forEach(it => { const n = it.done.filter(Boolean).length; total += it.sets; done += n; if (n < it.sets) pending.push(S.ex(it.ex).name + ': ' + n + ' de ' + it.sets + ' séries'); });
+      else if (b.kind === 'cardio') { total++; if (b.minutes) done++; else pending.push(b.title + ': não registrado'); }
+      else if (b.kind === 'intervalado') { total++; if (b.doneOpt) done++; else pending.push('Intervalado: não feito'); }
+      else if (b.kind === 'check') { const left = b.items.filter(i => !i.checked).length; if (left) info.push(b.title + ': ' + left + ' de ' + b.items.length + ' não marcados'); }
+    });
+    const checks = c.blocks.filter(b => b.kind === 'check').flatMap(b => b.items), anyCheck = checks.some(i => i.checked);
+    const pct = total ? Math.round(100 * done / total) : (checks.length ? Math.round(100 * checks.filter(i => i.checked).length / checks.length) : 100);
+    return { total, done, pct, pending, info, anyWork: done > 0 || (c.type === 'flex' && anyCheck) };
+  };
   A['w-finish'] = () => {
-    U.modal('<h2>Concluir treino</h2><p>Esforço percebido (1 = muito leve, 10 = máximo)</p><div class="rpe">' +
+    const c = S.current, k = W.completion(c);
+    if (!k.anyWork) return U.modal('<h2>Nada registrado ainda</h2><p>Nenhuma série foi marcada como feita' + (c.type === 'flex' ? ' (nenhum alongamento marcado)' : '') + '. Marque o que você fez (✓ em cada série) antes de concluir.</p>' +
+      '<button class="btn block" data-a="modal-close">Voltar ao treino</button><button class="btn ghosty danger block" data-a="w-cancel">Descartar este treino</button>');
+    const partial = c.type === 'session' && k.pct < 100;
+    U.modal('<h2>' + (partial ? 'Concluir treino parcial' : 'Concluir treino') + '</h2>' +
+      (partial ? '<div class="hint warn"><b>Feito: ' + k.pct + '%</b> (' + k.done + ' de ' + k.total + ')<ul class="small" style="margin:6px 0 0;padding-left:18px">' + k.pending.slice(0, 8).map(x => '<li>' + e(x) + '</li>').join('') + (k.pending.length > 8 ? '<li>…</li>' : '') + '</ul></div>' +
+        (c.type === 'session' ? '<label class="chk"><input type="radio" name="w-part" value="advance" checked><span>Salvar como parcial e seguir para a próxima sessão</span></label><label class="chk"><input type="radio" name="w-part" value="repeat"><span>Salvar como parcial e <b>repetir esta sessão</b> na próxima vez</span></label>' : '')
+        : '<div class="hint up">✓ Todas as séries concluídas.</div>') +
+      (k.info.length ? '<p class="muted small">' + k.info.map(e).join(' · ') + '</p>' : '') +
+      '<p>Esforço percebido (1 = muito leve, 10 = máximo)</p><div class="rpe">' +
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => '<button data-a="w-rpe" data-n="' + n + '">' + n + '</button>').join('') + '</div>' +
       '<label>Observações<textarea id="w-notes" rows="3" placeholder="Como foi? Dor, sono, energia…"></textarea></label>' +
-      '<button class="btn big block" data-a="w-save">Salvar treino</button>');
+      '<button class="btn big block" data-a="w-save">' + (partial ? 'Salvar treino parcial' : 'Salvar treino') + '</button>');
   };
   A['w-rpe'] = (d, el) => { el.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === el)); el.parentNode.dataset.v = d.n; };
   A['w-save'] = () => {
-    const c = S.current, items = [];
+    const c = S.current, items = [], k = W.completion(c), repeat = (U.$('input[name="w-part"]:checked') || {}).value === 'repeat';
+    if (!k.anyWork) return U.toast('Marque pelo menos uma série feita.');
     c.blocks.forEach(b => {
       if (b.kind === 'forca') b.items.forEach(it => { const sets = it.vals.filter((v, i) => it.done[i]); if (sets.length) { const o = { ex: it.ex, unit: it.unit, sets, side: !!it.side }; if (it.kgs && it.kgs.some(Number)) o.kg = it.kgs.filter((v, i) => it.done[i]).map(v => Number(v) || 0); items.push(o); } });
       if (b.kind === 'cardio' && b.minutes) items.push({ ex: b.ex || 'caminhada', unit: 'min', sets: [b.minutes] });
@@ -197,8 +249,8 @@
     const interval = c.blocks.map(b => b.doneOpt).filter(Boolean)[0] || null;
     const rpe = Number(U.$('.rpe').dataset.v) || null;
     S.state.logs.push({ id: S.uid(), t: Date.now(), date: c.date, programId: c.programId, round: c.round, sessionIdx: c.sessionIdx, sessionName: c.name, type: c.type,
-      items, interval, rpe, notes: U.$('#w-notes').value.trim(), minutes: Math.max(1, Math.round((Date.now() - c.startedAt) / 60000)) });
-    if (c.type === 'session' && c.programId === S.program().id) S.setPos(S.pos() + 1);
+      items, interval, rpe, notes: U.$('#w-notes').value.trim(), minutes: Math.max(1, Math.round((Date.now() - c.startedAt) / 60000)), pct: k.pct, partial: c.type === 'session' && k.pct < 100 });
+    if (c.type === 'session' && c.programId === S.program().id && !repeat) S.setPos(S.pos() + 1);
     S.current = null; S.saveCurrent(); S.save(); U.stopTimer(); U.wake(false);
     const ready = SKILLS.filter(sk => S.skillStep(sk.id) < sk.steps.length - 1 && S.critProgress(sk.steps[S.skillStep(sk.id)]) >= 2);
     const p = S.program();

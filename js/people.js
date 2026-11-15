@@ -41,7 +41,7 @@
   // ================= PERFIL =================
   V.perfil = () => {
     const p = S.state.profile || {};
-    return '<h1>Perfil</h1><div class="card"><p class="muted">Esses dados ficam só no seu aparelho. Servem para montar um treino sob medida e acompanhar sua evolução.</p>' + form(p) + imcLine(p) +
+    return '<h1>Perfil</h1><div class="card"><p class="muted">🔒 Isto não é uma conta: os dados ficam <b>só neste aparelho</b> e não são enviados para ninguém. Servem para montar sua ficha e acompanhar sua evolução' + (S.cfg.token ? ' (e para a cópia no seu próprio GitHub, se você ligou a sincronização)' : '') + '.</p>' + form(p) + imcLine(p) +
       '<div class="row wrap"><button class="btn" data-a="pf-save">Salvar perfil</button><button class="btn big" data-a="pf-gen">⚡ Gerar meu treino</button></div>' +
       '<p class="muted small">Equipamentos: ' + S.owned().length + ' marcados — <a href="#ajustes">conferir em Ajustes</a>. O treino usa só o que estiver marcado.</p></div>' +
       '<div class="card"><h2>Professor e amigos</h2><div class="row wrap"><button class="btn ghosty" data-a="report-share">📤 Enviar relatório ao professor</button><a class="btn ghosty" href="#programa">📋 Compartilhar um treino</a></div>' +
