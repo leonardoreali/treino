@@ -2219,5 +2219,7 @@
 "Fazer a versão leve": "Do the light version",
 "(versão leve)": "(light version)",
 "Mobilidade (versão leve)": "Mobility (light version)",
-"Flexibilidade (versão leve)": "Flexibility (light version)"
+"Flexibilidade (versão leve)": "Flexibility (light version)",
+"As regras de saúde do app ainda não foram revisadas por um profissional de saúde.": "The app's health rules have not yet been reviewed by a health professional.",
+"São regras de software, não uma avaliação clínica da sua situação.": "They are software rules, not a clinical assessment of your situation."
 };

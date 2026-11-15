@@ -108,9 +108,11 @@
     const cardio = long => ({ title: 'Cardio contínuo', kind: 'cardio', ex: cardioEx, min: (long ? 25 : 15) + (lvl - 1) * 5, max: (long ? 35 : 20) + (lvl - 1) * 5, note: 'Ritmo em que dá para falar frases curtas: ' + S.ex(cardioEx).name.toLowerCase() + '.' });
 
     // Tempo estimado (segundos) de cada bloco, para a sessão caber no tempo escolhido contando aquecimento e alongamento
+    // instrução em texto: usa o tempo escrito nela ("— 2 min"); a alternativa sentada da saúde dura 2 min; o resto, ~1 min
+    const textSec = it => { const m = /(\d+)\s*min/.exec(it.text || ''); return m ? +m[1] * 60 : it.seated ? 120 : 60; };
     const workSec = it => (it.unit === 's' ? it.max : it.max * 3.5) * (it.side ? 2 : 1);
     const blockSec = b => b.kind === 'forca' ? b.items.reduce((a, it) => a + it.sets * (workSec(it) + (it.rest || 60)), 0)
-      : b.kind === 'check' ? b.items.reduce((a, it) => a + (it.text ? 45 : (it.sets || 1) * (it.unit === 's' ? it.max : it.max * 4) * (it.side ? 2 : 1) + 15), 0)
+      : b.kind === 'check' ? b.items.reduce((a, it) => a + (it.text ? textSec(it) : (it.sets || 1) * (it.unit === 's' ? it.max : it.max * 4) * (it.side ? 2 : 1) + 15), 0)
       : b.kind === 'cardio' ? b.max * 60 : b.kind === 'intervalado' ? b.options[0].rounds * (b.options[0].work + b.options[0].rest) + 120 : 0; // pelo máximo prescrito
     const totalMin = blocks => Math.round(blocks.reduce((a, b) => a + blockSec(b), 0) / 60);
     const relabel = b => { if (b.kind === 'check') b.title = b.title.replace(/ \(\d+ min\)$/, '') + ' (' + Math.max(1, Math.round(blockSec(b) / 60)) + ' min)'; };

@@ -429,6 +429,7 @@
   V.saude = () => {
     const act = active(), old = conds().filter(c => c.resolved);
     return '<a href="#perfil" class="muted small">← Perfil</a><div class="row between"><h1>Saúde e lesões</h1><button class="btn small" data-a="hl-new">+ Registrar</button></div>' +
+      '<div class="hint warn small"><b>As regras de saúde do app ainda não foram revisadas por um profissional de saúde.</b> São regras de software, não uma avaliação clínica da sua situação.</div>' +
       '<div class="hint warn small"><b>O app não substitui médico, fisioterapeuta nem profissional de educação física.</b> Ele aplica regras gerais e as orientações que você registrar, para apoiar o acompanhamento de um profissional. Dor forte, inchaço, formigamento, dor no peito ou falta de ar: pare e procure atendimento.</div>' +
       (act.length ? act.map(card).join('') + '<button class="btn ghosty block" data-a="hl-report">📋 Relatório para o profissional de saúde</button>'
         : '<div class="card"><p>Nenhuma condição registrada. Se você tem uma <b>dor</b>, uma <b>lesão ou fratura</b> (ou está voltando de uma), ou uma <b>condição crônica</b> como pressão alta, diabetes ou hérnia, registre aqui: todos os treinos passam a ser adaptados até você se recuperar.</p><button class="btn" data-a="hl-new">Registrar agora</button></div>') +
