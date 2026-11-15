@@ -10,7 +10,7 @@
     const main = U.$('#view'), y = APP.last === name ? window.scrollY : 0;
     document.body.classList.toggle('onboarding', name === 'inicio');
     main.innerHTML = fn();
-    U.$('#nav').innerHTML = '<div class="brand">TRE<b>INO</b></div>' + TABS.map(t => '<a href="#' + t[0] + '" class="' + (name === t[0] || PARENT[name] === t[0] ? 'on' : '') + '"' + (name === t[0] || PARENT[name] === t[0] ? ' aria-current="page"' : '') + '><span class="ico">' + t[1] + '</span><span>' + t[2] + '</span></a>').join('');
+    U.$('#nav').innerHTML = '<div class="brand">🐾 NINA <b>CALISTHENICS</b></div>' + TABS.map(t => '<a href="#' + t[0] + '" class="' + (name === t[0] || PARENT[name] === t[0] ? 'on' : '') + '"' + (name === t[0] || PARENT[name] === t[0] ? ' aria-current="page"' : '') + '><span class="ico">' + t[1] + '</span><span>' + t[2] + '</span></a>').join('');
     if (V.after[name]) V.after[name]();
     window.scrollTo(0, y); APP.last = name;
   };
@@ -23,6 +23,7 @@
 
   if (U.needsOnboarding() && (!location.hash || location.hash === '#hoje')) history.replaceState(null, '', location.pathname + location.search + '#inicio');
   APP.render();
+  I18N.start();
   SHARE.check();
   S.sync();
   // ---------- atualizações do app ----------

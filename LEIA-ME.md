@@ -1,4 +1,6 @@
-# Treino — app de calistenia
+# Nina Calisthenics — app de treino
+
+O nome é uma homenagem à Nina, a salsicha do criador do app. 🐾
 
 App de treino que roda no navegador (PC e Android), sem servidor e sem mensalidade. Os dados ficam no próprio aparelho e, se você ligar a sincronização, num Gist privado da sua conta do GitHub.
 
@@ -64,3 +66,11 @@ As regras ficam em `js/adapt.js`: pergunta antes do treino (bem, cansado, dor ou
 - **Backup**: formato `treino-backup` versão 2 (o antigo continua sendo aceito). Restaurar valida o arquivo, descarta registros com defeito e guarda uma cópia do estado anterior (dá para voltar em Ajustes). Uma cópia de segurança dos dados válidos é atualizada a cada minuto e usada automaticamente se os dados do aparelho corromperem.
 - **Atualizações**: `sw.js` guarda cada versão inteira e só troca quando a pessoa toca em "Atualizar" (nunca durante um treino). **Ao publicar mudanças, aumente `VERSION` em `sw.js`** (a lista de arquivos é a dos `<script>` de `index.html` mais CSS, ícones e manifesto). Em `localhost` o service worker fica desligado; use `?sw=1` para testar.
 - **Regras de saúde**: origem, versão e revisão ficam em `HEALTH.RULES_INFO` (`js/health.js`).
+
+## Idiomas (português, inglês, espanhol)
+
+O app é escrito em português; `js/i18n.js` traduz o que aparece na tela usando `js/i18n/en.js` e `js/i18n/es.js`. Esses dois arquivos são **gerados**: edite `tools/i18n/*.tsv` (cada linha: `índice<TAB>inglês<TAB>espanhol`, onde o índice é a posição em `tools/i18n-keys.json`, ou `K:texto em português<TAB>inglês<TAB>espanhol`) e rode `python tools/i18n-build.py`. Números viram `#` nas chaves. Frases compostas são traduzidas por partes (frases, separadores como · — : e listas), então basta traduzir cada pedaço.
+
+Para achar textos sem tradução: abra o app em inglês no navegador, digite no console `I18N.collect = true`, use as telas e depois veja `I18N.missing`. O seletor de idioma fica na primeira tela e em Perfil → Ajustes.
+
+Ainda ficam em português: o PDF de treino gerado para compartilhar e os nomes/observações escritos pelo próprio usuário ou professor.

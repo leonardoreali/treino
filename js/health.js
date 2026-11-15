@@ -461,7 +461,7 @@
         '\n  Adaptações aplicadas pelo app: ' + H.effects(c).join(' ') + (c.notes ? '\n  Orientação registrada: ' + c.notes : '')).join('\n\n') +
       '\n\nTreinos nos últimos 28 dias: ' + logs.length + (logs.length ? ' (último em ' + U.fmtDate(logs[0].date) + ')' : '') + '\n' +
       logs.slice(0, 8).map(l => '  ' + U.fmtDate(l.date) + ' — ' + (l.sessionName || '') + (l.rpe ? ' · esforço ' + l.rpe + '/10' : '') + (l.feel ? ' · achou ' + { facil: 'fácil', ok: 'na medida', pesado: 'pesado' }[l.feel] : '') + (l.pain ? ' · dor em ' + l.pain.join(', ') : '')).join('\n') +
-      '\n\nGerado pelo app de treino (regras gerais, sem avaliação clínica). ' + H.rulesNote() + ' As fases e liberações registradas foram informadas pelo próprio usuário. Por favor, indique o que deve ser mudado.';
+      '\n\nGerado pelo app Nina Calisthenics (regras gerais, sem avaliação clínica). ' + H.rulesNote() + ' As fases e liberações registradas foram informadas pelo próprio usuário. Por favor, indique o que deve ser mudado.';
     SHARE.last = { text: txt, fone: '' };
     U.modal('<h2>Relatório para o profissional</h2><p class="muted small">Mostre ao médico, fisioterapeuta ou professor. As orientações deles você registra em cada condição.</p><textarea readonly rows="12" id="sh-text">' + e(txt) + '</textarea>' +
       '<button class="btn block" data-a="sh-wa">Enviar pelo WhatsApp</button><button class="btn ghosty block" data-a="sh-copy">Copiar</button>');

@@ -25,7 +25,7 @@
     const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const nome = ((S.state.profile || {}).nome || '').split(' ')[0];
     const days = new Set(logs.map(l => l.date)), today = S.today();
-    let h = '<div class="eyebrow">' + new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + (nome ? 'Bora, ' + e(nome) + '!' : 'Hoje') + '</h1>';
+    let h = '<div class="eyebrow">' + new Date().toLocaleDateString((window.I18N && I18N.locale || 'pt-BR'), { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + (nome ? 'Bora, ' + e(nome) + '!' : 'Hoje') + '</h1>';
     if (S.current) h += '<div class="card hl"><b>Treino em andamento:</b> ' + e(S.current.name) + '<div class="row"><a class="btn" href="#treino">Continuar</a></div></div>';
     if (S.finished()) {
       h += '<div class="hero"><div class="eyebrow">Programa concluído</div><h2>Você fechou as ' + p.rounds + ' voltas! 🏆</h2><p>Hora do próximo ciclo: gere um treino novo pelo perfil, importe um PDF ou repita este.</p><div class="row wrap"><a class="btn big" href="#perfil">Gerar novo treino</a><a class="btn ghosty" href="#programa">Programas</a></div></div>';
@@ -59,7 +59,7 @@
     const xp = U.xp(), lvl = Math.floor(xp / 1000) + 1, week = [];
     const kind = k => { const ls = logs.filter(l => l.date === k); return ls.some(l => l.type === 'session' && !l.partial) ? 'on' : ls.some(l => l.type === 'session') ? 'part' : ls.length ? 'lite' : ''; };
     const SYM = { on: '✓', part: '◐', lite: '·' }, NAME = { on: 'treino completo', part: 'treino parcial', lite: 'atividade leve' };
-    for (let i = 6; i >= 0; i--) { const d = new Date(Date.now() - i * 864e5), k = iso(d), kd = kind(k); week.push('<div>' + 'DSTQQSS'[d.getDay()] + '<i class="' + kd + (k === today ? ' today' : '') + '" title="' + (NAME[kd] || 'sem atividade') + '" aria-label="' + d.toLocaleDateString('pt-BR', { weekday: 'long' }) + ': ' + (NAME[kd] || 'sem atividade') + '">' + (SYM[kd] || d.getDate()) + '</i></div>'); }
+    for (let i = 6; i >= 0; i--) { const d = new Date(Date.now() - i * 864e5), k = iso(d), kd = kind(k); week.push('<div>' + d.toLocaleDateString((window.I18N && I18N.locale || 'pt-BR'), { weekday: 'narrow' }).toUpperCase() + '<i class="' + kd + (k === today ? ' today' : '') + '" title="' + (NAME[kd] || 'sem atividade') + '" aria-label="' + d.toLocaleDateString((window.I18N && I18N.locale || 'pt-BR'), { weekday: 'long' }) + ': ' + (NAME[kd] || 'sem atividade') + '">' + (SYM[kd] || d.getDate()) + '</i></div>'); }
     // meta da semana (segunda a domingo): treinos por semana do perfil, dos dias marcados ou do programa
     const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7)); const monK = iso(mon);
     const goal = mode === 'dias' ? new Set(p.sessions.flatMap(x => x.days || [])).size || n : Math.min(7, +((S.state.profile || {}).dias) || n);
@@ -117,8 +117,8 @@
 
   // ================= COMPARTILHAR O APP =================
   A['app-share'] = () => {
-    const text = 'Estou usando este app de treino gratuito: ele monta um treino sob medida (em casa ou na academia), tem vídeo de cada exercício, timers e acompanha a evolução. Abre direto no navegador e funciona sem internet:';
-    if (navigator.share) return navigator.share({ title: 'Treino — app gratuito', text, url: APP_URL }).catch(() => {});
+    const text = 'Estou usando o Nina Calisthenics, um app de treino gratuito: ele monta um treino sob medida (em casa ou na academia), tem vídeo de cada exercício, timers e acompanha a evolução. Abre direto no navegador e funciona sem internet:';
+    if (navigator.share) return navigator.share({ title: 'Nina Calisthenics', text, url: APP_URL }).catch(() => {});
     SHARE.last = { text: text + '\n' + APP_URL, fone: '' };
     U.modal('<h2>Indicar o app</h2><textarea readonly rows="5" id="sh-text">' + e(SHARE.last.text) + '</textarea><button class="btn block" data-a="sh-wa">Enviar pelo WhatsApp</button><button class="btn ghosty block" data-a="sh-copy">Copiar</button>');
   };
@@ -127,7 +127,7 @@
   let step = 1;
   V.inicio = () => {
     const dots = '<div class="dots"><i class="on"></i><i class="' + (step > 1 ? 'on' : '') + '"></i></div>';
-    if (step === 1) return '<div class="onb">' + dots + '<h1>Vamos montar a sua <b>ficha de treino</b></h1>' +
+    if (step === 1) return '<div class="onb">' + dots + I18N.picker() + '<h1>Vamos montar a sua <b>ficha de treino</b></h1>' +
       '<div class="card hl privacy"><div class="lvl-badge" style="background:var(--card2)" aria-hidden="true">🔒</div><div><b>Isto não é cadastro nem login.</b><p class="small" style="margin:4px 0 0">O app não tem contas nem servidor: <b>nada do que você preencher é enviado para ninguém</b>, nem para quem criou o app. Os dados ficam guardados só neste aparelho e servem apenas para montar a sua ficha e acompanhar sua evolução. Você pode apagar tudo quando quiser em Ajustes.</p></div></div>' +
       '<p class="muted">Responda o que quiser: nenhum campo é obrigatório, e dá para mudar depois em Perfil.</p>' +
       '<div class="card">' + PEOPLE.form(S.state.profile || {}) + '</div><div class="row end wrap"><button class="link" data-a="onb-skip">Pular e montar depois</button><button class="btn big" data-a="onb-next">Montar minha ficha</button></div></div>';

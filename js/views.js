@@ -435,9 +435,10 @@
     '<div class="row wrap"><input id="tok" type="password" autocomplete="off" placeholder="ghp_…" value="' + e(S.cfg.token) + '" class="grow" aria-label="Token do GitHub">' +
     '<button class="btn" data-a="sync-connect">' + (S.cfg.token ? 'Sincronizar agora' : 'Conectar') + '</button></div>' +
     '<div class="muted small" id="sync-status" role="status">Situação: ' + e(S.syncStatus) + '</div>' +
-    (S.cfg.tokenExp ? '<div class="small ' + (new Date(S.cfg.tokenExp) - Date.now() < 14 * 864e5 ? 'bad' : 'muted') + '">Token vence em ' + new Date(S.cfg.tokenExp).toLocaleDateString('pt-BR') + '.</div>' : '') +
+    (S.cfg.tokenExp ? '<div class="small ' + (new Date(S.cfg.tokenExp) - Date.now() < 14 * 864e5 ? 'bad' : 'muted') + '">Token vence em ' + new Date(S.cfg.tokenExp).toLocaleDateString((window.I18N && I18N.locale || 'pt-BR')) + '.</div>' : '') +
     (S.cfg.token ? '<div class="row wrap"><button class="btn small ghosty" data-a="sync-off">Desligar neste aparelho</button><button class="btn small ghosty danger" data-a="sync-del">Apagar backup na nuvem</button></div>' +
       '<p class="muted small"><b>Desligar</b> esquece o token só aqui: o backup na nuvem e os outros aparelhos continuam. <b>Apagar backup na nuvem</b> exclui o Gist; os dados deste aparelho ficam. Para invalidar o token em todo lugar, revogue no GitHub.</p>' : '') + '</div>' +
+    '<div class="card"><h2>Idioma · Language · Idioma</h2>' + I18N.picker() + '</div>' +
     V.themeCard() +
     '<div class="card"><h2>Meus equipamentos</h2><p class="muted">Marque o que você tem. O app avisa quando um exercício pede algo que falta, e a Biblioteca pode filtrar só o que dá para fazer.</p>' +
     S.allEquip().map(q => '<label class="chk"><input type="checkbox" data-equip="' + e(q.id) + '"' + (S.owned().includes(q.id) ? ' checked' : '') + '><span class="grow">' + e(q.name) + '</span>' +
@@ -451,9 +452,9 @@
     '<p class="muted small">A chave fica só neste aparelho.</p></div>' +
     '<div class="card"><h2>Backup manual</h2><p class="muted">Baixe um arquivo com tudo (treinos, programas, medidas) ou restaure um backup. Antes de restaurar, o app guarda uma cópia do que está aqui.</p><div class="row wrap"><button class="btn" data-a="backup">⬇ Baixar backup</button>' +
     '<label class="btn ghosty">⬆ Restaurar backup<input type="file" id="restore" accept="application/json,.json" hidden></label></div>' +
-    (S.previous() ? '<p class="small">Cópia anterior guardada em ' + new Date(S.previous().d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) + '. <button class="link" data-a="undo-restore">Voltar para ela</button></p>' : '') + '</div>' +
+    (S.previous() ? '<p class="small">Cópia anterior guardada em ' + new Date(S.previous().d).toLocaleString((window.I18N && I18N.locale || 'pt-BR'), { dateStyle: 'short', timeStyle: 'short' }) + '. <button class="link" data-a="undo-restore">Voltar para ela</button></p>' : '') + '</div>' +
     '<div class="card"><h2>Preferências</h2><label class="chk"><input type="checkbox" id="snd"' + (S.cfg.sound ? ' checked' : '') + '><span>Sons dos timers</span></label></div>' +
-    '<div class="card"><h2>Instalar no celular</h2><p class="muted">Abra este mesmo endereço no Chrome do Android → menu ⋮ → <b>Adicionar à tela inicial / Instalar app</b>. Depois de aberto uma vez, funciona sem internet (só os vídeos precisam de conexão).</p></div>' +
+    INSTALL.card() +
     '<div class="card"><h2>Zona de perigo</h2><button class="btn danger ghosty" data-a="reset">Apagar todos os dados deste aparelho</button></div>';
   A['sync-connect'] = async () => { S.cfg.token = U.$('#tok').value.trim(); S.saveCfg(); if (!S.cfg.token) return U.toast('Cole o token primeiro.'); await S.sync(); APP.render(); };
   A['ytkey-save'] = async () => {

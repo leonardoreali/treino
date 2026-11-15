@@ -54,9 +54,9 @@
     const font = (st, sz, c) => { doc.setFont('helvetica', st); doc.setFontSize(sz); doc.setTextColor(c[0], c[1], c[2]); };
     const need = h => { if (y + h > 790) { doc.addPage(); y = 50; } };
     doc.setFillColor(10, 11, 13); doc.rect(0, 0, PW, 104, 'F');
-    font('bold', 9, [200, 245, 60]); doc.text('PLANO DE TREINO', M, 36);
+    font('bold', 9, [200, 245, 60]); doc.text('NINA CALISTHENICS · PLANO DE TREINO', M, 36);
     font('bold', 20, [255, 255, 255]); doc.text(doc.splitTextToSize(T(p.name), CW)[0], M, 62);
-    font('normal', 10, [190, 195, 205]); doc.text(T((from ? 'Enviado por ' + from + '  •  ' : '') + p.sessions.length + ' sessões  •  ' + p.rounds + ' voltas  •  ' + new Date().toLocaleDateString('pt-BR')), M, 84);
+    font('normal', 10, [190, 195, 205]); doc.text(T((from ? 'Enviado por ' + from + '  •  ' : '') + p.sessions.length + ' sessões  •  ' + p.rounds + ' voltas  •  ' + new Date().toLocaleDateString((window.I18N && I18N.locale || 'pt-BR'))), M, 84);
     y = 132;
     p.sessions.forEach((s, si) => {
       need(86);
@@ -83,7 +83,7 @@
     });
     need(96);
     doc.setFillColor(243, 244, 246); doc.roundedRect(M, y, CW, 74, 8, 8, 'F');
-    font('bold', 11, [20, 20, 24]); doc.text('Abrir este treino no app (gratuito)', M + 12, y + 22);
+    font('bold', 11, [20, 20, 24]); doc.text('Abrir este treino no Nina Calisthenics (gratuito)', M + 12, y + 22);
     font('normal', 9, [70, 74, 82]); doc.text(doc.splitTextToSize('Com vídeo de cada exercício, timers de descanso e registro da evolução. Toque no botão abaixo; se não abrir, importe este PDF em Programa > Importar PDF.', CW - 24), M + 12, y + 37);
     font('bold', 10, [40, 70, 200]); doc.textWithLink('>> Toque aqui para importar no app <<', M + 12, y + 64, { url: link });
     const n = doc.getNumberOfPages();

@@ -1,0 +1,428 @@
+0	# / # XP	# / # XP
+1	# year	# año
+2	# clean pull-ups	# dominadas limpias
+3	# steak (# g)	# filete (# g)
+4	# tsp	# cdta.
+5	# tsp (# g)	# cdta. (# g)
+6	# tbsp	# cda.
+7	# tbsp (# g)	# cda. (# g)
+8	# complete, # partial	# completo(s), # parcial(es)
+9	# ladle (# g)	# cucharón (# g)
+10	# glass (# ml)	# vaso (# ml)
+11	# of #	# de #
+12	# of # workouts	# de # entrenamientos
+13	# days	# días
+14	# days without training	# días sin entrenar
+15	# scoop (# g)	# medida (# g)
+16	# exercises	# ejercicios
+17	# slice	# rebanada
+18	# slice (# g)	# rebanada (# g)
+19	# slices (# g)	# rebanadas (# g)
+20	# fillet (# g)	# filete (# g)
+21	# g	# g
+22	# link (# g)	# trozo (# g)
+23	# can (# ml)	# lata (# ml)
+24	# drained can (# g)	# lata escurrida (# g)
+25	# months	# meses
+26	# min	# min
+27	# piece (# g)	# trozo (# g)
+28	# serving (# g)	# porción (# g)
+29	# cup (# g)	# envase (# g)
+30	# plate	# plato
+31	# handful (# g)	# puñado (# g)
+32	# records!	¡# récords!
+33	# reps	# reps
+34	# s	# s
+35	# s each side	# s cada lado
+36	# sandwich	# sándwich
+37	# light set of the first exercise	# serie ligera del primer ejercicio
+38	# workout · last #/#	# entrenamiento · último #/#
+40	# workouts · last #/#	# entrenamientos · último #/#
+41	# unit	# unidad
+42	# unit (# g of starch)	# unidad (# g de almidón)
+43	# unit (# g)	# unidad (# g)
+44	# units	# unidades
+45	# rounds × # sessions · started #/#	# vueltas × # sesiones · inicio el #/#
+46	# cup	# taza
+47	# × # each side	# × # cada lado
+48	# × # each side · rest #:#	# × # cada lado · descanso #:#
+49	# × # s	# × # s
+52	# × # · rest #:#	# × # · descanso #:#
+53	# × #–# each side	# × #–# cada lado
+54	# × #–# each side · rest #:#	# × #–# cada lado · descanso #:#
+55	# × #–# s	# × #–# s
+56	# × #–# s each side	# × #–# s cada lado
+57	# × #–# s · rest #:#	# × #–# s · descanso #:#
+58	# × #–# · rest #:#	# × #–# · descanso #:#
+62	#. Finished every set at the top of the range? With weight: add load and go back to the start of the range. Without weight: move to the harder variation. #. End your sets feeling you could do #–# more reps. #. Rounds #, # and # are light: half the sets. #. Missed a day? The queue waits. Don't double up workouts. #. Sleeping #–# h and eating protein at every meal are part of training.	#. ¿Completaste todas las series en el tope del rango? Con carga: sube el peso y vuelve al inicio del rango. Sin carga: pasa a la variación más difícil. #. Termina las series sintiendo que podrías hacer #–# repeticiones más. #. Las vueltas #, # y # son ligeras: la mitad de las series. #. ¿Perdiste un día? La fila espera. No dobles entrenamientos. #. Dormir #–# h y comer proteína en cada comida son parte del entrenamiento.
+65	#–# s	#–# s
+66	Body fat %	% de grasa
+67	(# of #)	(# de #)
+68	(# partial)	(# parcial)
+69	(# workouts without a record)	(# entrenamientos sin récord)
+70	(# of # workouts): you were off for # days, so today is −# set, start of the range and loads −#%. The body loses rhythm fast, but it comes back fast too.	(# de # entrenamientos): estuviste # días parado, así que hoy es −# serie, inicio del rango y cargas −#%. El cuerpo pierde el ritmo rápido, pero también lo recupera rápido.
+71	(on some phones it shows as	(en algunos teléfonos aparece como
+72	(range considered healthy). BMI doesn't separate muscle from fat; use it as a reference, along with your waist measurement.	(rango considerado saludable). El IMC no distingue músculo de grasa; úsalo como referencia, junto con la medida de la cintura.
+73	(outside the current program)	(fuera del programa actual)
+74	(or # year): when it expires, the app warns you and you create another one.	(o # año): cuando venza, la app te avisa y generas otro.
+75	(or you're coming back from one), or a	(o estás volviendo de una), o una
+76	(round #).	(vuelta #).
+77	+ Exercise	+ Ejercicio
+78	+ Add	+ Registrar
+79	+ warm-up and stretching	+ calentamiento y estiramiento
+80	+ exercise	+ ejercicio
+81	+ session	+ sesión
+82	+# s	+# s
+83	, restrict the key to "YouTube Data API v#" and to the site	, limita la clave a "YouTube Data API v#" y al sitio
+84	, not even to whoever made the app. The data is stored only on this device and is only used to build your plan and track your progress. You can erase everything anytime in Settings.	, ni siquiera a quien creó la app. Los datos se guardan solo en este dispositivo y sirven únicamente para armar tu ficha y seguir tu evolución. Puedes borrar todo cuando quieras en Ajustes.
+85	, the token can't touch your repositories or your account: it only reads and writes gists.	, el token no toca tus repositorios ni tu cuenta: solo lee y escribe gists.
+86	, a	, una
+87	. For expiration, choose	. En la validez, elige
+88	. The workout only uses what is checked.	. El entrenamiento solo usa lo que esté marcado.
+89	. For a gym card filled in by hand, use	. Para una ficha de gimnasio llenada a mano, usa
+90	. For this condition, training requires a doctor's clearance.	. Para esta condición, el entrenamiento requiere autorización médica.
+91	. Anyone with access to it (unlocked device, malicious extensions) can use the token.	. Quien tenga acceso a él (dispositivo desbloqueado, extensiones maliciosas) puede usar el token.
+92	. It's free and needs no store or account.	. Es gratis y no necesita tienda ni cuenta.
+93	: # days without training. Today you get −# set and slightly smaller targets (loads −#%).	: # días sin entrenar. Hoy viene −# serie y metas un poco menores (cargas −#%).
+94	: # min	: # min
+95	: #, # s	: #, # s
+96	: it stops working immediately on every device.	: deja de funcionar al instante en todos los dispositivos.
+97	: next time, slow lowering and a pause to break through	: la próxima vez, bajada lenta y pausa para destrabar
+98	: for the next # days the app swaps or flags exercises that strain the area. If it keeps going for more than a few days, see a doctor or physical therapist.	: en los próximos # días la app cambia o señala los ejercicios que fuerzan la zona. Si sigue por más de algunos días, busca un médico o fisioterapeuta.
+99	: finish feeling you could do much more.	: termina sintiendo que podrías hacer mucho más.
+100	: I swapped or flagged the exercises that usually strain the area.	: cambié o señalé los ejercicios que suelen forzar la zona.
+101	The key stays only on this device.	La clave queda solo en este dispositivo.
+105	The swap also applies to future workouts.	El cambio vale también para las próximas veces.
+107	Crunch	Abdominal (crunch)
+108	Bicycle crunch	Abdominal bicicleta
+109	Lying leg raise	Elevación de piernas acostado
+110	Ab crunch machine	Abdominal en máquina
+111	Cable crunch	Abdominal en polea
+112	Oblique crunch	Abdominal oblicuo
+113	Abs	Abdomen
+114	Open	Abre
+115	Push your legs apart against the resistance; return slowly.	Abre las piernas contra la resistencia; vuelve despacio.
+116	Open this address in	Abre esta dirección en
+117	Open in editor	Abrir en el editor
+118	Gym	Gimnasio
+119	Full gym	Gimnasio completo
+120	Acrobatics	Acrobacia
+122	Adapt today's workout	Adaptar el entrenamiento de hoy
+123	Add	Agregar
+124	Add to Home screen	Agregar a la pantalla de inicio
+125	Low lunge (lizard)	Zancada baja (lagarto)
+126	Dumbbell lunge	Zancada con mancuernas
+127	Lunge toward front splits	Zancada hacia el split frontal
+128	Deep lunge with both hands inside the front foot.	Zancada profunda con las dos manos por dentro del pie delantero.
+129	Squat, plank, push-up, back up and jump.	Agáchate, plancha, flexión, vuelve y salta.
+130	Squat	Sentadilla
+131	Bulgarian split squat	Sentadilla búlgara
+132	Jump squat	Sentadilla con salto
+133	Full squat on one leg, the other extended in front.	Sentadilla completa en una pierna, la otra extendida al frente.
+134	Cossack squat	Sentadilla cosaca
+135	Goblet squat	Sentadilla goblet
+136	Hack squat	Sentadilla hack
+137	Barbell back squat	Sentadilla libre con barra
+138	Smith machine squat	Sentadilla en máquina Smith
+139	Squat and jump; land softly.	Agáchate y salta; aterriza suave.
+140	Only squat as deep as it doesn't hurt.	Agáchate solo hasta donde no duela.
+141	Not now	Ahora no
+142	Still recovering, not cleared to use the area	Todavía en recuperación, sin autorización para usar la zona
+143	Not yet	Todavía no
+144	Not yet reviewed by a doctor, physical therapist or fitness professional.	Aún no revisadas por un médico, fisioterapeuta o profesional de educación física.
+145	I don't have it yet	Todavía no la tengo
+146	Kneeling, rope behind your head; curl your torso down.	De rodillas, cuerda detrás de la cabeza; enrolla el tronco hacia abajo.
+147	Adjust here if the app's queue is different from where you really are.	Ajusta aquí si la fila de la app es diferente de donde realmente estás.
+148	Settings	Ajustes
+149	Something temporary that the app will track until it goes away.	Algo temporal que la app seguirá hasta que pase.
+150	Lunch	Almuerzo
+151	Stretches that pull on the back of the leg can make the pain worse: skip them if they hurt.	Los estiramientos que tiran de la parte de atrás de la pierna pueden empeorar el dolor: sáltalos si duelen.
+152	Stretching the calf and the sole of the foot usually helps.	Estirar la pantorrilla y la planta del pie suele ayudar.
+153	Height (cm)	Altura (cm)
+154	Students	Alumnos
+155	Full range of motion, pause at the top.	Amplitud completa, pausa arriba.
+156	Noted: slightly higher targets next time. If it's easy again, you get +# set.	Anotado: metas un poco más altas la próxima vez. Si te resulta fácil otra vez, entra +# serie.
+157	Noted: next time the targets repeat today's numbers, without increasing.	Anotado: la próxima vez las metas repiten los números de hoy, sin aumentar.
+158	Log	Anotar
+159	Log what you ate today	Anota lo que comiste hoy
+160	Before you start	Antes de empezar
+161	Before the muscle-up, check the distance between the bar and the ceiling (#–# cm free). Without room, only go up to explosive pull-ups at home.	Antes del muscle-up, revisa la distancia entre la barra y el techo (#–# cm libres). Sin espacio, llega solo hasta la dominada explosiva en casa.
+162	Delete cloud backup	Borrar respaldo en la nube
+163	Delete entry	Borrar registro
+164	Erase all data on this device	Borrar todos los datos de este dispositivo
+165	Appearance	Apariencia
+166	Warm-up (# min)	Calentamiento (# min)
+168	Warm-up (#–# min)	Calentamiento (#–# min)
+170	Longer warm-up and longer rests in the intervals.	Calentamiento más largo y pausas más largas en el intervalado.
+171	Cold, dry air usually makes it worse: prefer training somewhere sheltered.	El aire frío y seco suele empeorarla: prefiere entrenar en un lugar resguardado.
+172	Rings	Anillas
+173	Knee osteoarthritis	Artrosis de rodilla
+175	Hip osteoarthritis	Artrosis de cadera
+177	Asthma	Asma
+178	Turn on	Activar
+179	Current	Actual
+180	Update your weight and the push-up and pull-up tests: the app builds a workout for your level today.	Actualiza tu peso y las pruebas de flexiones y dominadas: la app arma un entrenamiento para tu nivel de hoy.
+181	Until the doctor or physical therapist clears you to use the area.	Hasta que el médico o fisioterapeuta autorice el uso de la zona.
+182	Evaluate diagnosis	Evaluar diagnóstico
+183	Diagnosis evaluation	Evaluación del diagnóstico
+184	Physical assessments	Evaluaciones físicas
+185	Move on when you meet the criterion with good form in two workouts in a row. The current steps go into your workouts automatically.	Avanza cuando cumplas el criterio con buena técnica en dos entrenamientos seguidos. Los pasos actuales entran solos en los entrenamientos.
+186	Advanced	Avanzado
+187	Advanced (more than # years)	Avanzado (más de # años)
+188	Move on to strengthening	Avanzar a fortalecimiento
+189	Next step →	Avanzar paso →
+190	Forward lunge	Zancada al frente
+191	Blue	Azul
+192	Back lever	Back lever
+193	Manual backup	Respaldo manual
+194	Download a file with everything (workouts, programs, measurements) or restore a backup. Before restoring, the app keeps a copy of what's here.	Descarga un archivo con todo (entrenamientos, programas, medidas) o restaura un respaldo. Antes de restaurar, la app guarda una copia de lo que hay aquí.
+195	Low impact and glute strengthening usually help.	El bajo impacto y fortalecer los glúteos suelen ayudar.
+196	Bench at #–#°; the bar comes down to the top of the chest.	Banco a #–#°; la barra baja hasta la parte alta del pecho.
+197	Bench at #–#°; the dumbbells go up and come together at the top.	Banco a #–#°; las mancuernas suben y se acercan arriba.
+198	Bench press / adjustable bench	Banco de press / ajustable
+199	Decline bench; the bar comes down to the lower chest.	Banco declinado; la barra baja hasta la parte baja del pecho.
+200	Seat at hip height; steady pace.	Asiento a la altura de la cadera; ritmo constante.
+201	Bench or chair	Banco o silla
+202	Human flag	Bandera humana
+203	Archer pull-up	Dominada arquero
+204	Pull-up to the waist	Dominada hasta la cintura
+205	Low bar or sturdy table	Barra baja o mesa firme
+206	Pull-up with legs extended in front.	Dominada con las piernas extendidas al frente.
+207	Barbell and plates	Barra y discos
+208	L-sit pull-up	Dominada en L
+209	Explosive pull-up (to the chest)	Dominada explosiva (hasta el pecho)
+210	Pull-up bar	Barra fija
+211	Bar close to your shins, neutral spine; push the floor away. Learn with a light load.	Barra junto a las espinillas, columna neutra; empuja el suelo. Aprende con poca carga.
+212	Negative pull-up	Dominada negativa
+214	Bar on your upper back, neutral spine, knees follow your feet.	Barra sobre los trapecios, columna neutra, rodillas siguen a los pies.
+215	Pull-up	Dominada prona
+216	The bar goes up close to the body to the chest, elbows above the hands.	La barra sube pegada al cuerpo hasta el pecho, codos por encima de las manos.
+217	Chin-up	Dominada supina (chin-up)
+218	Consecutive pull-ups	Dominadas seguidas
+219	Consecutive pull-ups (reps)	Dominadas seguidas (reps)
+220	Muscle-up foundation; few, fast reps, bar to chest.	Base del muscle-up; pocas reps y rápidas, barra al pecho.
+221	Stance and guard	Base y guardia
+222	Good	Bien
+223	Library	Biblioteca
+224	Stationary bike	Bicicleta estática
+226	Butterfly stretch	Mariposa
+227	Arm / forearm	Brazo / antebrazo
+228	Arms resting on the preacher bench; lower until almost straight.	Brazos apoyados en el banco Scott; baja hasta casi extender.
+229	Arms and legs open and close together.	Brazos y piernas se abren y cierran juntos.
+230	Arms straight, take the rope from front to back.	Brazos extendidos, lleva la cuerda de adelante hacia atrás.
+231	Straight arms; only the shoulders go up and down.	Brazos rectos; solo los hombros suben y bajan.
+232	Burpee	Burpee
+233	Burpee, Jumping jacks…	Burpee, Saltos de tijera…
+234	Shoulder bursitis	Bursitis en el hombro
+236	Search exercise…	Buscar ejercicio…
+237	Basic	Básico
+238	Biceps	Bíceps
+239	CALISTHENICS	CALISTHENICS
+240	Each side	Cada lado
+241	Each side/leg	Cada lado/pierna
+242	Hip abduction machine	Máquina abductora
+243	Hip adduction machine	Máquina aductora
+244	Leg extension	Extensión de piernas
+245	Wall sit	Sentadilla isométrica en pared
+246	Breakfast	Desayuno
+247	Heels off the floor for # s	Talones fuera del suelo por # s
+248	Calories (optional)	Calorías (opcional)
+249	Calories logged	Calorías anotadas
+250	Calories per day	Calorías por día
+251	Incline walk or jog at a conversational pace.	Caminata inclinada o trote a ritmo de conversación.
+252	Brisk walk / jog	Caminata rápida / trote
+253	Cancel	Cancelar
+254	Ankle strap on the low pulley; extend the leg back.	Tobillera en la polea baja; extiende la pierna hacia atrás.
+255	Tired or slept badly	Cansado o dormí mal
+256	Cardio	Cardio
+257	Steady cardio	Cardio continuo
+258	Steady cardio + core	Cardio continuo + core
+260	Steady cardio: from (min)	Cardio continuo: de (min)
+261	Cardio and intervals for this session (optional)	Cardio e intervalado de esta sesión (opcional)
+262	Maximum load for the area, in kg (optional)	Carga máxima en la zona, en kg (opcional)
+263	Moderate loads (#+ reps), holds up to # s, without holding your breath.	Cargas moderadas (#+ repeticiones), isometrías de hasta # s, sin contener la respiración.
+264	Home with bar, bands and rope	Casa con barra, bandas y cuerda
+265	Home without equipment	Casa sin equipo
+266	Category	Categoría
+267	YouTube API key	Clave de la API de YouTube
+268	Chrome	Chrome
+269	Low kick	Patada baja (low kick)
+270	Mid roundhouse kick	Patada circular media
+271	Waist (cm)	Cintura (cm)
+272	Waist (at navel height)	Cintura (a la altura del ombligo)
+273	Waist (at navel height) (cm)	Cintura (a la altura del ombligo) (cm)
+274	Recent surgery	Cirugía reciente
+275	Sciatica	Ciática
+277	Light	Claro
+278	Clinch	Clinch
+279	Cable glute kickback	Patada de glúteo en polea
+280	Paste text	Pegar texto
+281	Mat	Colchoneta
+282	Paste the key below. The free limit allows about # searches per day.	Pega la clave abajo. El límite gratuito permite unas # búsquedas por día.
+283	Paste the token below and tap Connect. Use the same token on your PC and phone.	Pega el token abajo y toca Conectar. Usa el mismo token en la PC y en el teléfono.
+284	Lower back	Columna lumbar
+285	With your hands for support, slide toward the splits.	Con apoyo de las manos, deslízate hacia el split.
+286	With only the permission	Con solo el permiso
+287	With a free YouTube API key, the app picks the video for new exercises by itself and shows options in the "Choose video" button. Without a key everything still works: you search and paste the link.	Con una clave gratuita de la API de YouTube, la app elige sola el video de los ejercicios nuevos y muestra opciones en el botón "Elegir video". Sin clave todo sigue funcionando: buscas y pegas el enlace.
+288	Start on top of the bar and lower slowly through the transition.	Empieza arriba de la barra y baja despacio pasando por la transición.
+289	Start light and increase gradually; bad days happen: do the short version.	Empieza suave y aumenta poco a poco; los días malos pasan: haz la versión corta.
+290	Start with palms facing you and rotate while you press.	Empieza con las palmas hacia ti y gira mientras empujas.
+291	How to create the key (free, no card)	Cómo crear la clave (gratis, sin tarjeta)
+292	How this workout was built	Cómo se armó este entrenamiento
+293	How to do it	Cómo hacerlo
+294	How the app will adapt	Cómo se va a adaptar la app
+295	How to progress	Cómo progresar
+296	How you want to follow the workout	Cómo quieres seguir el entrenamiento
+297	How to follow this program	Cómo seguir este programa
+298	How are you today? The workout adjusts to your answer.	¿Cómo estás hoy? El entrenamiento se ajusta a tu respuesta.
+299	How do you want to	¿Cómo quieres
+303	Share	Compartir
+304	Share workout	Compartir entrenamiento
+305	Clamshell	Almeja (clamshell)
+306	Complete set	Completar serie
+307	Finish workout	Terminar entrenamiento
+308	Finish partial workout	Terminar entrenamiento parcial
+309	Chronic condition	Condición crónica
+310	Chronic condition or illness	Condición crónica o enfermedad
+311	Connect	Conectar
+312	Check names, sets and reps. Exercises not in the library are created automatically.	Revisa nombres, series y repeticiones. Los ejercicios que no existen en la biblioteca se crean automáticamente.
+313	Confirm	Confirmar
+314	Confirm and open guidance	Confirmar y abrir indicaciones
+315	Confirm and adapt	Confirmar y adaptar
+316	Confirm. Nina's icon appears on your home screen and the app opens full screen, even offline.	Confirma. El ícono de Nina aparece en la pantalla de inicio y la app abre en pantalla completa, incluso sin internet.
+317	Against the wall at first; lower with control into the bridge.	Contra la pared al principio; baja controlado hasta el puente.
+318	Hamstring contract-relax (seated pike)	Contraer-relajar isquios (pike sentado)
+319	Control your opponent's neck and arms.	Controla la nuca y los brazos del oponente.
+320	Copy	Copiar
+321	Copy request	Copiar pedido
+322	Copy one of my programs	Copiar uno de mis programas
+323	Main color	Color principal
+324	Secondary color	Color secundario
+325	Rope tied to the bar with a firm knot; lean back and pull your chest to your hands. More horizontal = harder.	Cuerda atada a la barra con un nudo firme; inclínate hacia atrás y lleva el pecho a las manos. Más acostado = más difícil.
+326	Jump rope	Cuerda para saltar
+327	Rope on the high pulley; pull toward your face, flaring your elbows.	Cuerda en la polea alta; tira hacia la cara abriendo los codos.
+328	Rope or towel for rows	Cuerda o toalla para remo
+329	Core	Core
+330	Core · weighted	Core · con carga
+331	Colors: Blue	Colores: Azul
+332	Colors: Gold	Colores: Dorado
+333	Colors: Orange	Colores: Naranja
+334	Colors: Lime	Colores: Lima
+335	Colors: Pink	Colores: Rosa
+336	Colors: Purple	Colores: Morado
+337	Colors: Teal	Colores: Verde agua
+338	Colors: Red	Colores: Rojo
+339	Body horizontal and sideways on a vertical pole.	Cuerpo horizontal de lado en un poste vertical.
+340	Straight body facing down, arms behind.	Cuerpo recto boca abajo, brazos atrás.
+341	Straight body parallel to the floor, arms straight.	Cuerpo recto y paralelo al suelo, brazos extendidos.
+342	Straight body, elbows at ~#°, chest almost touches the floor.	Cuerpo recto, codos a ~#°, el pecho casi toca el suelo.
+343	Full body A	Cuerpo completo A
+344	Full body B	Cuerpo completo B
+345	Full body C	Cuerpo completo C
+346	High knees	Carrera con rodillas altas
+347	Running in place, knees at hip height.	Carrera en el lugar, rodillas a la altura de la cadera.
+348	Back	Espalda
+349	Back supported, shoulder blades together; push without locking your elbows.	Espalda apoyada, escápulas juntas; empuja sin bloquear los codos.
+350	Back supported; bring your arms together in front, squeezing your chest.	Espalda apoyada; cierra los brazos al frente contrayendo el pecho.
+351	Back against the wall, knees at #°.	Espalda en la pared, rodillas a #°.
+352	Back on the bench, bar on your hips; rise until torso and thighs line up.	Espalda en el banco, barra en la cadera; sube hasta alinear tronco y muslos.
+353	Back against the machine pad; lower to ~#° and push.	Espalda en el respaldo de la máquina; baja hasta ~#° y empuja.
+354	Straight back, hips at shoulder height, knees at #°.	Espalda recta, cadera a la altura de los hombros, rodillas a #°.
+355	Straight back, hips at shoulder height.	Espalda recta, cadera a la altura de los hombros.
+356	Ribs / chest	Costilla / tórax
+368	Elbow strike	Codazo
+369	Elbow	Codo
+370	Elbow at #°, rotate your hips.	Codo a #°, gira la cadera.
+371	Elbow under the shoulder, hips high.	Codo bajo el hombro, cadera alta.
+372	Elbows tight to your body; extend fully.	Codos pegados al cuerpo; extiende hasta el final.
+373	Elbows slightly bent; open until the chest stretches, then close.	Codos levemente flexionados; abre hasta estirar el pecho y cierra.
+374	Elbows still at your sides; curl one at a time.	Codos quietos al lado del cuerpo; sube uno a la vez.
+375	Elbows under your shoulders, glutes tight, hips level.	Codos bajo los hombros, glúteos contraídos, cadera recta.
+376	Couch stretch	Couch stretch
+377	Thigh / shin	Muslo / espinilla
+378	Credentials → Create credentials → API key	Credenciales → Crear credenciales → Clave de API
+379	Criterion: # × #	Criterio: # × #
+380	Criterion: # × # s	Criterio: # × # s
+381	Criterion: # × # s · #/# workouts in a row	Criterio: # × # s · #/# entrenamientos seguidos
+382	Criterion: # × # · #/# workouts in a row	Criterio: # × # · #/# entrenamientos seguidos
+383	Time it	Cronometrar
+384	Cable crossover	Cruce en polea
+385	Dumbbell fly	Aperturas con mancuernas
+386	Reverse fly	Aperturas inversas
+387	Hook	Gancho
+388	Take care of your feet: comfortable shoes and check for sores.	Cuida tus pies: calzado cómodo y revisa que no haya heridas.
+389	Short and horizontal; rotate your torso.	Corto y horizontal; gira el tronco.
+390	Big circles forward and backward.	Círculos amplios hacia adelante y hacia atrás.
+391	Previous copy saved on #/#/#, #:#.	Copia anterior guardada el #/#/#, #:#.
+392	Details and health history	Datos y anamnesis
+393	Date	Fecha
+394	From the bottom up, power coming from the legs.	De abajo hacia arriba, fuerza desde las piernas.
+395	Face down on the bench; arms make the letters Y, T and W. # of each.	Boca abajo en el banco; los brazos forman las letras Y, T y W. # de cada una.
+396	Face down; lift chest and legs and hold. Balances the core for the back and lower back.	Boca abajo; levanta pecho y piernas y sostén. Equilibra el core para la espalda y la zona lumbar.
+397	On all fours; round and arch your spine.	En cuatro apoyos; redondea y arquea la columna.
+398	Dead bug	Dead bug
+399	Kick check	Bloqueo de patada (check)
+400	Lying on your side, band above the knees; open the top knee without rotating the hips.	Acostado de lado, banda sobre las rodillas; abre la rodilla de arriba sin girar la cadera.
+401	Lying on the bench, dumbbells in line with the chest; lower with control until elbows at ~#°.	Acostado en el banco, mancuernas a la altura del pecho; baja controlado hasta los codos a ~#°.
+402	Lying down, the bar comes down toward the forehead by bending only the elbows.	Acostado, la barra baja hacia la frente doblando solo los codos.
+403	Lying down, the dumbbell goes behind your head with elbows almost straight.	Acostado, la mancuerna baja detrás de la cabeza con los codos casi rectos.
+404	Lying down, feet on the floor; lift only your hips.	Acostado, pies en el suelo; sube solo la cadera.
+405	Lying down, raise your straight legs without lifting your lower back.	Acostado, sube las piernas extendidas sin despegar la zona lumbar del suelo.
+406	After saving, you can change exercises, sets and reps in Program → Edit.	Después de guardar, puedes cambiar ejercicios, series y repeticiones en Programa → Editar.
+407	After a month off, your body is no longer where this program left off: continuing from it increases the risk of injury and frustration. Choose how to restart:	Después de un mes parado, el cuerpo ya no está donde este programa se quedó: continuar desde ahí aumenta el riesgo de lesión y frustración. Elige cómo recomenzar:
+409	Discard	Descartar
+410	Discard this workout	Descartar este entrenamiento
+411	Since #/#	Desde #/#
+412	Since #/# ·	Desde #/# ·
+413	Since #/# · no diagnosis (general rules for the area)	Desde #/# · sin diagnóstico (reglas generales de la zona)
+414	Since when	Desde cuándo
+415	Arnold press	Press Arnold
+416	Dumbbell shoulder press	Press de hombros con mancuernas
+417	Shoulder press machine	Press de hombros en máquina
+418	Turn off	Apagar
+419	Turn off on this device	Desactivar en este dispositivo
+K:Adaptado para	Adapted for	Adaptado para
+K:Descanso	Rest	Descanso
+K:Valendo	Go	¡Ya!
+K:Prepare-se	Get ready	Prepárate
+K:A seguir	Next	A continuación
+K:Comparado com o último	Compared with the last	Comparado con el último
+K:+#% de repetições	+#% reps	+#% de repeticiones
+K:-#% de repetições	-#% reps	-#% de repeticiones
+K:mesmo total de repetições	same total reps	mismo total de repeticiones
+K:fase de proteção	protection phase	fase de protección
+K:fase de retorno	return phase	fase de retorno
+K:fase de fortalecimento	strengthening phase	fase de fortalecimiento
+K:joelho	knee	rodilla
+K:ombro	shoulder	hombro
+K:coluna lombar	lower back	columna lumbar
+K:pescoço	neck	cuello
+K:punho e mão	wrist and hand	muñeca y mano
+K:cotovelo	elbow	codo
+K:braço	arm	brazo
+K:antebraço	forearm	antebrazo
+K:quadril	hip	cadera
+K:coxa	thigh	muslo
+K:canela	shin	espinilla
+K:tornozelo e pé	ankle and foot	tobillo y pie
+K:costela	ribs	costilla
+K:tórax	chest	tórax
+K:Dor	Pain	Dolor
+K:Fratura	Fracture	Fractura
+K:Lesão	Injury	Lesión
+K:(esquerdo)	(left)	(izquierdo)
+K:(direito)	(right)	(derecho)
+K:(os dois lados)	(both sides)	(ambos lados)
+K:Ritmo em que dá para falar frases curtas	A pace at which you can speak short sentences	Ritmo en el que puedes decir frases cortas
+K:caminhada rápida	brisk walk	caminata rápida
+K:trote.	jog.	trote.
+K:esteira.	treadmill.	cinta.
+K:Teste	Test	Prueba
+K:não marcados	not checked	sin marcar
+K:# de # não marcados	# of # not checked	# de # sin marcar
+K:# de # séries	# of # sets	# de # series
+K:não registrado	not logged	no registrado
+K:não feito	not done	no hecho
+K:# forte	# hard	# fuerte
+K:# s pausa	# s rest	# s pausa
+K:# s forte	# s hard	# s fuerte

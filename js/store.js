@@ -57,7 +57,7 @@
     if (raw) { try { st = JSON.parse(raw); } catch (e) { st = null; } }
     if (raw && (!st || S.validate(st).length)) { // dados corrompidos: tenta a última cópia boa
       const good = read(GOOD, null);
-      if (good && good.state && !S.validate(good.state).length) { st = good.state; S.recovered = 'Os dados deste aparelho estavam corrompidos. Recuperei a cópia de segurança de ' + new Date(good.d.length > 10 ? good.d : good.d + 'T12:00').toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: good.d.length > 10 ? 'short' : undefined }) + '.'; }
+      if (good && good.state && !S.validate(good.state).length) { st = good.state; S.recovered = 'Os dados deste aparelho estavam corrompidos. Recuperei a cópia de segurança de ' + new Date(good.d.length > 10 ? good.d : good.d + 'T12:00').toLocaleString((window.I18N && I18N.locale || 'pt-BR'), { dateStyle: 'short', timeStyle: good.d.length > 10 ? 'short' : undefined }) + '.'; }
       else if (st) { S.recovered = 'Alguns dados estavam com defeito e foram corrigidos.'; }
       try { localStorage.setItem(KEY + '.corrompido', raw); } catch (e) {}
     }
@@ -207,7 +207,7 @@
         const list = await S.gh('/gists?per_page=100');
         const found = list.find(g => g.files && g.files[SYNC_FILE]);
         if (found) S.cfg.gistId = found.id;
-        else S.cfg.gistId = (await S.gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'Dados do app de treino (sincronização)', public: false, files: { [SYNC_FILE]: { content: '{}' } } }) })).id;
+        else S.cfg.gistId = (await S.gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'Dados do app Nina Calisthenics (sincronização)', public: false, files: { [SYNC_FILE]: { content: '{}' } } }) })).id;
         S.saveCfg();
       }
       const before = stable(S.state), base = read(BASE, null);
@@ -226,7 +226,7 @@
       // só depois de gravar com sucesso: vira a nova base comum (sincronização interrompida não perde nada)
       S.state = merged; write(KEY, S.state); write(BASE, merged);
       S.cfg.lastSync = Date.now(); S.saveCfg();
-      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const hora = new Date().toLocaleTimeString((window.I18N && I18N.locale || 'pt-BR'), { hour: '2-digit', minute: '2-digit' });
       setStatus(conflicts.length ? 'Sincronizado às ' + hora + '. ' + conflicts.length + ' alteração(ões) feita(s) ao mesmo tempo nos dois aparelhos: ficou a mais recente.' : 'Sincronizado às ' + hora);
       if (before !== stable(S.state) && S.onRemoteChange) S.onRemoteChange();
     } catch (e) {

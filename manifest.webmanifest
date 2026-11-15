@@ -1,7 +1,7 @@
 {
-  "name": "Treino — Calistenia",
-  "short_name": "Treino",
-  "description": "Rotina de calistenia, cardio e flexibilidade com timers, progressões e histórico.",
+  "name": "Nina Calisthenics",
+  "short_name": "Nina",
+  "description": "Treino gratuito de calistenia e academia, com vídeos, timers, evolução e adaptação para dor e lesões. Os dados ficam só no seu aparelho.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",
@@ -10,8 +10,23 @@
   "background_color": "#0a0b0d",
   "theme_color": "#0a0b0d",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
