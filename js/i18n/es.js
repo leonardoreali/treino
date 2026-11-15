@@ -2204,5 +2204,20 @@
 "Sem liberação médica registrada": "Sin autorización médica registrada",
 "Só o leve, sem esforço intenso, até o médico liberar.": "Solo lo suave, sin esfuerzo intenso, hasta que el médico autorice.",
 "Rotina adaptada para": "Rutina adaptada para",
-"Marcha parada ou caminhada leve — # min": "Marcha en el sitio o caminata suave — # min"
+"Marcha parada ou caminhada leve — # min": "Marcha en el sitio o caminata suave — # min",
+"Articulações exigidas:": "Articulaciones exigidas:",
+"Articulações exigidas": "Articulaciones exigidas",
+"Tornozelo": "Tobillo",
+"Sentado: círculos de braços e ombros, aumentando o ritmo aos poucos — # min": "Sentado: círculos de brazos y hombros, aumentando el ritmo poco a poco — # min",
+"sem cardio em pé": "sin cardio de pie",
+"Regras gerais do app, ainda não revisadas por um profissional de saúde: na dúvida, siga o seu médico ou fisioterapeuta.": "Reglas generales de la app, todavía no revisadas por un profesional de la salud: ante la duda, sigue a tu médico o fisioterapeuta.",
+"Duração estimada (fazendo o máximo prescrito)": "Duración estimada (haciendo el máximo indicado)",
+"Algumas sessões não couberam no tempo escolhido mesmo com os cortes; o número acima é o tempo real.": "Algunas sesiones no cupieron en el tiempo elegido incluso con los recortes; el número de arriba es el tiempo real.",
+"Sem liberação médica": "Sin autorización médica",
+"sem liberação médica. A rotina fica na versão leve: só movimentos fáceis e alongamentos suaves, cerca de # minutos, sem força em amplitude final.": "sin autorización médica. La rutina queda en la versión suave: solo movimientos fáciles y estiramientos suaves, unos # minutos, sin fuerza en amplitud final.",
+"Pare se sentir dor no peito, falta de ar, tontura ou qualquer mal-estar. Converse com o médico antes de aumentar.": "Para si sientes dolor en el pecho, falta de aire, mareo o cualquier malestar. Habla con el médico antes de aumentar.",
+"Fazer a versão leve": "Hacer la versión suave",
+"(versão leve)": "(versión suave)",
+"Mobilidade (versão leve)": "Movilidad (versión suave)",
+"Flexibilidade (versão leve)": "Flexibilidad (versión suave)"
 };

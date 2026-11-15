@@ -2204,5 +2204,20 @@
 "Sem liberação médica registrada": "No medical clearance recorded",
 "Só o leve, sem esforço intenso, até o médico liberar.": "Only light work, no intense effort, until your doctor clears you.",
 "Rotina adaptada para": "Routine adapted for",
-"Marcha parada ou caminhada leve — # min": "Marching in place or easy walk — # min"
+"Marcha parada ou caminhada leve — # min": "Marching in place or easy walk — # min",
+"Articulações exigidas:": "Joints involved:",
+"Articulações exigidas": "Joints involved",
+"Tornozelo": "Ankle",
+"Sentado: círculos de braços e ombros, aumentando o ritmo aos poucos — # min": "Seated: arm and shoulder circles, gradually picking up the pace — # min",
+"sem cardio em pé": "no standing cardio",
+"Regras gerais do app, ainda não revisadas por um profissional de saúde: na dúvida, siga o seu médico ou fisioterapeuta.": "General app rules, not yet reviewed by a health professional: when in doubt, follow your doctor or physical therapist.",
+"Duração estimada (fazendo o máximo prescrito)": "Estimated duration (doing the maximum prescribed)",
+"Algumas sessões não couberam no tempo escolhido mesmo com os cortes; o número acima é o tempo real.": "Some sessions didn't fit the chosen time even after the cuts; the number above is the real time.",
+"Sem liberação médica": "No medical clearance",
+"sem liberação médica. A rotina fica na versão leve: só movimentos fáceis e alongamentos suaves, cerca de # minutos, sem força em amplitude final.": "without medical clearance. The routine stays in the light version: only easy movements and gentle stretches, about # minutes, no end-range strength work.",
+"Pare se sentir dor no peito, falta de ar, tontura ou qualquer mal-estar. Converse com o médico antes de aumentar.": "Stop if you feel chest pain, shortness of breath, dizziness or any discomfort. Talk to your doctor before doing more.",
+"Fazer a versão leve": "Do the light version",
+"(versão leve)": "(light version)",
+"Mobilidade (versão leve)": "Mobility (light version)",
+"Flexibilidade (versão leve)": "Flexibility (light version)"
 };

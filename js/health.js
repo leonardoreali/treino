@@ -78,7 +78,7 @@
     { id: 'osteoporose', name: 'Osteoporose / osteopenia', flags: ['noSpinalFlex', 'noJump'], prefer: 'agachamento meia-ponte superman', tips: ['Força e equilíbrio ajudam os ossos e evitam quedas.', 'Evite abdominais que dobram a coluna.'] },
     { id: 'fibromialgia', name: 'Fibromialgia', rpeMax: 6, tips: ['Comece leve e aumente aos poucos; dias ruins acontecem: faça a versão curta.'] },
     { id: 'articulacoes', name: 'Quero proteger as articulações (baixo impacto)', flags: ['noJump'], tips: ['Troca saltos por exercícios sem impacto.'] },
-    { id: 'gestacao', name: 'Gestação ou pós-parto', clearance: true, flags: ['noJump'], tips: ['O app não sabe adaptar o treino para cada fase da gestação: siga o médico e um profissional de educação física.'] },
+    { id: 'gestacao', name: 'Gestação ou pós-parto', clearance: true, flags: ['noJump'], avoid: 'cobra elevacao-bracos-prono superman ytw sapo dragon-flag dragon-flag-negativa', tips: ['O app não sabe adaptar o treino para cada fase da gestação: siga o médico e um profissional de educação física.'] },
   ];
   const specOf = c => c.kind === 'cronica' ? CHRONIC.find(x => x.id === c.spec) || (SPEC[c.area] || []).find(x => x.id === c.spec)
     : (SPEC[c.area] || []).concat(ANY_LESAO).find(x => x.id === c.spec) || null;
@@ -113,6 +113,7 @@
         else if (p >= 3 || !c.spec) { add(baseAvoid(c.area), name); REGION_CATS[reg].forEach(k => { r.caps[k] = Math.min(r.caps[k] || 9, 3); }); }
       }
     });
+    r.mob.filter(m => m.mode === 'lock').forEach(m => S.allExercises().forEach(x => { if (!x.mod && H.usesArea(x, m.area)) add([x.id], m.name); }));
     r.flags.forEach(f => add(ids(FLAG_EX[f]), FLAG_TEXT[f]));
     if (r.flags.has('noHang')) S.allExercises().forEach(x => { if (S.needs(x.id).includes('barra')) add([x.id], FLAG_TEXT.noHang); });
     // sem as mãos: também nada que precise segurar peso (halter, barra, polia, paralelas)
@@ -146,13 +147,17 @@
   }
   // Mobilidade/flexibilidade × saúde. Região da condição → regiões de mobilidade e exercícios que carregam aquela articulação.
   const MOB_REG = { ombro: ['ombro'], punho: ['punho'], braco: ['punho'], quadril: ['quadril'], perna: ['posterior', 'tornozelo'], tornozelo: ['tornozelo'], lombar: ['coluna'], costela: ['coluna'], cotovelo: [], joelho: [], pescoco: [] };
+  // articulações (x.joints, de js/data/joints.js) que cada região da tela Saúde protege
+  const AREA_JOINTS = { ombro: ['ombro'], cotovelo: ['cotovelo'], punho: ['punho'], braco: ['cotovelo', 'punho'], joelho: ['joelho'], quadril: ['quadril'], perna: ['joelho', 'tornozelo'], tornozelo: ['tornozelo'], lombar: ['coluna'], costela: ['coluna'], pescoco: ['pescoco'] };
+  const jointsOfX = x => x.joints || (window.jointsOf ? jointsOf(x) : []);
+  H.usesArea = (x, area) => jointsOfX(x).some(j => (AREA_JOINTS[area] || []).includes(j));
   const MOB_EX = { joelho: 'couch-stretch couch-stretch-ativo sapo quadriceps-deitado alongamento-quadriceps flexor-quadril-ajoelhado agachamento-profundo pombo shin-box quadril-90-90 quadril-90-90-liftoff lagarto meio-espacate afundo-espacate espacate-frontal mobilidade-tornozelo worlds-greatest crianca',
     cotovelo: 'punho-garrafa pronacao-supinacao alongamento-triceps elevacao-palmas alongamento-punho german-hang skin-the-cat passagem-ombro', pescoco: 'ponte cobra jefferson-curl',
     lombar: 'jefferson-curl cobra ponte pike-pe pancake', costela: 'ponte torcao-coluna livro-aberto passar-agulha inclinacao-lateral' };
   // apoio nas mãos ou de quatro (vale quando a condição pede "sem apoio nas mãos")
   const HANDS_MOB = new Set('gato-vaca rotacao-toracica passar-agulha adutor-balanco alongamento-punho elevacao-palmas cachorro-baixo postura-filhote cobra worlds-greatest lagarto bird-dog'.split(' '));
   H.mobRegions = area => MOB_REG[area] || [];
-  const mobHit = (x, area) => (MOB_REG[area] || []).includes(x.reg) || ids(MOB_EX[area]).includes(x.id);
+  const mobHit = (x, area) => (MOB_REG[area] || []).includes(x.reg) || H.usesArea(x, area) || ids(MOB_EX[area]).includes(x.id);
   // Motivo para NÃO fazer o exercício de mobilidade/flexibilidade hoje (ou '' se pode)
   H.mobReason = (x, r) => {
     if (!x) return '';
@@ -164,13 +169,15 @@
       if (m.mode === 'gentle' && !x.gentle) return m.name + ': por enquanto só movimentos leves';
       if (m.mode === 'cap' && (x.level >= 3 || x.mod === 'final')) return m.name + ': ainda sem os mais intensos';
     }
-    if (r.clearance.length && x.mod === 'final') return 'falta a liberação médica';
+    if (r.clearance.length && (x.mod === 'final' || x.level >= 2)) return 'falta a liberação médica';
     return '';
   };
   // Troca ou tira itens de blocos de aquecimento/alongamento conforme as regras
   function applyCheck(b, r, used, swapped, removed) {
+    const noStand = r.flags.has('noStandCardio') || r.removeCats.has('pernas'); let lostCardio = false;
     b.items = b.items.filter(it => {
-      if (!it.ex) return true;
+      if (!it.ex) { if (it.cardio && noStand) { removed.push(it.text + ' (' + FLAG_TEXT.noStandCardio + ')'); lostCardio = true; return false; } return true; }
+      if (S.ex(it.ex).cat === 'cardio' && (r.avoid.has(it.ex) || noStand)) { removed.push(S.ex(it.ex).name + ' (' + (r.why[it.ex] || FLAG_TEXT.noStandCardio) + ')'); lostCardio = true; return false; }
       const x = S.ex(it.ex), why = x.mod ? H.mobReason(x, r) : (r.avoid.has(it.ex) || r.removeCats.has(x.cat) ? (r.why[it.ex] || 'usa a região em recuperação') : '');
       if (!why) return true;
       const alt = x.mod && S.allExercises().filter(y => y.mod === x.mod && y.id !== x.id && !y.sup && !used.has(y.id) && !S.missing(y.id).length && y.level <= Math.max(2, x.level) && !H.mobReason(y, r))
@@ -180,7 +187,9 @@
       Object.assign(it, { ex: alt.id, sets: d.sets || it.sets, min: d.min || it.min, max: d.max || it.max, unit: d.unit || it.unit, side: !!d.side, note: 'Adaptado à sua condição.' });
       return true;
     });
-    if (!b.items.some(it => it.ex)) b.drop = true;
+    // aquecimento sem cardio em pé: alternativa sentada, se os braços estiverem liberados
+    if (lostCardio && !r.removeCats.has('empurrar') && !r.flags.has('noHands')) b.items.unshift({ text: 'Sentado: círculos de braços e ombros, aumentando o ritmo aos poucos — 2 min', seated: true, key: (b.items[0] && b.items[0].key || 'h') + '.s', checked: false });
+    if (!b.items.some(it => it.ex || it.seated)) b.drop = true;
   }
   const resize = (it, n) => { it.sets = n; ['vals', 'done', 'kgs'].forEach(k => { if (it[k]) it[k] = it[k].slice(0, n); }); };
   function apply(c) {
@@ -227,6 +236,7 @@
     if (removed.length) notes.push('Fora de hoje: ' + e(removed.join(', ')) + '.');
     if (dropped.length) notes.push('Sem ' + e(dropped.join(' e ').toLowerCase()) + ' por enquanto.');
     if (r.rpeMax < 10) notes.push('Esforço até <b>' + r.rpeMax + ' de 10</b>: termine sentindo que daria para fazer bem mais.');
+    notes.push('Regras gerais do app, ainda não revisadas por um profissional de saúde: na dúvida, siga o seu médico ou fisioterapeuta.');
     if (r.clearance.length) notes.push('Sem liberação médica registrada: ' + e(r.clearance.map(H.title).join(', ')) + '. Só o leve, sem esforço intenso, até o médico liberar.');
     r.checks.forEach(x => notes.push('✔ ' + e(x)));
     notes.push('Dor que aumenta durante o exercício (acima de 3 de 10): pare aquele exercício.');

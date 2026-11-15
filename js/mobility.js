@@ -70,11 +70,13 @@
     return ALL;
   };
   MOB.routine = (type, focus) => {
+    const hr0 = window.HEALTH ? HEALTH.rules() : null, light = !!(hr0 && hr0.clearance.length);
+    if (light && type === 'full') type = 'flex';
     const t = TYPES[type], pr = profile(), lvl = Math.max(1, Math.min(3, +pr.nivel || 1)), avoid = MOB.avoidFor(pr.limit);
     const hr = window.HEALTH ? HEALTH.rules() : null;
     const can = id => !avoid.has(id) && !S.missing(id).length && !(hr && HEALTH.mobReason(S.ex(id), hr));
     const regions = focusRegions(focus), used = new Set(), seed = new Date().getDate();
-    const blocks = t.parts.map(([mod, n]) => {
+    const blocks = t.parts.filter(([mod]) => !light || mod !== 'final').map(([mod, n0]) => { const n = light ? Math.min(n0, 3) : n0;
       const xs = MOB.pick({ regions: focus === 'all' ? ALL : regions, mod, n: REGIONS[focus] ? Math.min(n, 4) : n, maxLvl: lvl + 1, can, seed, used, noFill: !!REGIONS[focus] });
       return xs.length ? { title: TITLES[mod], kind: 'check', items: xs.map(x => MOB.item(x, type === 'mob' ? 'warm' : '')) } : null;
     }).filter(Boolean);
@@ -85,7 +87,7 @@
     const label = { all: 'corpo todo', skills: 'minhas habilidades', today: 'treino de hoje' }[focus] || REGIONS[focus].toLowerCase();
     blocks.forEach(b => withCaution(b.items, pr.limit));
     const locked = hr && REGIONS[focus] && hr.mob.some(m => m.mode === 'lock' && HEALTH.mobRegions(m.area).includes(focus));
-    return { name: t.name + ' — ' + label, blocks, locked };
+    return { name: t.name + (light ? ' (versão leve)' : '') + ' — ' + label, blocks, locked, light, clearance: light ? hr0.clearance.map(HEALTH.title) : [] };
   };
   A['mob-menu'] = () => {
     const opt = (v, l) => '<option value="' + v + '">' + l + '</option>';
@@ -101,6 +103,10 @@
     W.flexOverride = MOB.routine(type, focus);
     if (W.flexOverride.locked) { W.flexOverride = null; return U.toast('Essa região está em recuperação (tela Saúde): exercícios nela só com orientação do profissional.'); }
     if (!W.flexOverride.blocks.length) { W.flexOverride = null; return U.toast('Nenhum exercício disponível com seus equipamentos e limitações.'); }
+    if (W.flexOverride.light) { const ro = W.flexOverride; W.flexOverride = null; MOB.pendingLight = ro;
+      return U.modal('<h2>Sem liberação médica</h2><p>Você registrou <b>' + e(ro.clearance.join(', ')) + '</b> sem liberação médica. A rotina fica na versão leve: só movimentos fáceis e alongamentos suaves, cerca de 10 minutos, sem força em amplitude final.</p>' +
+        '<p class="muted small">Pare se sentir dor no peito, falta de ar, tontura ou qualquer mal-estar. Converse com o médico antes de aumentar.</p><button class="btn block" data-a="mob-light-go">Fazer a versão leve</button><button class="btn ghosty block" data-a="modal-close">Agora não</button>'); }
     U.closeModal(); A.start({ type: 'flex' });
   };
+  A['mob-light-go'] = () => { W.flexOverride = MOB.pendingLight; MOB.pendingLight = null; U.closeModal(); if (W.flexOverride) A.start({ type: 'flex' }); };
 })();
