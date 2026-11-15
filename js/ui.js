@@ -147,10 +147,12 @@
   };
   U.showExercise = exId => {
     const ex = S.ex(exId), hist = S.logsFor(exId).slice(-5).reverse(), next = NEXT_VARIATION[exId];
-    U.modal('<h2>' + U.esc(ex.name) + '</h2><div class="tags"><span class="tag">' + U.esc(CATEGORIES[ex.cat] || 'Outros') + '</span><span class="tag lvl' + ex.level + '">' + LEVELS[ex.level] + '</span></div>' +
+    U.modal('<h2>' + U.esc(ex.name) + '</h2><div class="tags"><span class="tag">' + U.esc(CATEGORIES[ex.cat] || 'Outros') + '</span><span class="tag lvl' + ex.level + '">' + LEVELS[ex.level] + '</span>' +
+      (ex.pat && window.PATTERNS ? '<span class="tag">' + U.esc(PATTERNS[ex.pat]) + '</span>' : '') + (ex.reg && window.REGIONS ? '<span class="tag">' + U.esc(REGIONS[ex.reg]) + '</span>' : '') + (ex.uni ? '<span class="tag">Unilateral</span>' : '') + '</div>' +
+      (ex.sup ? '<div class="warn-box">⚠️ <b>Exige supervisão.</b> Treine só com professor ou alguém experiente segurando (spotter), em colchão grosso ou estrutura de ginástica. O app nunca coloca este exercício sozinho nos treinos.</div>' : '') +
       U.videoHtml(exId) + '<p>' + U.esc(ex.how) + '</p>' +
       '<p class="small"><b>Equipamento:</b> ' + (S.needs(exId).length ? S.needs(exId).map(q => { const n = (S.allEquip().find(x => x.id === q) || { name: q }).name, ok = S.owned().includes(q); return '<span class="' + (ok ? 'good' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + U.esc(n) + '</span>'; }).join(' · ') : 'nenhum (peso do corpo)') + '</p>' +
-      (next ? '<p class="muted">Ficou fácil? Próxima variação: <a href="#" data-a="exercise" data-ex="' + next + '">' + U.esc(S.ex(next).name) + '</a></p>' : '') +
+      (next ? '<p class="muted">Ficou fácil? Próxima variação' + (S.ex(next).sup ? ' (exige supervisão)' : '') + ': <a href="#" data-a="exercise" data-ex="' + next + '">' + U.esc(S.ex(next).name) + '</a></p>' : '') +
       (hist.length ? '<h3>Últimos registros</h3><ul class="plain">' + hist.map(h => '<li><b>' + U.fmtDate(h.log.date) + '</b> — ' + h.item.sets.join(', ') + U.unit(h.item.unit) + (h.item.kg && h.item.kg.some(Number) ? ' @ ' + Math.max(...h.item.kg) + ' kg' : '') + '</li>').join('') + '</ul>' : ''));
   };
   A.exercise = d => U.showExercise(d.ex);

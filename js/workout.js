@@ -196,9 +196,9 @@
   }
   A['w-swap'] = d => {
     const it = findItem(d.key), cur = S.ex(it.ex);
-    const list = S.allExercises().filter(x => x.cat === cur.cat && x.id !== it.ex).sort((a, b) => S.missing(a.id).length - S.missing(b.id).length || a.level - b.level);
+    const list = S.allExercises().filter(x => x.cat === cur.cat && x.id !== it.ex).sort((a, b) => (a.sup ? 1 : 0) - (b.sup ? 1 : 0) || (cur.pat && b.pat === cur.pat ? 1 : 0) - (cur.pat && a.pat === cur.pat ? 1 : 0) || S.missing(a.id).length - S.missing(b.id).length || a.level - b.level);
     U.modal('<h2>Trocar ' + e(cur.name) + '</h2><p class="muted">A troca vale para as próximas vezes também.</p><div class="list">' +
-      list.map(x => '<button class="list-item" data-a="w-swap-pick" data-key="' + d.key + '" data-ex="' + e(x.id) + '"><span>' + e(x.name) + (S.missing(x.id).length ? ' <small class="bad">falta: ' + e(S.missing(x.id).join(', ')) + '</small>' : '') + '</span><span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></button>').join('') +
+      list.map(x => '<button class="list-item" data-a="w-swap-pick" data-key="' + d.key + '" data-ex="' + e(x.id) + '"><span>' + e(x.name) + (x.sup ? ' <small class="bad">⚠️ exige supervisão</small>' : '') + (S.missing(x.id).length ? ' <small class="bad">falta: ' + e(S.missing(x.id).join(', ')) + '</small>' : '') + '</span><span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></button>').join('') +
       '</div><button class="btn ghosty" data-a="w-swap-pick" data-key="' + d.key + '" data-ex="">Voltar ao exercício original do programa</button>');
   };
   A['w-swap-pick'] = d => {

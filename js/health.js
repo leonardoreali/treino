@@ -136,9 +136,10 @@
   const TIMED = /prancha|wall-sit|hollow|superman|dead-hang|isometria|lsit|parada|planche|lever|tuck|vsit/;
   function pickAlt(it, r, used, cap) {
     const ex = S.ex(it.ex), lvl = Math.min(ex.level, cap || 9);
-    const c = S.allExercises().filter(x => x.cat === ex.cat && x.id !== it.ex && !r.avoid.has(x.id) && !r.removeCats.has(x.cat) && !used.has(x.id) && !S.missing(x.id).length && x.level <= (cap || Math.max(2, ex.level)) && TIMED.test(x.id) === TIMED.test(it.ex));
+    const c = S.allExercises().filter(x => x.cat === ex.cat && x.id !== it.ex && !x.sup && !r.avoid.has(x.id) && !r.removeCats.has(x.cat) && !used.has(x.id) && !S.missing(x.id).length && x.level <= (cap || Math.max(2, ex.level)) && TIMED.test(x.id) === TIMED.test(it.ex));
     const jumpy = new Set(ids(FLAG_EX.noJump));
-    c.sort((a, b) => (jumpy.has(a.id) ? 1 : 0) - (jumpy.has(b.id) ? 1 : 0) || (!!a.w === !!ex.w ? 0 : 1) - (!!b.w === !!ex.w ? 0 : 1) || Math.abs(a.level - lvl) - Math.abs(b.level - lvl));
+    const samePat = x => ex.pat && x.pat === ex.pat ? 0 : 1;
+    c.sort((a, b) => (jumpy.has(a.id) ? 1 : 0) - (jumpy.has(b.id) ? 1 : 0) || samePat(a) - samePat(b) || (!!a.w === !!ex.w ? 0 : 1) - (!!b.w === !!ex.w ? 0 : 1) || Math.abs(a.level - lvl) - Math.abs(b.level - lvl));
     return c[0];
   }
   const resize = (it, n) => { it.sets = n; ['vals', 'done', 'kgs'].forEach(k => { if (it[k]) it[k] = it[k].slice(0, n); }); };
@@ -177,7 +178,7 @@
     // sessão ficou vazia: monta um bloco com o que é seguro
     if (!c.blocks.some(b => b.kind === 'forca')) {
       const order = ['core', 'pernas', 'empurrar', 'puxar', 'mobilidade', 'flexibilidade'], pick = [];
-      order.forEach(cat => S.allExercises().filter(x => x.cat === cat && x.level <= 2 && !r.avoid.has(x.id) && !r.removeCats.has(x.cat) && !S.missing(x.id).length && !pick.some(p => p.cat === cat)).slice(0, 1).forEach(x => pick.push(x)));
+      order.forEach(cat => S.allExercises().filter(x => x.cat === cat && x.level <= 2 && !x.sup && !r.avoid.has(x.id) && !r.removeCats.has(x.cat) && !S.missing(x.id).length && !pick.some(p => p.cat === cat)).slice(0, 1).forEach(x => pick.push(x)));
       const items = pick.slice(0, 5).map((x, i) => { const timed = TIMED.test(x.id), it = { ex: x.id, sets: 2, min: timed ? 20 : 10, max: timed ? 30 : 15, unit: timed ? 's' : 'reps', rest: 60, key: 'h.' + i }; const s = W.suggest(x.id, it, 0); return Object.assign(it, { vals: s.targets, done: [false, false], hint: 'Treino alternativo seguro para a sua condição.' }); });
       if (items.length) c.blocks.splice(1, 0, { title: 'Treino alternativo (o original força a região)', kind: 'forca', items });
     }

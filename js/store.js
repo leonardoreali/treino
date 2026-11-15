@@ -45,6 +45,11 @@
     Object.keys(out.programs).forEach(id => { const p = out.programs[id]; if (!isObj(p) || !Array.isArray(p.sessions) || !p.sessions.length) { delete out.programs[id]; fixed++; } else p.id = p.id || id; });
     if (!Object.keys(out.programs).length) { out.programs = base.programs; out.activeProgram = base.activeProgram; fixed++; }
     if (!out.programs[out.activeProgram]) out.activeProgram = Object.keys(out.programs)[0];
+    // etapas inseridas nas árvores de habilidade (window.SKILL_INSERTS): quem já estava num passo continua no mesmo exercício
+    const ins = window.SKILL_INSERTS || {}; if (!isObj(out.skillsV)) out.skillsV = {};
+    Object.keys(ins).forEach(id => { const seen = +out.skillsV[id] || 0; let v = out.skills[id];
+      if (typeof v === 'number') { const v0 = v; ins[id].forEach(([ver, at, n]) => { if (ver > seen && v0 >= at) v += n; }); out.skills[id] = v; }
+      out.skillsV[id] = Math.max(seen, ...ins[id].map(x => x[0])); });
     out.v = FORMAT_VERSION; out.rev = out.rev || 0;
     return { state: out, fixed };
   };

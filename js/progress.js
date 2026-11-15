@@ -160,7 +160,7 @@
         if (step && step.ex === ex && cur < sk.steps.length - 1 && S.critProgress(step) >= 2 && !(S.state.swaps[pid] || {})[slot.key]) {
           S.state.skills[slot.skill] = cur + 1; promos.push({ kind: 'skill', skill: slot.skill, prev: cur, from: ex, to: sk.steps[cur + 1].ex });
         }
-      } else if (top(item) && prevSame && top(prevSame.item) && NEXT_VARIATION[ex] && !S.missing(NEXT_VARIATION[ex]).length && !slots.some(s2 => s2.ex === NEXT_VARIATION[ex])) {
+      } else if (top(item) && prevSame && top(prevSame.item) && NEXT_VARIATION[ex] && !S.ex(NEXT_VARIATION[ex]).sup && !S.missing(NEXT_VARIATION[ex]).length && !slots.some(s2 => s2.ex === NEXT_VARIATION[ex])) {
         const sw = S.state.swaps[pid] = S.state.swaps[pid] || {}, old = sw[slot.key];
         sw[slot.key] = NEXT_VARIATION[ex]; promos.push({ kind: 'swap', pid, key: slot.key, prev: old, from: ex, to: NEXT_VARIATION[ex] });
       }

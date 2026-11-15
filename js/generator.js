@@ -24,8 +24,9 @@
     pullV: [['barra-negativa', 1], ['chin-up', 2], ['barra-pronada', 3], ['barra-l', 4], ['barra-archer', 4], ['puxada-alta', 1]],
     pullH: [['remada-australiana', 1], ['remada-corda', 2], ['remada-maquina', 1], ['remada-baixa', 1], ['remada-serrote', 2], ['remada-curvada', 3], ['ytw', 1], ['superman', 1]],
     knee: [['agachamento', 1], ['bulgaro', 2], ['pistol-assistido', 3], ['pistol', 4], ['leg-press', 1], ['goblet', 1], ['agachamento-barra', 3]],
-    hip: [['meia-ponte', 1], ['ponte-gluteo-elastico', 1], ['nordic', 3], ['flexora', 1], ['hip-thrust', 2], ['stiff', 2], ['terra', 3]],
-    single: [['passada', 1], ['bulgaro', 2], ['afundo-halteres', 2], ['wall-sit', 1]],
+    hip: [['meia-ponte', 1], ['ponte-gluteo-elastico', 1], ['hip-hinge-bastao', 1], ['stiff-unilateral-livre', 2], ['ponte-unilateral', 2], ['hip-thrust', 2], ['stiff', 2], ['terra', 3]],
+    ham: [['ponte-pes-elevados', 1], ['ponte-caminhada', 1], ['flexao-joelho-toalha-excentrica', 2], ['flexao-joelho-toalha', 2], ['flexao-joelho-toalha-unilateral', 3], ['nordic-assistido', 3], ['nordic', 4], ['flexora', 1]],
+    single: [['agachamento-split', 1], ['passada', 1], ['step-down', 2], ['bulgaro', 2], ['afundo-halteres', 2], ['wall-sit', 1]],
     legIso: [['extensora', 1], ['flexora', 1], ['abdutora', 1], ['wall-sit', 1]],
     calf: [['panturrilha', 1], ['panturrilha-unilateral', 2], ['panturrilha-maquina', 1]],
     coreA: [['prancha', 1], ['dead-bug', 1], ['abdominal', 1], ['hollow-body', 2], ['elevacao-joelhos', 2], ['abdominal-polia', 2], ['elevacao-pernas', 3], ['toes-to-bar', 4]],
@@ -39,12 +40,12 @@
   const TEMPL = {
     fullA: ['Corpo todo A', 'pushH pullV knee hip coreA calf delt'],
     fullB: ['Corpo todo B', 'pushV pullH single hip coreB tri bi'],
-    fullC: ['Corpo todo C', 'pushH pullH knee legIso coreA bi tri'],
+    fullC: ['Corpo todo C', 'pushH pullH knee ham coreA bi tri'],
     upper: ['Superior', 'pushH pullV pushV pullH bi tri delt'],
-    lower: ['Inferior', 'knee hip single legIso calf coreA coreB'],
+    lower: ['Inferior', 'knee hip single ham calf coreA coreB'],
     push: ['Empurrar', 'pushH pushV tri delt pushH coreA'],
     pull: ['Puxar', 'pullV pullH bi rear pullH coreB'],
-    legs: ['Pernas', 'knee hip single legIso calf coreA'],
+    legs: ['Pernas', 'knee hip single ham calf coreA'],
   };
   const TIMED = new Set(['prancha', 'prancha-lateral', 'hollow-body', 'superman', 'wall-sit', 'dead-hang']);
   const SKILL_OF = { pushH: 'flexao-um-braco', knee: 'pistol' };
@@ -61,7 +62,7 @@
     const gymFirst = p.local === 'academia' || (p.local === 'misto' && (goal === 'hipertrofia' || goal === 'forca'));
     const avoid = new Set((p.limit || []).flatMap(l => (AVOID[l] || '').split(' ')));
     if ((imc && imc >= 30) || age >= 60) AVOID.joelho.split(' ').filter(x => /salto|burpee|corda|polichinelo|joelho-alto/.test(x)).forEach(x => avoid.add(x));
-    const can = id => !avoid.has(id) && (EQUIP_NEEDS[id] || []).every(q => owned.includes(q));
+    const can = id => !avoid.has(id) && !(S.ex(id) || {}).sup && (EQUIP_NEEDS[id] || []).every(q => owned.includes(q));
     // nível por padrão a partir dos testes (flexões e barras seguidas), quando informados
     const lv = { push: lvl, pull: lvl, legs: lvl };
     if (p.flexoes !== '' && p.flexoes != null) lv.push = +p.flexoes < 5 ? 1 : +p.flexoes <= 20 ? 2 : +p.flexoes <= 35 || lvl < 3 ? 3 : 4;
@@ -86,13 +87,14 @@
         : acc ? { ex, sets: Math.min(3, sets), min: core ? 10 : 8, max: core ? 15 : 12, unit: 'reps', rest: 60 }
         : { ex, sets, min: w ? VOL[3] : VOL[1], max: w ? VOL[4] : VOL[2], unit: 'reps', rest: n < 2 ? VOL[5] : Math.max(45, VOL[5] - 30) };
       if (goal === 'hipertrofia' && lvl === 3 && w && /^(tri|bi|delt|rear|legIso|calf)/.test(pat)) o.note = 'Última série: perto da falha, reduza ~20% da carga e continue sem descanso (drop-set).';
-      if (/bulgaro|passada|afundo|pistol|panturrilha-unilateral|remada-serrote|prancha-lateral|dead-bug/.test(ex)) o.side = true;
+      if (/bulgaro|passada|afundo|pistol|panturrilha-unilateral|remada-serrote|prancha-lateral|dead-bug/.test(ex) || (S.ex(ex) || {}).uni) o.side = true;
       if (goal === 'habilidades' && SKILL_OF[pat] && S.skill(SKILL_OF[pat]).steps.some(s => s.ex === ex)) { o.skill = SKILL_OF[pat]; }
       return o;
     };
     const aquec = () => ({ title: 'Aquecimento (5–8 min)', kind: 'check', items: [
       can('corda') ? { ex: 'corda', sets: 1, min: 120, max: 120, unit: 's' } : (avoid.has('polichinelo') ? { text: 'Marcha parada ou caminhada leve — 2 min' } : { ex: 'polichinelo', sets: 1, min: 60, max: 60, unit: 's' }),
       { ex: 'rotacao-ombros', sets: 1, min: 30, max: 30, unit: 's' }, { ex: 'gato-vaca', sets: 1, min: 10, max: 10, unit: 'reps' },
+      ...(goal === 'habilidades' || lv.push >= 3 ? [{ ex: 'punho-circulos', sets: 1, min: 30, max: 30, unit: 's', note: 'Punhos aquecidos antes de apoiar o peso nas mãos' }] : []),
       { ex: 'agachamento', sets: 1, min: 10, max: 10, unit: 'reps', note: 'Lento' }, { text: '1 série leve do primeiro exercício' }] });
     const flex = () => JSON.parse(JSON.stringify(DEFAULT_PROGRAM.sessions[0].blocks.slice(-1)[0]));
     const hiit = () => {

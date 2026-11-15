@@ -1,7 +1,7 @@
 /* Service worker: o app abre sem internet e só troca de versão quando a pessoa aceita.
    Ao publicar mudanças, aumente VERSION: a versão nova é baixada inteira em segundo plano e fica esperando;
    o app mostra "Nova versão disponível" e só troca quando a pessoa toca em Atualizar (nunca no meio de um treino). */
-const VERSION = 'treino-v16';
+const VERSION = 'treino-v17';
 const RUNTIME = 'treino-bibliotecas';
 const SHELL = [
   './',
@@ -16,6 +16,8 @@ const SHELL = [
   'js/data/gym.js',
   'js/data/more.js',
   'js/data/program.js',
+  'js/data/more2.js',
+  'js/data/meta.js',
   'js/store.js',
   'js/ui.js',
   'js/i18n/en.js',

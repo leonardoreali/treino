@@ -2,7 +2,7 @@
 (function () {
   const V = window.V = {}, after = V.after = {};
   const e = U.esc;
-  const ui = V.ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, draft: null };
+  const ui = V.ui = { evoTab: 'historico', chartEx: null, chartTest: null, libCat: '', libQ: '', libLvl: 0, libPat: '', libReg: '', libSup: false, draft: null };
 
 
   // ================= HOJE =================
@@ -134,20 +134,22 @@
   // ================= BIBLIOTECA =================
   function libFiltered() {
     const q = ui.libQ.trim().toLowerCase();
-    return S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
+    return S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libPat || x.pat === ui.libPat) && (!ui.libReg || x.reg === ui.libReg) && (!ui.libSup || !x.sup) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
   }
   function libList() {
     const list = libFiltered();
     const EMO = { empurrar: '💪', puxar: '🧗', pernas: '🦵', core: '🎯', habilidade: '🤸', cardio: '🏃', flexibilidade: '🧘', mobilidade: '🔄', acrobacia: '🌀', luta: '🥊' };
     return list.length ? list.map(x => '<button class="tile" data-a="exercise" data-ex="' + e(x.id) + '"><span class="tile-img">' + (EMO[x.cat] || '🏋️') + (U.thumb(x.id) ? '<img alt="" loading="lazy" src="' + U.thumb(x.id) + '" onerror="this.remove()">' : '') +
-      '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></span><span class="tile-body"><b>' + e(x.name) + '</b><small>' + e(CATEGORIES[x.cat] || 'Outros') + (x.w ? ' · com carga' : '') + '</small></span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
+      '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span>' + (x.sup ? '<span class="tag sup" title="Exige supervisão">⚠️</span>' : '') + '</span><span class="tile-body"><b>' + e(x.name) + '</b><small>' + e(x.pat && window.PATTERNS ? PATTERNS[x.pat] : x.reg && window.REGIONS ? CATEGORIES[x.cat] + ' · ' + REGIONS[x.reg] : CATEGORIES[x.cat] || 'Outros') + (x.w ? ' · com carga' : '') + (x.sup ? ' · exige supervisão' : '') + '</small></span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
   }
   const cnt = n => ' <span class="cnt">' + n + '</span>';
   V.biblioteca = () => { const all = S.allExercises(), inCat = all.filter(x => !ui.libCat || x.cat === ui.libCat); return '<div class="row between"><h1>Biblioteca</h1><button class="btn small" data-a="lib-new">+ Exercício</button></div>' +
     '<p class="muted small lib-total"><b>' + all.length + '</b> exercícios no total' + ((S.state.customEx || []).length ? ' (<b>' + S.state.customEx.length + '</b> criados por você)' : '') + '. <a href="#" data-a="lib-stats">Ver a lista por categoria</a></p><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
     '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + cnt(c[0] ? all.filter(x => x.cat === c[0]).length : all.length) + '</button>').join('') + '</div>' +
-    '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + cnt(i ? inCat.filter(x => x.level === i).length : inCat.length) + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button></div>' +
+    '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + cnt(i ? inCat.filter(x => x.level === i).length : inCat.length) + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button><button data-a="lib-sup" class="' + (ui.libSup ? 'on' : '') + '">🛡️ Sem os que exigem supervisão' + cnt(inCat.filter(x => !x.sup).length) + '</button></div>' +
+    '<div class="lib-filters"><label>Padrão de movimento <select id="lib-pat"><option value="">Todos' + '</option>' + Object.entries(PATTERNS).map(p => '<option value="' + p[0] + '"' + (ui.libPat === p[0] ? ' selected' : '') + '>' + p[1] + ' (' + inCat.filter(x => x.pat === p[0]).length + ')</option>').join('') + '</select></label>' +
+    (!ui.libCat || ui.libCat === 'mobilidade' || ui.libCat === 'flexibilidade' ? '<label>Região (mobilidade e flexibilidade) <select id="lib-reg"><option value="">Todas</option>' + Object.entries(REGIONS).map(r => '<option value="' + r[0] + '"' + (ui.libReg === r[0] ? ' selected' : '') + '>' + r[1] + ' (' + inCat.filter(x => x.reg === r[0]).length + ')</option>').join('') + '</select></label>' : '') + '</div>' +
     '<p class="muted small" id="lib-count">' + libCountText() + '</p><div class="tiles" id="lib-list">' + libList() + '</div>'; };
   function libCountText() { const n = libFiltered().length, t = S.allExercises().length; return n === t ? 'Mostrando todos os ' + t + ' exercícios' : 'Mostrando ' + n + ' de ' + t + ' exercícios'; }
   // Lista completa: quantos exercícios há em cada categoria e em cada nível
@@ -156,12 +158,19 @@
     U.modal('<h2>Exercícios por categoria</h2><p class="muted small"><b>' + all.length + '</b> exercícios no total.</p><div style="overflow-x:auto"><table class="tbl"><tr><th>Categoria</th><th>Total</th>' + LEVELS.slice(1).map(l => '<th>' + l + '</th>').join('') + '</tr>' +
       cats.map(c => { const xs = all.filter(x => x.cat === c[0]); return '<tr><td><a href="#" data-a="lib-cat-go" data-c="' + c[0] + '">' + e(c[1]) + '</a></td><td><b>' + xs.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td>' + (xs.filter(x => x.level === n).length || '·') + '</td>').join('') + '</tr>'; }).join('') +
       '<tr><td><b>Total</b></td><td><b>' + all.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td><b>' + all.filter(x => x.level === n).length + '</b></td>').join('') + '</tr></table></div>' +
-      '<p class="muted small">Com vídeo: ' + all.filter(x => S.videoFor(x.id)).length + ' · Com carga (academia): ' + all.filter(x => x.w).length + ' · Só com peso do corpo: ' + all.filter(x => !S.needs(x.id).length).length + '</p>');
+      '<h3>Por padrão de movimento</h3><div style="overflow-x:auto"><table class="tbl"><tr><th>Padrão</th><th>Total</th>' + LEVELS.slice(1).map(l => '<th>' + l + '</th>').join('') + '</tr>' +
+      Object.entries(PATTERNS).map(p => { const xs = all.filter(x => x.pat === p[0]); return '<tr><td><a href="#" data-a="lib-pat-go" data-p="' + p[0] + '">' + e(p[1]) + '</a></td><td><b>' + xs.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td>' + (xs.filter(x => x.level === n).length || '·') + '</td>').join('') + '</tr>'; }).join('') + '</table></div>' +
+      '<h3>Mobilidade e flexibilidade por região</h3><p class="small">' + Object.entries(REGIONS).map(r => '<a href="#" data-a="lib-reg-go" data-r="' + r[0] + '">' + e(r[1]) + '</a>: <b>' + all.filter(x => x.reg === r[0]).length + '</b>').join(' · ') + '</p>' +
+      '<p class="muted small">Unilaterais: ' + all.filter(x => x.uni).length + ' · Exigem supervisão (fora dos treinos automáticos): ' + all.filter(x => x.sup).length + ' · Com vídeo: ' + all.filter(x => S.videoFor(x.id)).length + ' · Com carga (academia): ' + all.filter(x => x.w).length + ' · Só com peso do corpo: ' + all.filter(x => !S.needs(x.id).length).length + '</p>');
   };
+  A['lib-pat-go'] = d => { Object.assign(ui, { libCat: '', libLvl: 0, libReg: '', libPat: d.p }); U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
+  A['lib-reg-go'] = d => { Object.assign(ui, { libCat: '', libLvl: 0, libPat: '', libReg: d.r }); U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
   A['lib-cat-go'] = d => { ui.libCat = d.c === 'outros' ? '' : d.c; ui.libLvl = 0; U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
-  A['lib-cat'] = d => { ui.libCat = d.c; APP.render(); };
+  A['lib-cat'] = d => { ui.libCat = d.c; if (d.c && d.c !== 'mobilidade' && d.c !== 'flexibilidade') ui.libReg = ''; APP.render(); };
   A['lib-lvl'] = d => { ui.libLvl = +d.l; APP.render(); };
   A['lib-own'] = () => { ui.libOwn = !ui.libOwn; APP.render(); };
+  A['lib-sup'] = () => { ui.libSup = !ui.libSup; APP.render(); };
+  document.addEventListener('change', ev => { if (ev.target.id === 'lib-pat') { ui.libPat = ev.target.value; APP.render(); } if (ev.target.id === 'lib-reg') { ui.libReg = ev.target.value; APP.render(); } });
   // equipamentos (Ajustes)
   document.addEventListener('change', ev => {
     const q = ev.target.dataset && ev.target.dataset.equip; if (!q) return;
@@ -178,10 +187,11 @@
   A['lib-new'] = () => U.modal('<h2>Novo exercício</h2><label>Nome <input id="nx-name"></label><label>Categoria <select id="nx-cat">' + Object.entries(CATEGORIES).map(c => '<option value="' + c[0] + '">' + c[1] + '</option>').join('') + '</select></label>' +
     '<label>Nível <select id="nx-lvl">' + LEVELS.slice(1).map((l, i) => '<option value="' + (i + 1) + '">' + l + '</option>').join('') + '</select></label>' +
     '<label>Equipamento necessário <select id="nx-eq"><option value="">Nenhum (peso do corpo)</option>' + S.allEquip().map(q => '<option value="' + e(q.id) + '">' + e(q.name) + '</option>').join('') + '</select></label>' +
+    '<label>Padrão de movimento <select id="nx-pat"><option value="">Nenhum / não sei</option>' + Object.entries(PATTERNS).map(p => '<option value="' + p[0] + '">' + p[1] + '</option>').join('') + '</select></label>' +
     '<label>Como fazer <textarea id="nx-how" rows="2"></textarea></label><label>Link do short no YouTube (opcional) <input id="nx-vid" placeholder="https://youtube.com/shorts/…"></label><button class="btn block" data-a="lib-save">Salvar</button>');
   A['lib-save'] = () => {
     const name = U.$('#nx-name').value.trim(); if (!name) return U.toast('Dê um nome ao exercício.');
-    S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined });
+    S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined, pat: U.$('#nx-pat').value || undefined });
     S.save(); U.closeModal(); APP.render();
   };
 

@@ -8,7 +8,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..'), out = path.join(root, 'js', 'data', 'videos.js');
 const ctx = {}; ctx.window = ctx; vm.createContext(ctx);
-for (const f of ['exercises.js', 'equip.js', 'gym.js', 'more.js']) vm.runInContext(fs.readFileSync(path.join(root, 'js', 'data', f), 'utf8'), ctx);
+for (const f of ['exercises.js', 'equip.js', 'gym.js', 'more.js', 'program.js', 'more2.js', 'meta.js']) vm.runInContext(fs.readFileSync(path.join(root, 'js', 'data', f), 'utf8'), ctx);
 const args = process.argv.slice(2), all = args.includes('--todos'), only = args.filter(a => !a.startsWith('--'));
 if (fs.existsSync(out)) vm.runInContext(fs.readFileSync(out, 'utf8'), ctx);
 const have = (all ? {} : ctx.window.VIDEOS) || {}, titles = (all ? {} : ctx.window.VIDEO_TITLES) || {}, wide = (all ? {} : ctx.window.VIDEO_WIDE) || {};
@@ -39,7 +39,7 @@ async function search(q) {
 }
 const GOOD = /tutorial|how to|how-to|como fazer|aprenda|learn|passo a passo|step by step|step-by-step|guide|guia|ensin/i;
 const OK = /t[ée]cnica|technique|\bform\b|execu[cç][aã]o|correct|corret|mistake|erro|tips|dicas|progress|beginner|iniciante|drill|explain|explica|para iniciantes|breakdown|cue/i;
-const BAD = /compila|compilation|fails?\b|challenge|desafio|\bvs\.?\b|reaction|rea[cç][aã]o|funny|meme|prank|insane|crazy|epic|motiva|edit\b|transformation|transforma[cç][aã]o|world record|recorde mundial|asmr/i;
+const BAD = /compila|compilation|fails?\b|challenge|desafio|\bvs\.?\b|reaction|rea[cç][aã]o|funny|meme|prank|insane|crazy|epic|motiva|edit\b|transformation|transforma[cç][aã]o|world record|recorde mundial|asmr|bordado|embroider|croch|costura|sewing|[óo]rtese|orthosis|artesanato|diy\b/i;
 function score(v, ex) {
   let s = 0; const t = v.title || '';
   if (GOOD.test(t)) s += 5; if (OK.test(t)) s += 2; if (BAD.test(t)) s -= 10;
@@ -47,12 +47,17 @@ function score(v, ex) {
   const tl = t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const hit = words.filter(w => tl.includes(w)).length; s += Math.min(3, hit * 1.5); if (!hit) s -= 4; // título precisa falar do exercício
   if (!v.short) { if (v.sec >= 40 && v.sec <= 12 * 60) s += 2; else if (v.sec > 20 * 60) s -= 3; }
-  if (/[ãõçáéíóú]|\bcomo\b|\bpara\b/i.test(t)) s += 1; // conteúdo em português ajuda o público principal
+  if (/[ãõçáéíóú]|\bcomo\b|\bpara\b/i.test(t)) s += 1;
+  // aparelho ou variação que o exercício não tem (abdominal no chão x na polia; cotovelada x cotovelada giratória)
+  const nm = (ex.name + ' ' + ex.q).toLowerCase();
+  if (!ex.gym && /polia|cable|m[áa]quina|machine|smith/i.test(t) && !/polia|cable|m[áa]quina|machine|smith/.test(nm)) s -= 6;
+  if (/gir[a-z]*t[óo]ri|spinning/i.test(t) && !/girat|spinning/.test(nm)) s -= 6; // conteúdo em português ajuda o público principal
   return s;
 }
 async function best(ex) {
   const cands = [];
-  for (const q of [ex.q.replace(/\b(form|tutorial)\b/gi, '').trim() + ' tutorial', ex.name + ' como fazer']) {
+  const custom = (ctx.window.VIDEO_QUERY || {})[ex.id];
+  for (const q of custom ? [custom] : [ex.q.replace(/\b(form|tutorial)\b/gi, '').trim() + ' tutorial', ex.name + ' como fazer']) {
     try { (await search(q)).slice(0, 12).forEach(v => { if (!cands.some(c => c.id === v.id)) cands.push(v); }); } catch (e) { console.log('  busca falhou:', q, e.message); }
     await sleep(900);
   }

@@ -27,9 +27,11 @@ Em **Ajustes → Sincronização** há o passo a passo: você cria um token do G
 
 | Quero… | Arquivo |
 | --- | --- |
-| Adicionar/editar exercícios da biblioteca | `js/data/exercises.js`, `js/data/gym.js` e `js/data/more.js` (uma linha por exercício; traduções em `tools/i18n/tr-5.tsv`) |
+| Adicionar/editar exercícios da biblioteca | `js/data/exercises.js`, `gym.js`, `more.js` e `more2.js` (uma linha por exercício; traduções em `tools/i18n/tr-5.tsv` e `tr-6.tsv`) |
 | Trocar o vídeo padrão de um exercício | `js/data/videos.js` (ou, mais fácil, o botão **Trocar vídeo** dentro do app) |
 | Editar árvores de habilidade ou o programa inicial | `js/data/program.js` |
+| Padrão de movimento, região (mobilidade), unilateral e "exige supervisão" | `js/data/meta.js` (listas de ids no começo; exercícios com supervisão nunca entram em treinos automáticos) |
+| Etapas novas nas árvores de habilidade | `js/data/more2.js` (`plan(...)` registra a posição para o app ajustar o passo de quem já treinava) |
 | Buscar vídeos que ensinam (tutoriais) para exercícios novos | `node tools/buscar-videos.js` (`--todos` refaz todos) |
 | Mudar cores | topo de `css/style.css` |
 

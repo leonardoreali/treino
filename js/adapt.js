@@ -25,8 +25,9 @@
   const names = areas => areas.map(a => (AREAS[a] || a).toLowerCase()).join(', ');
   function alternative(it, avoid, used) {
     const ex = S.ex(it.ex);
-    const c = S.allExercises().filter(x => x.cat === ex.cat && x.id !== it.ex && !avoid.has(x.id) && !used.has(x.id) && !S.missing(x.id).length && x.level <= Math.max(2, ex.level) && (it.unit !== 'reps' || !TIMED.test(x.id)) && (it.unit === 'reps' || TIMED.test(x.id)));
-    c.sort((a, b) => (!!a.w === !!ex.w ? 0 : 1) - (!!b.w === !!ex.w ? 0 : 1) || Math.abs(a.level - ex.level) - Math.abs(b.level - ex.level));
+    const c = S.allExercises().filter(x => x.cat === ex.cat && x.id !== it.ex && !x.sup && !avoid.has(x.id) && !used.has(x.id) && !S.missing(x.id).length && x.level <= Math.max(2, ex.level) && (it.unit !== 'reps' || !TIMED.test(x.id)) && (it.unit === 'reps' || TIMED.test(x.id)));
+    const samePat = x => ex.pat && x.pat === ex.pat ? 0 : 1;
+    c.sort((a, b) => samePat(a) - samePat(b) || (!!a.w === !!ex.w ? 0 : 1) - (!!b.w === !!ex.w ? 0 : 1) || Math.abs(a.level - ex.level) - Math.abs(b.level - ex.level));
     return c[0];
   }
   const resize = (it, n) => { it.sets = n; for (const k of ['vals', 'done', 'kgs']) if (it[k]) { const last = it[k][it[k].length - 1]; it[k] = Array.from({ length: n }, (_, i) => i < it[k].length ? it[k][i] : (k === 'done' ? false : last)); } };
