@@ -2191,5 +2191,18 @@
 "Termine ou descarte o treino em andamento primeiro.": "Finish or discard the workout in progress first.",
 "Nenhum exercício disponível com seus equipamentos e limitações.": "No exercises available with your equipment and limitations.",
 "· #–# min": "· #–# min",
-"#–# reps": "#–# reps"
+"#–# reps": "#–# reps",
+"Cada sessão foi ajustada para caber em cerca de # min, contando aquecimento e alongamento final.": "Each session was adjusted to fit in about # min, including warm-up and the final stretching.",
+"Duração estimada": "Estimated duration",
+"Movimento leve: faça só se não doer (você marcou limitação nesta região).": "Gentle movement: only do it if it doesn't hurt (you marked a limitation in this area).",
+"Essa região está em recuperação (tela Saúde): exercícios nela só com orientação do profissional.": "This area is recovering (Health screen): exercises for it only with guidance from your professional.",
+"Adaptado à sua condição.": "Adapted to your condition.",
+"região em recuperação, só com orientação do profissional": "area recovering, only with guidance from your professional",
+"por enquanto só movimentos leves": "only gentle movements for now",
+"ainda sem os mais intensos": "no intense ones yet",
+"falta a liberação médica": "medical clearance missing",
+"Sem liberação médica registrada": "No medical clearance recorded",
+"Só o leve, sem esforço intenso, até o médico liberar.": "Only light work, no intense effort, until your doctor clears you.",
+"Rotina adaptada para": "Routine adapted for",
+"Marcha parada ou caminhada leve — # min": "Marching in place or easy walk — # min"
 };

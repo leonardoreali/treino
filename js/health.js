@@ -27,7 +27,7 @@
     noJump: 'agachamento-salto salto-grupado burpee corda polichinelo joelho-alto mountain-climber flexao-explosiva flexao-palma estrela rodante kip-up macaco mortal-tras mortal-frente',
     noInvert: 'parada-mao-parede parada-mao-um-pe parada-mao-toques parada-mao-livre hspu-parede pike-pushup-elevado parada-ponte rolamento-frente rolamento-tras',
     noHands: 'prancha prancha-lateral mountain-climber burpee crow',
-    noSpinalFlex: 'abdominal abdominal-infra abdominal-obliquo abdominal-bicicleta abdominal-maquina abdominal-polia russian-twist elevacao-pernas toes-to-bar vsit dragon-flag pike-pe pancake contrai-relaxa-pike terra',
+    noSpinalFlex: 'jefferson-curl abdominal abdominal-infra abdominal-obliquo abdominal-bicicleta abdominal-maquina abdominal-polia russian-twist elevacao-pernas toes-to-bar vsit dragon-flag pike-pe pancake contrai-relaxa-pike terra',
     noStandCardio: 'caminhada corda escada escada-maq esteira eliptico polichinelo joelho-alto burpee',
   };
   const FLAG_TEXT = { noJump: 'sem saltos nem impacto', noInvert: 'sem posições de cabeça para baixo', noHang: 'sem pendurar na barra', noHands: 'sem apoio nas mãos', noSpinalFlex: 'sem flexionar a coluna com carga (abdominais tradicionais)', noStandCardio: 'sem cardio em pé', noHIIT: 'sem intervalado intenso', noValsalva: 'cargas moderadas (10+ repetições), isometrias de até 30 s, sem prender a respiração' };
@@ -89,7 +89,7 @@
 
   // ---------- regras somadas de todas as condições ativas ----------
   H.rules = list => {
-    const r = { avoid: new Set(), removeCats: new Set(), caps: {}, setsCap: {}, load: {}, maxKg: {}, flags: new Set(), rpeMax: 10, why: {}, tips: [], checks: [], clearance: [], names: [] };
+    const r = { mob: [], avoid: new Set(), removeCats: new Set(), caps: {}, setsCap: {}, load: {}, maxKg: {}, flags: new Set(), rpeMax: 10, why: {}, tips: [], checks: [], clearance: [], names: [] };
     const add = (list, why) => list.forEach(x => { r.avoid.add(x); if (!r.why[x]) r.why[x] = why; });
     (list || active()).forEach(c => {
       const sp = specOf(c) || {}, reg = REGION[c.area], name = H.title(c);
@@ -100,6 +100,8 @@
       if (sp.rpeMax) r.rpeMax = Math.min(r.rpeMax, sp.rpeMax);
       (sp.tips || []).forEach(t => r.tips.push(t)); if (sp.check) r.checks.push(sp.check);
       if (sp.clearance && !c.cleared) r.clearance.push(c);
+      // mobilidade e alongamento da região: travados na proteção (ou dor forte), só movimentos leves no retorno, sem os mais difíceis no fortalecimento
+      if (c.area && c.kind !== 'cronica') { const p = painNow(c); r.mob.push({ area: c.area, name, mode: (c.kind === 'lesao' && c.phase === 'protecao') || p >= 6 ? 'lock' : (c.kind === 'lesao' && c.phase === 'retorno') || (c.kind === 'dor' && p >= 3) ? 'gentle' : 'cap' }); }
       if (c.kind === 'lesao' && reg) {
         // dor forte numa lesão: volta a poupar a região até melhorar
         if (c.phase === 'protecao' || painNow(c) >= 6) { REGION_CATS[reg].forEach(k => r.removeCats.add(k)); PROTECT[reg].forEach(f => r.flags.add(f)); add(baseAvoid(c.area), name); r.rpeMax = Math.min(r.rpeMax, 7); }
@@ -142,6 +144,44 @@
     c.sort((a, b) => (jumpy.has(a.id) ? 1 : 0) - (jumpy.has(b.id) ? 1 : 0) || samePat(a) - samePat(b) || (!!a.w === !!ex.w ? 0 : 1) - (!!b.w === !!ex.w ? 0 : 1) || Math.abs(a.level - lvl) - Math.abs(b.level - lvl));
     return c[0];
   }
+  // Mobilidade/flexibilidade × saúde. Região da condição → regiões de mobilidade e exercícios que carregam aquela articulação.
+  const MOB_REG = { ombro: ['ombro'], punho: ['punho'], braco: ['punho'], quadril: ['quadril'], perna: ['posterior', 'tornozelo'], tornozelo: ['tornozelo'], lombar: ['coluna'], costela: ['coluna'], cotovelo: [], joelho: [], pescoco: [] };
+  const MOB_EX = { joelho: 'couch-stretch couch-stretch-ativo sapo quadriceps-deitado alongamento-quadriceps flexor-quadril-ajoelhado agachamento-profundo pombo shin-box quadril-90-90 quadril-90-90-liftoff lagarto meio-espacate afundo-espacate espacate-frontal mobilidade-tornozelo worlds-greatest crianca',
+    cotovelo: 'punho-garrafa pronacao-supinacao alongamento-triceps elevacao-palmas alongamento-punho german-hang skin-the-cat passagem-ombro', pescoco: 'ponte cobra jefferson-curl',
+    lombar: 'jefferson-curl cobra ponte pike-pe pancake', costela: 'ponte torcao-coluna livro-aberto passar-agulha inclinacao-lateral' };
+  // apoio nas mãos ou de quatro (vale quando a condição pede "sem apoio nas mãos")
+  const HANDS_MOB = new Set('gato-vaca rotacao-toracica passar-agulha adutor-balanco alongamento-punho elevacao-palmas cachorro-baixo postura-filhote cobra worlds-greatest lagarto bird-dog'.split(' '));
+  H.mobRegions = area => MOB_REG[area] || [];
+  const mobHit = (x, area) => (MOB_REG[area] || []).includes(x.reg) || ids(MOB_EX[area]).includes(x.id);
+  // Motivo para NÃO fazer o exercício de mobilidade/flexibilidade hoje (ou '' se pode)
+  H.mobReason = (x, r) => {
+    if (!x) return '';
+    if (r.avoid.has(x.id)) return r.why[x.id] || 'sua condição';
+    if (r.flags.has('noHands') && HANDS_MOB.has(x.id)) return FLAG_TEXT.noHands;
+    if (r.flags.has('noInvert') && ['cachorro-baixo', 'jefferson-curl', 'ponte'].includes(x.id)) return FLAG_TEXT.noInvert;
+    for (const m of r.mob) if (mobHit(x, m.area)) {
+      if (m.mode === 'lock') return m.name + ': região em recuperação, só com orientação do profissional';
+      if (m.mode === 'gentle' && !x.gentle) return m.name + ': por enquanto só movimentos leves';
+      if (m.mode === 'cap' && (x.level >= 3 || x.mod === 'final')) return m.name + ': ainda sem os mais intensos';
+    }
+    if (r.clearance.length && x.mod === 'final') return 'falta a liberação médica';
+    return '';
+  };
+  // Troca ou tira itens de blocos de aquecimento/alongamento conforme as regras
+  function applyCheck(b, r, used, swapped, removed) {
+    b.items = b.items.filter(it => {
+      if (!it.ex) return true;
+      const x = S.ex(it.ex), why = x.mod ? H.mobReason(x, r) : (r.avoid.has(it.ex) || r.removeCats.has(x.cat) ? (r.why[it.ex] || 'usa a região em recuperação') : '');
+      if (!why) return true;
+      const alt = x.mod && S.allExercises().filter(y => y.mod === x.mod && y.id !== x.id && !y.sup && !used.has(y.id) && !S.missing(y.id).length && y.level <= Math.max(2, x.level) && !H.mobReason(y, r))
+        .sort((a, b2) => (b2.gentle ? 1 : 0) - (a.gentle ? 1 : 0) || a.level - b2.level)[0];
+      if (!alt) { removed.push(x.name + ' (' + why + ')'); return false; }
+      const d = alt.dose || {}; swapped.push(x.name + ' → ' + alt.name + ' (' + why + ')'); used.add(alt.id);
+      Object.assign(it, { ex: alt.id, sets: d.sets || it.sets, min: d.min || it.min, max: d.max || it.max, unit: d.unit || it.unit, side: !!d.side, note: 'Adaptado à sua condição.' });
+      return true;
+    });
+    if (!b.items.some(it => it.ex)) b.drop = true;
+  }
   const resize = (it, n) => { it.sets = n; ['vals', 'done', 'kgs'].forEach(k => { if (it[k]) it[k] = it[k].slice(0, n); }); };
   function apply(c) {
     const r = H.rules(); if (!r.names.length) return;
@@ -165,7 +205,7 @@
         }
         return true;
       });
-      else if (b.kind === 'check') b.items.forEach(it => { if (it.ex && r.avoid.has(it.ex)) it.note = '⚠ Pule (' + (r.why[it.ex] || 'sua condição') + ').'; });
+      else if (b.kind === 'check') applyCheck(b, r, used, swapped, removed);
       else if (b.kind === 'intervalado') {
         if (r.flags.has('noHIIT') || r.removeCats.has('pernas')) b.drop = true;
         else (b.options || []).forEach(o => { const l = o.labels.filter(x => !S.allExercises().some(y => y.name === x && r.avoid.has(y.id))); o.labels = l.length ? l : ['Marcha rápida no lugar']; });
@@ -176,7 +216,7 @@
     const dropped = c.blocks.filter(b => b.drop).map(b => b.title);
     c.blocks = c.blocks.filter(b => !b.drop && (b.kind !== 'forca' || b.items.length));
     // sessão ficou vazia: monta um bloco com o que é seguro
-    if (!c.blocks.some(b => b.kind === 'forca')) {
+    if (c.type !== 'flex' && !c.blocks.some(b => b.kind === 'forca')) {
       const order = ['core', 'pernas', 'empurrar', 'puxar', 'mobilidade', 'flexibilidade'], pick = [];
       order.forEach(cat => S.allExercises().filter(x => x.cat === cat && x.level <= 2 && !x.sup && !r.avoid.has(x.id) && !r.removeCats.has(x.cat) && !S.missing(x.id).length && !pick.some(p => p.cat === cat)).slice(0, 1).forEach(x => pick.push(x)));
       const items = pick.slice(0, 5).map((x, i) => { const timed = TIMED.test(x.id), it = { ex: x.id, sets: 2, min: timed ? 20 : 10, max: timed ? 30 : 15, unit: timed ? 's' : 'reps', rest: 60, key: 'h.' + i }; const s = W.suggest(x.id, it, 0); return Object.assign(it, { vals: s.targets, done: [false, false], hint: 'Treino alternativo seguro para a sua condição.' }); });
@@ -187,6 +227,7 @@
     if (removed.length) notes.push('Fora de hoje: ' + e(removed.join(', ')) + '.');
     if (dropped.length) notes.push('Sem ' + e(dropped.join(' e ').toLowerCase()) + ' por enquanto.');
     if (r.rpeMax < 10) notes.push('Esforço até <b>' + r.rpeMax + ' de 10</b>: termine sentindo que daria para fazer bem mais.');
+    if (r.clearance.length) notes.push('Sem liberação médica registrada: ' + e(r.clearance.map(H.title).join(', ')) + '. Só o leve, sem esforço intenso, até o médico liberar.');
     r.checks.forEach(x => notes.push('✔ ' + e(x)));
     notes.push('Dor que aumenta durante o exercício (acima de 3 de 10): pare aquele exercício.');
     c.adaptNotes = notes.concat(c.adaptNotes || []); c.health = true;
@@ -300,6 +341,7 @@
   // ---------- antes do treino ----------
   const start0 = A.start;
   A.start = d => {
+    if (!S.current && d.type === 'flex') { const r = H.rules(); start0(d); if (S.current && r.names.length) U.toast('Rotina adaptada para: ' + r.names.join('; ')); return; }
     if (S.current || d.type !== 'session') return start0(d);
     const r = H.rules();
     if (r.clearance.length) return U.modal('<h2>Liberação médica</h2><p>Você registrou: <b>' + e(r.clearance.map(H.title).join(', ')) + '</b>. Para essa condição, o treino precisa de liberação do médico.</p>' +

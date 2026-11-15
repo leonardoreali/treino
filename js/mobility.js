@@ -14,7 +14,13 @@
   MOB.BY_SKILL = BY_SKILL;
   // Mobilidade e alongamentos que costumam incomodar quem tem limitação na região (somados a GEN.AVOID)
   const AVOID_MOB = { punho: 'elevacao-palmas', ombro: 'german-hang skin-the-cat sleeper-stretch extensao-ombro elevacao-bracos-prono', lombar: 'jefferson-curl cobra ponte',
-    joelho: 'couch-stretch couch-stretch-ativo sapo', quadril: 'shin-box quadril-90-90-liftoff straddle-ativo sapo', pescoco: 'ponte' };
+    joelho: 'couch-stretch couch-stretch-ativo sapo quadriceps-deitado alongamento-quadriceps agachamento-profundo pombo shin-box quadril-90-90-liftoff', quadril: 'shin-box quadril-90-90-liftoff straddle-ativo sapo', pescoco: 'ponte',
+    tornozelo: 'mobilidade-tornozelo tibial-parede caminhada-ponta-calcanhar equilibrio-um-pe alongamento-panturrilha alongamento-soleo agachamento-profundo',
+    cotovelo: 'punho-garrafa pronacao-supinacao alongamento-triceps elevacao-palmas german-hang skin-the-cat' };
+  // Limitação marcada no perfil: os movimentos leves da região continuam (costumam ajudar), com aviso para parar se doer
+  const LIMIT_REG = { ombro: ['ombro'], lombar: ['coluna'], punho: ['punho'], cotovelo: ['punho'], quadril: ['quadril'], tornozelo: ['tornozelo'], joelho: [], pescoco: [] };
+  MOB.cautionNote = (limits, x) => (limits || []).some(l => (LIMIT_REG[l] || []).includes(x.reg)) ? 'Movimento leve: faça só se não doer (você marcou limitação nesta região).' : '';
+  const withCaution = (items, limits) => items.map(it => { const n = MOB.cautionNote(limits, S.ex(it.ex)); return n ? Object.assign(it, { note: n }) : it; });
   MOB.avoidFor = limits => new Set((limits || []).flatMap(l => ((GEN.AVOID[l] || '') + ' ' + (AVOID_MOB[l] || '')).split(' ').filter(Boolean)));
 
   // Regiões em ordem de exigência, a partir dos itens de uma sessão (exercícios e habilidades)
@@ -40,12 +46,12 @@
   MOB.item = (x, scale) => { const d = x.dose || { sets: 1, min: 30, max: 30, unit: 's' }, sets = scale === 'warm' ? 1 : d.sets; return Object.assign({ ex: x.id, sets, min: d.min, max: d.max, unit: d.unit }, d.side ? { side: true } : {}); };
 
   // ---------- no gerador ----------
-  MOB.warmup = (regions, ctx) => MOB.pick({ regions, mod: 'ativa', n: ctx.n || 3, maxLvl: Math.min(2, ctx.lvl + 1), can: ctx.can, seed: ctx.seed }).map(x => MOB.item(x, 'warm'));
+  MOB.warmup = (regions, ctx) => withCaution(MOB.pick({ regions, mod: 'ativa', n: ctx.n || 3, maxLvl: Math.min(2, ctx.lvl + 1), can: ctx.can, seed: ctx.seed }).map(x => MOB.item(x, 'warm')), ctx.limits);
   MOB.cooldown = (regions, ctx) => {
     const n = ctx.time <= 30 ? 3 : ctx.time <= 45 ? 4 : 5, used = new Set();
     const st = MOB.pick({ regions, mod: 'estatica', n, maxLvl: ctx.lvl + 1, can: ctx.can, seed: ctx.seed, used });
     const fin = ctx.goal === 'habilidades' || ctx.lvl >= 2 ? MOB.pick({ regions: regions.slice(0, 2), mod: 'final', n: 1, maxLvl: ctx.lvl + 1, can: ctx.can, seed: ctx.seed, used }) : [];
-    const items = fin.concat(st).map(x => MOB.item(x)), mins = Math.max(5, Math.round(items.reduce((a, it) => a + it.sets * (it.unit === 's' ? it.max : it.max * 4) * (it.side ? 2 : 1), 0) / 60));
+    const items = withCaution(fin.concat(st).map(x => MOB.item(x)), ctx.limits), mins = Math.max(5, Math.round(items.reduce((a, it) => a + it.sets * (it.unit === 's' ? it.max : it.max * 4) * (it.side ? 2 : 1), 0) / 60));
     return { title: 'Volta à calma: alongamento (' + mins + ' min)', kind: 'check', note: 'Foco: ' + regions.slice(0, 3).map(r => REGIONS[r].toLowerCase()).join(', ') + '. Alongamento estático fica no fim do treino: antes de força ou salto ele pode diminuir o rendimento.', items };
   };
 
@@ -59,13 +65,14 @@
   const profile = () => S.state.profile || {};
   const focusRegions = f => {
     if (REGIONS[f]) return [f];
-    if (f === 'skills') { const ids = new Set(); Object.values(S.state.programs).forEach(p => p.sessions.forEach(s => s.blocks.forEach(b => (b.items || []).forEach(it => it.skill && ids.add(it.skill))))); const r = MOB.demand([...ids].map(skill => ({ skill }))); return r.length ? r : ALL; }
+    if (f === 'skills') { const ids = new Set(); [S.program()].forEach(p => p.sessions.forEach(s => s.blocks.forEach(b => (b.items || []).forEach(it => it.skill && ids.add(it.skill))))); const r = MOB.demand([...ids].map(skill => ({ skill }))); return r.length ? r : ALL; }
     if (f === 'today') { const p = S.program(), s = p.sessions[S.sessionIdx()]; return s ? MOB.demand(s.blocks.flatMap(b => b.items || []).map(it => it.skill ? it : { ex: W.resolve(it, p.id, 'x') })) : ALL; }
     return ALL;
   };
   MOB.routine = (type, focus) => {
     const t = TYPES[type], pr = profile(), lvl = Math.max(1, Math.min(3, +pr.nivel || 1)), avoid = MOB.avoidFor(pr.limit);
-    const can = id => !avoid.has(id) && !S.missing(id).length;
+    const hr = window.HEALTH ? HEALTH.rules() : null;
+    const can = id => !avoid.has(id) && !S.missing(id).length && !(hr && HEALTH.mobReason(S.ex(id), hr));
     const regions = focusRegions(focus), used = new Set(), seed = new Date().getDate();
     const blocks = t.parts.map(([mod, n]) => {
       const xs = MOB.pick({ regions: focus === 'all' ? ALL : regions, mod, n: REGIONS[focus] ? Math.min(n, 4) : n, maxLvl: lvl + 1, can, seed, used, noFill: !!REGIONS[focus] });
@@ -76,7 +83,9 @@
       if (extra.length) blocks.push({ title: 'Resto do corpo', kind: 'check', items: extra.map(x => MOB.item(x, type === 'mob' ? 'warm' : '')) });
     }
     const label = { all: 'corpo todo', skills: 'minhas habilidades', today: 'treino de hoje' }[focus] || REGIONS[focus].toLowerCase();
-    return { name: t.name + ' — ' + label, blocks };
+    blocks.forEach(b => withCaution(b.items, pr.limit));
+    const locked = hr && REGIONS[focus] && hr.mob.some(m => m.mode === 'lock' && HEALTH.mobRegions(m.area).includes(focus));
+    return { name: t.name + ' — ' + label, blocks, locked };
   };
   A['mob-menu'] = () => {
     const opt = (v, l) => '<option value="' + v + '">' + l + '</option>';
@@ -90,6 +99,7 @@
     const type = (document.querySelector('input[name="mob-type"]:checked') || {}).value || 'mob', focus = U.$('#mob-focus').value;
     if (S.current) return U.toast('Termine ou descarte o treino em andamento primeiro.');
     W.flexOverride = MOB.routine(type, focus);
+    if (W.flexOverride.locked) { W.flexOverride = null; return U.toast('Essa região está em recuperação (tela Saúde): exercícios nela só com orientação do profissional.'); }
     if (!W.flexOverride.blocks.length) { W.flexOverride = null; return U.toast('Nenhum exercício disponível com seus equipamentos e limitações.'); }
     U.closeModal(); A.start({ type: 'flex' });
   };

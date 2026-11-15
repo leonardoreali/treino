@@ -2191,5 +2191,18 @@
 "Termine ou descarte o treino em andamento primeiro.": "Termina o descarta el entrenamiento en curso primero.",
 "Nenhum exercício disponível com seus equipamentos e limitações.": "No hay ejercicios disponibles con tu equipamiento y limitaciones.",
 "· #–# min": "· #–# min",
-"#–# reps": "#–# reps"
+"#–# reps": "#–# reps",
+"Cada sessão foi ajustada para caber em cerca de # min, contando aquecimento e alongamento final.": "Cada sesión se ajustó para caber en unos # min, contando el calentamiento y el estiramiento final.",
+"Duração estimada": "Duración estimada",
+"Movimento leve: faça só se não doer (você marcou limitação nesta região).": "Movimiento suave: hazlo solo si no duele (marcaste una limitación en esta región).",
+"Essa região está em recuperação (tela Saúde): exercícios nela só com orientação do profissional.": "Esta región está en recuperación (pantalla Salud): ejercicios en ella solo con orientación del profesional.",
+"Adaptado à sua condição.": "Adaptado a tu condición.",
+"região em recuperação, só com orientação do profissional": "región en recuperación, solo con orientación del profesional",
+"por enquanto só movimentos leves": "por ahora solo movimientos suaves",
+"ainda sem os mais intensos": "todavía sin los más intensos",
+"falta a liberação médica": "falta la autorización médica",
+"Sem liberação médica registrada": "Sin autorización médica registrada",
+"Só o leve, sem esforço intenso, até o médico liberar.": "Solo lo suave, sin esfuerzo intenso, hasta que el médico autorice.",
+"Rotina adaptada para": "Rutina adaptada para",
+"Marcha parada ou caminhada leve — # min": "Marcha en el sitio o caminata suave — # min"
 };

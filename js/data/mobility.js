@@ -69,6 +69,9 @@
     x.dose = Object.assign({}, DOSE[x.id] || BASE[x.mod], SIDE.has(x.id) ? { side: true } : {});
     if (WARN[x.id]) x.warn = WARN[x.id];
   });
+  // leve: mobilidade ativa de nível 1, sem equipamento e sem carga no corpo (ex.: círculos de tornozelo)
+  const NOT_GENTLE = new Set('mobilidade-tornozelo equilibrio-um-pe caminhada-ponta-calcanhar adutor-balanco worlds-greatest shin-box escapula-elevacao-parede passagem-ombro'.split(' '));
+  EXERCISES.forEach(x => { if (x.mod === 'ativa' && x.level === 1 && !(EQUIP_NEEDS[x.id] || []).length && !NOT_GENTLE.has(x.id)) x.gentle = true; });
   ['german-hang', 'skin-the-cat'].forEach(id => { const x = EXERCISES.find(y => y.id === id); if (x) x.warn = WARN[id]; });
 
   Object.assign(NEXT_VARIATION, {

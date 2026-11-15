@@ -91,11 +91,12 @@
       if (goal === 'habilidades' && SKILL_OF[pat] && S.skill(SKILL_OF[pat]).steps.some(s => s.ex === ex)) { o.skill = SKILL_OF[pat]; }
       return o;
     };
-    let seedN = 0; const mctx = () => ({ lvl, goal, time, seed: seedN, can: id => can(id) && !MOB.avoidFor(p.limit).has(id) });
+    let seedN = 0; const mctx = () => ({ lvl, goal, time, seed: seedN, limits: p.limit, can: id => can(id) && !MOB.avoidFor(p.limit).has(id) });
     // aquecimento: cardio leve + mobilidade ativa das articulações que a sessão mais usa (nada de alongamento estático antes de força)
-    const aquec = regs => ({ title: 'Aquecimento (5–8 min)', kind: 'check', items: [
-      can('corda') ? { ex: 'corda', sets: 1, min: 120, max: 120, unit: 's' } : (avoid.has('polichinelo') ? { text: 'Marcha parada ou caminhada leve — 2 min' } : { ex: 'polichinelo', sets: 1, min: 60, max: 60, unit: 's' }),
-      ...MOB.warmup(regs, mctx()),
+    const short = time <= 30;
+    const aquec = regs => ({ title: 'Aquecimento', kind: 'check', items: [
+      can('corda') ? { ex: 'corda', sets: 1, min: short ? 60 : 120, max: short ? 60 : 120, unit: 's' } : (avoid.has('polichinelo') ? { text: 'Marcha parada ou caminhada leve — ' + (short ? 1 : 2) + ' min' } : { ex: 'polichinelo', sets: 1, min: 60, max: 60, unit: 's' }),
+      ...MOB.warmup(regs, Object.assign(mctx(), { n: short ? 2 : 3 })),
       { ex: 'agachamento', sets: 1, min: 10, max: 10, unit: 'reps', note: 'Lento' }, { text: '1 série leve do primeiro exercício' }] });
     const flex = regs => MOB.cooldown(regs, mctx());
     const hiit = () => {
@@ -106,6 +107,28 @@
     const cardioEx = ['esteira', 'bicicleta', 'eliptico'].find(can) || 'caminhada';
     const cardio = long => ({ title: 'Cardio contínuo', kind: 'cardio', ex: cardioEx, min: (long ? 25 : 15) + (lvl - 1) * 5, max: (long ? 35 : 20) + (lvl - 1) * 5, note: 'Ritmo em que dá para falar frases curtas: ' + S.ex(cardioEx).name.toLowerCase() + '.' });
 
+    // Tempo estimado (segundos) de cada bloco, para a sessão caber no tempo escolhido contando aquecimento e alongamento
+    const workSec = it => (it.unit === 's' ? it.max : it.max * 3.5) * (it.side ? 2 : 1);
+    const blockSec = b => b.kind === 'forca' ? b.items.reduce((a, it) => a + it.sets * (workSec(it) + (it.rest || 60)), 0)
+      : b.kind === 'check' ? b.items.reduce((a, it) => a + (it.text ? 45 : (it.sets || 1) * (it.unit === 's' ? it.max : it.max * 4) * (it.side ? 2 : 1) + 15), 0)
+      : b.kind === 'cardio' ? b.min * 60 : b.kind === 'intervalado' ? b.options[0].rounds * (b.options[0].work + b.options[0].rest) + 120 : 0;
+    const totalMin = blocks => Math.round(blocks.reduce((a, b) => a + blockSec(b), 0) / 60);
+    const relabel = b => { if (b.kind === 'check') b.title = b.title.replace(/ \(\d+ min\)$/, '') + ' (' + Math.max(1, Math.round(blockSec(b) / 60)) + ' min)'; };
+    // Cabe no tempo: menos descanso nos acessórios → menos alongamento → menos exercícios → menos séries → sem o cardio extra
+    const fit = (blocks, keepCardio) => {
+      const lim = time * 60, tot = () => blocks.reduce((a, b) => a + blockSec(b), 0), main = blocks.find(b => b.kind === 'forca'), cool = blocks[blocks.length - 1], cb = () => blocks.find(b => b.kind === 'cardio');
+      const shrinkCardio = floor => { const c = cb(); if (c && tot() > lim) { const over = Math.ceil((tot() - lim) / 60); c.min = Math.max(floor, c.min - over); c.max = Math.max(c.min, c.max - over); } };
+      const coolTo = n => { while (tot() > lim && cool.kind === 'check' && cool.items.length > n) cool.items.pop(); };
+      const mainTo = n => { while (main && tot() > lim && main.items.length > n) main.items.pop(); };
+      if (main) main.items.forEach((it, i) => { if (i >= 2 && tot() > lim && it.rest > 45) it.rest = 45; });
+      coolTo(3); shrinkCardio(keepCardio ? 15 : 10); mainTo(4);
+      if (main) for (let guard = 0; tot() > lim && guard < 20; guard++) { const big = main.items.filter(it => it.sets > 2).sort((a, b) => b.sets - a.sets)[0]; if (!big) break; big.sets--; }
+      coolTo(2); mainTo(3);
+      const extra = blocks.findIndex(b => (b.kind === 'cardio' && !keepCardio) || b.kind === 'intervalado' && !keepCardio);
+      if (extra > 0 && tot() > lim) blocks.splice(extra, 1);
+      if (keepCardio) shrinkCardio(10);
+      blocks.forEach(relabel); return blocks;
+    };
     const strength = (key, alt) => {
       const [name, pats] = TEMPL[key], used = new Set(), items = [];
       const skills = [];
@@ -122,12 +145,13 @@
       const regs = MOB.demand(skills.concat(items)); seedN++;
       const blocks = [aquec(regs), { title: name, kind: 'forca', items: skills.concat(items) }];
       if ((goal === 'emagrecer' || goal === 'saude') && time >= 45 && days <= 3) blocks.push(goal === 'emagrecer' ? hiit() : cardio(false));
-      blocks.push(flex(regs));
-      return { name: name + (alt ? ' (variação)' : ''), duration: time, blocks };
+      blocks.push(flex(regs)); fit(blocks);
+      return { name: name + (alt ? ' (variação)' : ''), duration: Math.min(time, totalMin(blocks)), blocks };
     };
-    const cardioSession = hard => ({ name: hard ? 'Cardio intervalado + core' : 'Cardio contínuo + core', duration: Math.min(time, 45), blocks: [
+    const cardioSession = hard => { seedN++; const blocks = fit([
       aquec(['tornozelo', 'quadril', 'coluna']), hard ? hiit() : cardio(true),
-      { title: 'Core', kind: 'forca', items: ['coreA', 'coreB'].map((pt, n) => { const ex = pick(pt, new Set(), false); return ex ? item(ex, n + 2, pt) : null; }).filter(Boolean) }, flex(['quadril', 'posterior', 'coluna'])] });
+      { title: 'Core', kind: 'forca', items: ['coreA', 'coreB'].map((pt, n) => { const ex = pick(pt, new Set(), false); return ex ? item(ex, n + 2, pt) : null; }).filter(Boolean) }, flex(['quadril', 'posterior', 'coluna'])], true);
+      return { name: hard ? 'Cardio intervalado + core' : 'Cardio contínuo + core', duration: Math.min(time, totalMin(blocks)), blocks }; };
 
     const S_ = { 2: ['fullA', 'fullB'], 3: ['fullA', 'fullB', 'fullC'], 4: ['upper', 'lower', 'upper*', 'lower*'], 5: ['push', 'pull', 'legs', 'upper', 'lower'], 6: ['push', 'pull', 'legs', 'push*', 'pull*', 'legs*'] };
     let plan = S_[days].slice();
@@ -144,6 +168,7 @@
     const periodized = lvl === 3 && (goal === 'forca' || goal === 'hipertrofia') && !careful;
     const why = ['Objetivo: ' + G.GOALS[goal] + '. ' + days + ' sessões por volta (uma volta ≈ uma semana), cerca de ' + time + ' min cada.',
       'Divisão: ' + sessions.map(s => s.name).join(' → ') + '.',
+      'Cada sessão foi ajustada para caber em cerca de ' + time + ' min, contando aquecimento e alongamento final. Duração estimada: ' + sessions.map(s => s.duration + ' min').join(', ') + '.',
       'Exercícios escolhidos pelo seu nível' + (p.flexoes || p.barras ? ' e pelos testes de flexões/barras' : '') + ', usando só os equipamentos marcados' + (gymFirst ? ' (prioridade para academia)' : ' (prioridade para peso do corpo)') + '.',
       (p.limit || []).length ? 'Evitei exercícios que costumam incomodar: ' + p.limit.map(l => G.LIMITS[l].toLowerCase()).join(', ') + '.' : '',
       periodized ? 'Periodização em 3 fases de 4 voltas: a faixa de repetições dos exercícios com carga cai 2 reps a cada fase, para você subir o peso. A 4ª volta de cada fase é leve.' : '',
