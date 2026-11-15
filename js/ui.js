@@ -134,14 +134,14 @@
 
   // ---------- vídeo ----------
   U.ytId = url => { const m = String(url).match(/(?:shorts\/|v=|youtu\.be\/|embed\/)([\w-]{11})/) || String(url).trim().match(/^([\w-]{11})$/); return m ? m[1] : null; };
-  U.searchUrl = ex => 'https://www.youtube.com/results?search_query=' + encodeURIComponent((ex.q || ex.name) + ' shorts');
+  U.searchUrl = ex => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ex.name + ' como fazer tutorial');
   U.videoHtml = exId => {
     const ex = S.ex(exId), id = S.videoFor(exId);
     let v;
     if (!id) v = '<div class="novideo">Sem vídeo fixo para este exercício.</div>';
     else if (location.protocol === 'file:') v = '<a class="thumb" target="_blank" rel="noopener" href="https://www.youtube.com/shorts/' + id + '"><img alt="" src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg"><span>▶ Abrir no YouTube</span></a>';
-    else v = '<div class="short"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&loop=1&playlist=' + id + '&playsinline=1&rel=0" title="Vídeo do exercício" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>';
-    return v + '<div class="vid-links"><a target="_blank" rel="noopener" href="' + U.searchUrl(ex) + '">🔎 Buscar outros shorts</a>' +
+    else v = '<div class="' + ((window.VIDEO_WIDE || {})[exId] && !S.state.videos[exId] ? 'wide' : 'short') + '"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '?playsinline=1&rel=0&modestbranding=1" title="Vídeo do exercício" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>';
+    return v + '<div class="vid-links"><a target="_blank" rel="noopener" href="' + U.searchUrl(ex) + '">🔎 Buscar outros tutoriais</a>' +
       (S.cfg.ytKey ? '<button class="link" data-a="video-pick" data-ex="' + U.esc(exId) + '">Escolher vídeo</button>' : '') +
       '<button class="link" data-a="video-change" data-ex="' + U.esc(exId) + '">' + (S.cfg.ytKey ? 'Colar link' : 'Trocar vídeo') + '</button></div>';
   };

@@ -132,18 +132,33 @@
   });
 
   // ================= BIBLIOTECA =================
-  function libList() {
+  function libFiltered() {
     const q = ui.libQ.trim().toLowerCase();
-    const list = S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
+    return S.allExercises().filter(x => (!ui.libCat || x.cat === ui.libCat) && (!ui.libLvl || x.level === ui.libLvl) && (!ui.libOwn || !S.missing(x.id).length) && (!q || x.name.toLowerCase().includes(q)))
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+  }
+  function libList() {
+    const list = libFiltered();
     const EMO = { empurrar: '💪', puxar: '🧗', pernas: '🦵', core: '🎯', habilidade: '🤸', cardio: '🏃', flexibilidade: '🧘', mobilidade: '🔄', acrobacia: '🌀', luta: '🥊' };
     return list.length ? list.map(x => '<button class="tile" data-a="exercise" data-ex="' + e(x.id) + '"><span class="tile-img">' + (EMO[x.cat] || '🏋️') + (U.thumb(x.id) ? '<img alt="" loading="lazy" src="' + U.thumb(x.id) + '" onerror="this.remove()">' : '') +
       '<span class="tag lvl' + x.level + '">' + LEVELS[x.level] + '</span></span><span class="tile-body"><b>' + e(x.name) + '</b><small>' + e(CATEGORIES[x.cat] || 'Outros') + (x.w ? ' · com carga' : '') + '</small></span></button>').join('') : '<div class="empty">Nada encontrado.</div>';
   }
-  V.biblioteca = () => '<div class="row between"><h1>Biblioteca</h1><button class="btn small" data-a="lib-new">+ Exercício</button></div><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
-    '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + '</button>').join('') + '</div>' +
-    '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button></div>' +
-    '<div class="tiles" id="lib-list">' + libList() + '</div>';
+  const cnt = n => ' <span class="cnt">' + n + '</span>';
+  V.biblioteca = () => { const all = S.allExercises(), inCat = all.filter(x => !ui.libCat || x.cat === ui.libCat); return '<div class="row between"><h1>Biblioteca</h1><button class="btn small" data-a="lib-new">+ Exercício</button></div>' +
+    '<p class="muted small lib-total"><b>' + all.length + '</b> exercícios no total' + ((S.state.customEx || []).length ? ' (<b>' + S.state.customEx.length + '</b> criados por você)' : '') + '. <a href="#" data-a="lib-stats">Ver a lista por categoria</a></p><input id="lib-q" type="search" placeholder="Buscar exercício…" value="' + e(ui.libQ) + '">' +
+    '<div class="chips">' + [['', 'Tudo']].concat(Object.entries(CATEGORIES)).map(c => '<button data-a="lib-cat" data-c="' + c[0] + '" class="' + (ui.libCat === c[0] ? 'on' : '') + '">' + c[1] + cnt(c[0] ? all.filter(x => x.cat === c[0]).length : all.length) + '</button>').join('') + '</div>' +
+    '<div class="chips">' + LEVELS.map((l, i) => '<button data-a="lib-lvl" data-l="' + i + '" class="' + (ui.libLvl === i ? 'on' : '') + '">' + (l || 'Todos os níveis') + cnt(i ? inCat.filter(x => x.level === i).length : inCat.length) + '</button>').join('') + '<button data-a="lib-own" class="' + (ui.libOwn ? 'on' : '') + '">🏠 Só com meu equipamento</button></div>' +
+    '<p class="muted small" id="lib-count">' + libCountText() + '</p><div class="tiles" id="lib-list">' + libList() + '</div>'; };
+  function libCountText() { const n = libFiltered().length, t = S.allExercises().length; return n === t ? 'Mostrando todos os ' + t + ' exercícios' : 'Mostrando ' + n + ' de ' + t + ' exercícios'; }
+  // Lista completa: quantos exercícios há em cada categoria e em cada nível
+  A['lib-stats'] = () => {
+    const all = S.allExercises(), cats = Object.entries(CATEGORIES).concat([['outros', 'Outros']]).filter(c => all.some(x => x.cat === c[0]));
+    U.modal('<h2>Exercícios por categoria</h2><p class="muted small"><b>' + all.length + '</b> exercícios no total.</p><div style="overflow-x:auto"><table class="tbl"><tr><th>Categoria</th><th>Total</th>' + LEVELS.slice(1).map(l => '<th>' + l + '</th>').join('') + '</tr>' +
+      cats.map(c => { const xs = all.filter(x => x.cat === c[0]); return '<tr><td><a href="#" data-a="lib-cat-go" data-c="' + c[0] + '">' + e(c[1]) + '</a></td><td><b>' + xs.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td>' + (xs.filter(x => x.level === n).length || '·') + '</td>').join('') + '</tr>'; }).join('') +
+      '<tr><td><b>Total</b></td><td><b>' + all.length + '</b></td>' + [1, 2, 3, 4, 5].map(n => '<td><b>' + all.filter(x => x.level === n).length + '</b></td>').join('') + '</tr></table></div>' +
+      '<p class="muted small">Com vídeo: ' + all.filter(x => S.videoFor(x.id)).length + ' · Com carga (academia): ' + all.filter(x => x.w).length + ' · Só com peso do corpo: ' + all.filter(x => !S.needs(x.id).length).length + '</p>');
+  };
+  A['lib-cat-go'] = d => { ui.libCat = d.c === 'outros' ? '' : d.c; ui.libLvl = 0; U.closeModal(); location.hash = '#biblioteca'; APP.render(); };
   A['lib-cat'] = d => { ui.libCat = d.c; APP.render(); };
   A['lib-lvl'] = d => { ui.libLvl = +d.l; APP.render(); };
   A['lib-own'] = () => { ui.libOwn = !ui.libOwn; APP.render(); };
@@ -159,7 +174,7 @@
     S.state.equip = S.owned().concat(id); S.save(); APP.render();
   };
   A['equip-del'] = d => { S.state.customEquip = (S.state.customEquip || []).filter(x => x.id !== d.id); S.state.deleted.push(d.id); S.save(); APP.render(); };
-  document.addEventListener('input', ev => { if (ev.target.id === 'lib-q') { ui.libQ = ev.target.value; U.$('#lib-list').innerHTML = libList(); } });
+  document.addEventListener('input', ev => { if (ev.target.id === 'lib-q') { ui.libQ = ev.target.value; U.$('#lib-list').innerHTML = libList(); U.$('#lib-count').textContent = libCountText(); } });
   A['lib-new'] = () => U.modal('<h2>Novo exercício</h2><label>Nome <input id="nx-name"></label><label>Categoria <select id="nx-cat">' + Object.entries(CATEGORIES).map(c => '<option value="' + c[0] + '">' + c[1] + '</option>').join('') + '</select></label>' +
     '<label>Nível <select id="nx-lvl">' + LEVELS.slice(1).map((l, i) => '<option value="' + (i + 1) + '">' + l + '</option>').join('') + '</select></label>' +
     '<label>Equipamento necessário <select id="nx-eq"><option value="">Nenhum (peso do corpo)</option>' + S.allEquip().map(q => '<option value="' + e(q.id) + '">' + e(q.name) + '</option>').join('') + '</select></label>' +

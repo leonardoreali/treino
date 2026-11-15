@@ -27,10 +27,10 @@ Em **Ajustes → Sincronização** há o passo a passo: você cria um token do G
 
 | Quero… | Arquivo |
 | --- | --- |
-| Adicionar/editar exercícios da biblioteca | `js/data/exercises.js` (uma linha por exercício) |
+| Adicionar/editar exercícios da biblioteca | `js/data/exercises.js`, `js/data/gym.js` e `js/data/more.js` (uma linha por exercício; traduções em `tools/i18n/tr-5.tsv`) |
 | Trocar o vídeo padrão de um exercício | `js/data/videos.js` (ou, mais fácil, o botão **Trocar vídeo** dentro do app) |
 | Editar árvores de habilidade ou o programa inicial | `js/data/program.js` |
-| Buscar vídeos para exercícios novos | `node tools/buscar-videos.js` |
+| Buscar vídeos que ensinam (tutoriais) para exercícios novos | `node tools/buscar-videos.js` (`--todos` refaz todos) |
 | Mudar cores | topo de `css/style.css` |
 
 Depois de alterar arquivos, publique de novo (`git add -A`, `git commit -m "atualiza"`, `git push`) e aumente o `VERSION` em `sw.js`.
