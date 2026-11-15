@@ -77,7 +77,7 @@
   Object.assign(NEXT_VARIATION, {
     'quadriceps-deitado': 'alongamento-quadriceps', 'alongamento-quadriceps': 'couch-stretch', 'flexor-quadril-ajoelhado': 'couch-stretch', 'couch-stretch': 'couch-stretch-ativo',
     'shin-box': 'quadril-90-90-liftoff', 'cars-ombro': 'deslizamento-chao', 'deslizamento-chao': 'elevacao-bracos-prono', 'punho-circulos': 'punho-cars', 'punho-cars': 'alongamento-punho',
-    'alongamento-posterior-deitado': 'elevacao-perna-ativa', 'pancake': 'straddle-ativo', 'escapula-elevacao-parede': 'wall-slide',
+    'alongamento-posterior-deitado': 'elevacao-perna-ativa', 'straddle-ativo': 'pancake', 'escapula-elevacao-parede': 'wall-slide',
   });
   Object.assign(window.VIDEO_QUERY = window.VIDEO_QUERY || {}, {
     'punho-cars': 'wrist CARs tutorial mobility', 'escapula-elevacao-parede': 'wall scapular shrug handstand drill', 'elevacao-bracos-prono': 'prone overhead lift off shoulder flexion', 'elevacao-perna-ativa': 'active straight leg raise drill hamstring',

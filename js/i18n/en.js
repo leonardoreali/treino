@@ -2221,5 +2221,9 @@
 "Mobilidade (versão leve)": "Mobility (light version)",
 "Flexibilidade (versão leve)": "Flexibility (light version)",
 "As regras de saúde do app ainda não foram revisadas por um profissional de saúde.": "The app's health rules have not yet been reviewed by a health professional.",
-"São regras de software, não uma avaliação clínica da sua situação.": "They are software rules, not a clinical assessment of your situation."
+"São regras de software, não uma avaliação clínica da sua situação.": "They are software rules, not a clinical assessment of your situation.",
+"Articulações que o exercício exige": "Joints the exercise involves",
+"(usadas para proteger lesões registradas em Saúde; o app também soma as típicas da categoria)": "(used to protect injuries recorded in Health; the app also adds the typical ones for the category)",
+"exercícios no total (": "exercises in total (",
+"criados por você).": "created by you)."
 };

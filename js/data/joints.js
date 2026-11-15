@@ -10,7 +10,10 @@
     agachar: 'quadril joelho tornozelo', quadril: 'quadril coluna', joelho: 'joelho quadril', estabilizar: 'coluna', locomover: 'quadril joelho tornozelo',
   };
   const BY_REG = { punho: 'punho', ombro: 'ombro', quadril: 'quadril', posterior: 'quadril joelho', tornozelo: 'tornozelo', coluna: 'coluna' };
-  const BY_CAT = { cardio: 'quadril joelho tornozelo', acrobacia: 'punho cotovelo ombro pescoco coluna quadril joelho tornozelo', pernas: 'quadril joelho' };
+  // Reserva conservadora por categoria: vale quando não há padrão nem região, e SEMPRE para exercícios criados pelo usuário
+  const BY_CAT = { cardio: 'quadril joelho tornozelo', acrobacia: 'punho cotovelo ombro pescoco coluna quadril joelho tornozelo', pernas: 'quadril joelho tornozelo',
+    empurrar: 'punho cotovelo ombro', puxar: 'punho cotovelo ombro', core: 'coluna quadril', habilidade: 'punho cotovelo ombro coluna',
+    luta: 'ombro cotovelo punho quadril joelho tornozelo', flexibilidade: 'coluna quadril', mobilidade: 'coluna quadril' };
   // isolados e golpes, pelo nome
   const BY_ID = [
     [/rosca|triceps|pronacao|punho-garrafa/, 'cotovelo punho'], [/panturrilha|tibial/, 'tornozelo'], [/extensora|flexora|leg-press|hack|sissy/, 'joelho'],
@@ -31,6 +34,8 @@
   const BY_EQUIP = { barra: 'punho cotovelo ombro', argolas: 'punho cotovelo ombro', paralelas: 'punho cotovelo ombro', poste: 'punho cotovelo ombro', polia: 'punho cotovelo ombro',
     'corda-remada': 'punho cotovelo ombro', 'barra-baixa': 'punho cotovelo ombro', saco: 'punho cotovelo ombro', halteres: 'punho cotovelo ombro', 'barra-livre': 'punho cotovelo ombro',
     kettlebell: 'punho cotovelo ombro', 'roda-abdominal': 'punho cotovelo ombro', 'corda-pular': 'punho ombro', superband: 'ombro' };
+  // 'elastico' (mini elástico) não entra aqui: preso nos joelhos trabalha o quadril, nos punhos trabalha o ombro, segurado trabalha os braços.
+  // Os exercícios do app com mini elástico têm padrão, região ou EXTRA; os criados pelo usuário usam a reserva por categoria e as articulações marcadas.
   // Metadados por exercício quando nada acima representa bem o movimento (somados ao cálculo)
   const EXTRA = {
     'remo-ergometro': 'ombro cotovelo punho coluna', eliptico: 'ombro cotovelo', polichinelo: 'ombro', superman: 'ombro', pallof: 'ombro cotovelo punho',
@@ -52,7 +57,8 @@
     const j = new Set(x.jointsManual || []), how = (x.how || '').toLowerCase();
     if (BY_PAT[x.pat]) add(j, BY_PAT[x.pat]);
     if (BY_REG[x.reg]) add(j, BY_REG[x.reg]);
-    if (!x.pat && !x.reg && BY_CAT[x.cat]) add(j, BY_CAT[x.cat]);
+    const custom = /^c-/.test(x.id || '');
+    if (((!x.pat && !x.reg) || custom) && BY_CAT[x.cat]) add(j, BY_CAT[x.cat]);
     BY_ID.forEach(([re, s]) => { if (re.test(x.id)) add(j, s); });
     BY_TEXT.forEach(([re, s]) => { if (re.test(how)) add(j, s); });
     (x.equip || (window.EQUIP_NEEDS || {})[x.id] || []).forEach(q => { if (BY_EQUIP[q]) add(j, BY_EQUIP[q]); });

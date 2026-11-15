@@ -2221,5 +2221,9 @@
 "Mobilidade (versão leve)": "Movilidad (versión suave)",
 "Flexibilidade (versão leve)": "Flexibilidad (versión suave)",
 "As regras de saúde do app ainda não foram revisadas por um profissional de saúde.": "Las reglas de salud de la app todavía no fueron revisadas por un profesional de la salud.",
-"São regras de software, não uma avaliação clínica da sua situação.": "Son reglas de software, no una evaluación clínica de tu situación."
+"São regras de software, não uma avaliação clínica da sua situação.": "Son reglas de software, no una evaluación clínica de tu situación.",
+"Articulações que o exercício exige": "Articulaciones que exige el ejercicio",
+"(usadas para proteger lesões registradas em Saúde; o app também soma as típicas da categoria)": "(se usan para proteger lesiones registradas en Salud; la app también suma las típicas de la categoría)",
+"exercícios no total (": "ejercicios en total (",
+"criados por você).": "creados por ti)."
 };

@@ -190,10 +190,11 @@
     '<label>Nível <select id="nx-lvl">' + LEVELS.slice(1).map((l, i) => '<option value="' + (i + 1) + '">' + l + '</option>').join('') + '</select></label>' +
     '<label>Equipamento necessário <select id="nx-eq"><option value="">Nenhum (peso do corpo)</option>' + S.allEquip().map(q => '<option value="' + e(q.id) + '">' + e(q.name) + '</option>').join('') + '</select></label>' +
     '<label>Padrão de movimento <select id="nx-pat"><option value="">Nenhum / não sei</option>' + Object.entries(PATTERNS).map(p => '<option value="' + p[0] + '">' + p[1] + '</option>').join('') + '</select></label>' +
+    '<div><div class="small">Articulações que o exercício exige <span class="muted">(usadas para proteger lesões registradas em Saúde; o app também soma as típicas da categoria)</span></div><div class="row wrap" style="margin-top:4px">' + Object.entries(JOINTS).map(j => '<label class="chk" style="border:0"><input type="checkbox" class="nx-joint" value="' + j[0] + '"><span>' + j[1] + '</span></label>').join('') + '</div></div>' +
     '<label>Como fazer <textarea id="nx-how" rows="2"></textarea></label><label>Link do short no YouTube (opcional) <input id="nx-vid" placeholder="https://youtube.com/shorts/…"></label><button class="btn block" data-a="lib-save">Salvar</button>');
   A['lib-save'] = () => {
     const name = U.$('#nx-name').value.trim(); if (!name) return U.toast('Dê um nome ao exercício.');
-    S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined, pat: U.$('#nx-pat').value || undefined });
+    S.state.customEx.push({ id: 'c-' + S.uid(), t: Date.now(), name, cat: U.$('#nx-cat').value, level: +U.$('#nx-lvl').value, how: U.$('#nx-how').value.trim(), q: name, equip: U.$('#nx-eq').value ? [U.$('#nx-eq').value] : undefined, video: U.ytId(U.$('#nx-vid').value) || undefined, pat: U.$('#nx-pat').value || undefined, jointsManual: [...document.querySelectorAll('.nx-joint:checked')].map(c => c.value) });
     S.save(); U.closeModal(); APP.render();
   };
 
