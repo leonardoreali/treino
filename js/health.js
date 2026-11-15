@@ -468,6 +468,7 @@
   };
 
   // ---------- Hoje e Perfil ----------
+  // Acrescenta à tela Hoje (definida em js/theme.js) os avisos de saúde e de consulta.
   const hoje0 = V.hoje;
   V.hoje = () => {
     const h = hoje0(), act = active(); if (!act.length) return h;

@@ -4,8 +4,10 @@
   const APP_URL = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? 'https://leonardoreali.github.io/treino/' : location.origin + location.pathname;
   const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
-  // XP: 50 por treino + 10 por série + 2 por minuto de cardio. A cada 1000 XP sobe um nível.
-  U.xp = () => S.state.logs.reduce((a, l) => a + 50 + (l.items || []).reduce((b, i) => b + (i.unit === 'min' ? i.sets[0] * 2 : i.sets.length * 10), 0), 0);
+  // XP: bônus de 50 por treino completo, 25 por parcial e 15 por atividade leve (alongamento), mais 10 por série feita
+  // e 2 por minuto de cardio. A cada 1000 XP sobe um nível.
+  U.xpOf = l => (l.type === 'session' ? (l.partial ? 25 : 50) : 15) + (l.items || []).reduce((b, i) => b + (i.unit === 'min' ? i.sets[0] * 2 : i.sets.length * 10), 0);
+  U.xp = () => S.state.logs.reduce((a, l) => a + U.xpOf(l), 0);
   U.thumb = exId => { const id = S.videoFor(exId); return id ? 'https://i.ytimg.com/vi/' + id + '/mqdefault.jpg' : ''; };
   // Dias seguidos com qualquer atividade (treino, parcial ou alongamento).
   function streak() {
@@ -16,6 +18,8 @@
   }
 
   // ================= HOJE =================
+  // Esta é a única implementação da tela Hoje. js/progress.js e js/health.js apenas acrescentam blocos a ela
+  // (cartão de evolução, avisos de tempo parado, saúde), envolvendo esta função — para mudar a tela, edite aqui.
   V.hoje = () => {
     const p = S.program(), n = p.sessions.length, mode = S.mode(), ti = S.todayIdx(), si = Math.max(0, ti), round = S.round(), logs = S.sortedLogs();
     const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];

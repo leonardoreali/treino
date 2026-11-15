@@ -105,6 +105,7 @@
     });
     return { ids, st, prs };
   };
+  // Acrescenta à tela Hoje (definida em js/theme.js) o cartão de evolução e os avisos de tempo parado.
   const hoje0 = V.hoje;
   V.hoje = () => {
     let h = hoje0();
@@ -219,15 +220,15 @@
     const logs = S.sortedLogs(), o = overview();
     if (!o.ids.length) return '<div class="empty">Registre seus treinos: a evolução de cada exercício aparece aqui a partir do segundo treino.</div>';
     // treinos por semana (8 semanas)
-    const wk = []; for (let i = 7; i >= 0; i--) { const a = new Date(Date.now() - (i * 7 + 6) * 864e5).toISOString().slice(0, 10), b = new Date(Date.now() - i * 7 * 864e5).toISOString().slice(0, 10); wk.push(logs.filter(l => l.date >= a && l.date <= b && l.type === 'session').length); }
-    const mx = Math.max(3, ...wk);
+    const wk = []; for (let i = 7; i >= 0; i--) { const a = new Date(Date.now() - (i * 7 + 6) * 864e5).toISOString().slice(0, 10), b = new Date(Date.now() - i * 7 * 864e5).toISOString().slice(0, 10); const ss = logs.filter(l => l.date >= a && l.date <= b && l.type === 'session'); wk.push({ full: ss.filter(l => !l.partial).length, part: ss.filter(l => l.partial).length }); }
+    const mx = Math.max(3, ...wk.map(w => w.full + w.part));
     // séries por grupo nos últimos 7 dias
     const since7 = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10), grp = {};
     logs.filter(l => l.date >= since7).forEach(l => (l.items || []).forEach(i => { if (i.unit !== 'min') { const c = S.ex(i.ex).cat; grp[c] = (grp[c] || 0) + i.sets.length; } }));
     const gmx = Math.max(10, ...Object.values(grp));
     const ids = o.ids.slice().sort((a, b) => { const la = P.series(a), lb = P.series(b); return (lb.length ? lb[lb.length - 1].date : '') < (la.length ? la[la.length - 1].date : '') ? -1 : 1; });
     return '<div class="stats"><div><b>' + o.prs + '</b><span>recordes em 30 dias</span></div><div><b>' + ((o.st.pr || 0) + (o.st.subindo || 0)) + '</b><span>exercícios subindo</span></div><div><b>' + ((o.st.estagnado || 0) + (o.st.caindo || 0)) + '</b><span>precisam de atenção</span></div></div>' +
-      '<div class="card"><b>Treinos por semana</b><div class="bars">' + wk.map((n, i) => '<div title="' + n + ' treinos"><i style="height:' + Math.round(100 * n / mx) + '%"></i><span>' + (i === 7 ? 'esta' : '-' + (7 - i)) + '</span></div>').join('') + '</div></div>' +
+      '<div class="card"><b>Treinos por semana</b><div class="bars" role="img" aria-label="Treinos por semana nas últimas 8 semanas: ' + wk.map(w => w.full + (w.part ? ' + ' + w.part + ' parcial' : '')).join(', ') + '">' + wk.map((w, i) => '<div title="' + w.full + ' completo(s), ' + w.part + ' parcial(is)"><i class="part" style="height:' + Math.round(100 * w.part / mx) + '%"></i><i style="height:' + Math.round(100 * w.full / mx) + '%"></i><span>' + (i === 7 ? 'esta' : '-' + (7 - i)) + '</span></div>').join('') + '</div><div class="legend small"><span><i style="background:var(--accent)"></i>completos</span><span><i style="background:color-mix(in srgb, var(--accent) 35%, var(--card2))"></i>parciais</span></div></div>' +
       (Object.keys(grp).length ? '<div class="card"><b>Séries por grupo nos últimos 7 dias</b><p class="muted small">Referência comum para ganhar músculo: 10 a 20 séries por grupo por semana.</p>' + Object.entries(grp).sort((a, b) => b[1] - a[1]).map(([c, n]) => '<div class="grp"><span>' + e(CATEGORIES[c] || 'Outros') + '</span><div class="bar"><i style="width:' + Math.round(100 * n / gmx) + '%"></i></div><b>' + n + '</b></div>').join('') + '</div>' : '') +
       '<h3>Exercícios</h3>' + ids.map(id => {
         const s = P.series(id), st = statusOf(id), b = BADGE[st], best = s.length ? s.reduce((a, x) => x.score > a.score ? x : a) : null;

@@ -230,7 +230,7 @@
     const partial = c.type === 'session' && k.pct < 100;
     U.modal('<h2>' + (partial ? 'Concluir treino parcial' : 'Concluir treino') + '</h2>' +
       (partial ? '<div class="hint warn"><b>Feito: ' + k.pct + '%</b> (' + k.done + ' de ' + k.total + ')<ul class="small" style="margin:6px 0 0;padding-left:18px">' + k.pending.slice(0, 8).map(x => '<li>' + e(x) + '</li>').join('') + (k.pending.length > 8 ? '<li>…</li>' : '') + '</ul></div>' +
-        (c.type === 'session' ? '<label class="chk"><input type="radio" name="w-part" value="advance" checked><span>Salvar como parcial e seguir para a próxima sessão</span></label><label class="chk"><input type="radio" name="w-part" value="repeat"><span>Salvar como parcial e <b>repetir esta sessão</b> na próxima vez</span></label>' : '')
+        (c.type === 'session' ? '<label class="chk"><input type="radio" name="w-part" value="repeat" checked><span>Salvar como parcial e <b>repetir esta sessão</b> na próxima vez (recomendado)</span></label><label class="chk"><input type="radio" name="w-part" value="advance"><span>Salvar como parcial e seguir para a próxima sessão mesmo assim</span></label>' : '')
         : '<div class="hint up">✓ Todas as séries concluídas.</div>') +
       (k.info.length ? '<p class="muted small">' + k.info.map(e).join(' · ') + '</p>' : '') +
       '<p>Esforço percebido (1 = muito leve, 10 = máximo)</p><div class="rpe">' +
@@ -240,7 +240,9 @@
   };
   A['w-rpe'] = (d, el) => { el.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === el)); el.parentNode.dataset.v = d.n; };
   A['w-save'] = () => {
-    const c = S.current, items = [], k = W.completion(c), repeat = (U.$('input[name="w-part"]:checked') || {}).value === 'repeat';
+    const c = S.current, items = [], k = W.completion(c), choice = (U.$('input[name="w-part"]:checked') || {}).value;
+    // treino parcial não avança a fila, a não ser que a pessoa escolha seguir
+    const repeat = c.type === 'session' && k.pct < 100 && choice !== 'advance';
     if (!k.anyWork) return U.toast('Marque pelo menos uma série feita.');
     c.blocks.forEach(b => {
       if (b.kind === 'forca') b.items.forEach(it => { const sets = it.vals.filter((v, i) => it.done[i]); if (sets.length) { const o = { ex: it.ex, unit: it.unit, sets, side: !!it.side }; if (it.kgs && it.kgs.some(Number)) o.kg = it.kgs.filter((v, i) => it.done[i]).map(v => Number(v) || 0); items.push(o); } });
