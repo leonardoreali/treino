@@ -59,8 +59,17 @@
       });
       blocks.push(nb);
     });
+    // Garante uma volta à calma também em fichas antigas ou importadas sem bloco final.
+    if (type === 'session' && !blocks.some(b => b.kind === 'check' && /alongamento|flexibilidade|volta à calma/i.test(b.title || ''))) {
+      const fallback = JSON.parse(JSON.stringify(FLEX_PADRAO));
+      fallback.title = 'Volta à calma: alongamento';
+      fallback.note = 'Faça os alongamentos depois dos exercícios. Pare se sentir dor.';
+      fallback.items = fallback.items.slice(0, 4);
+      fallback.items.forEach((it, i) => Object.assign(it, { key: 'cooldown.' + i, checked: false }));
+      blocks.push(fallback);
+    }
     S.current = { type, programId: p.id, round, sessionIdx: si, name: src.name, startedAt: Date.now(), date: S.today(), blocks, deload, phase: ph ? ph.label : '' };
-    if (S.cfg.focus && type === 'session') S.current.focus = { idx: 0 };
+    if (type === 'session' && S.cfg.focus !== false) S.current.focus = { idx: 0 };
     S.saveCurrent();
   };
 
@@ -90,7 +99,7 @@
         '<button class="check" data-a="w-set" data-key="' + it.key + '" data-i="' + i + '" aria-label="Concluir série">✓</button></div>').join('') + '</div></div>';
   }
   function itemCheck(it) {
-    if (it.text) return '<label class="chk' + (it.checked ? ' on' : '') + '"><input type="checkbox" data-chk="' + it.key + '"' + (it.checked ? ' checked' : '') + '><span>' + e(it.text) + '</span></label>';
+    if (it.text) return '<label class="chk' + (it.checked ? ' on' : '') + '"><input type="checkbox" data-chk="' + it.key + '"' + (it.checked ? ' checked' : '') + '><span>' + e(it.text) + '</span></label>' + (it.cardio && it.ex ? '<button class="link" data-a="video" data-ex="' + e(it.ex) + '">▶ Ver vídeo do aquecimento</button>' : '');
     const ex = S.ex(it.ex);
     return '<div class="chk' + (it.checked ? ' on' : '') + '"><input type="checkbox" data-chk="' + it.key + '"' + (it.checked ? ' checked' : '') + ' aria-label="Feito">' +
       '<div class="grow"><span class="ex-name" data-a="exercise" data-ex="' + e(it.ex) + '">' + e(ex.name) + '</span> <span class="muted small">' + U.fmtRange(it) + '</span>' +
@@ -102,7 +111,7 @@
     let body = '';
     if (b.kind === 'forca') body = b.items.map(itemForca).join('');
     else if (b.kind === 'check') body = '<div class="card">' + (b.note ? '<p class="muted small">' + e(b.note) + '</p>' : '') + b.items.map(itemCheck).join('') + '</div>';
-    else if (b.kind === 'cardio') body = '<div class="card">' + (b.note ? '<p class="muted">' + e(b.note) + '</p>' : '') +
+    else if (b.kind === 'cardio') body = '<div class="card">' + (b.note ? '<p class="muted">' + e(b.note) + '</p>' : '') + (b.ex ? '<button class="link" data-a="video" data-ex="' + e(b.ex) + '">▶ Ver vídeo do movimento</button>' : '') +
       '<div class="row"><button class="btn" data-a="w-cardio" data-b="' + bi + '">⏱ Iniciar ' + b.min + ' min</button>' +
       '<label class="inline">Minutos feitos <input type="number" inputmode="numeric" min="0" value="' + (b.minutes || '') + '" data-cardio="' + bi + '" placeholder="' + b.min + '–' + b.max + '"></label></div></div>';
     else if (b.kind === 'intervalado') body = '<div class="card">' + (b.note ? '<p class="muted">' + e(b.note) + '</p>' : '') +
@@ -137,6 +146,7 @@
   A['w-focus'] = () => { const st = steps(S.current); S.current.focus = { idx: Math.max(0, st.findIndex(x => !stepDone(x))) }; S.cfg.focus = true; S.saveCfg(); rerender(); window.scrollTo(0, 0); };
   A['w-full'] = () => { delete S.current.focus; S.cfg.focus = false; S.saveCfg(); rerender(); };
   A['w-step'] = d => { const n = steps(S.current).length; S.current.focus.idx = Math.max(0, Math.min(n - 1, (S.current.focus.idx || 0) + +d.d)); rerender(); window.scrollTo(0, 0); };
+  function advanceFocusIfDone() { if (!S.current.focus) return; const st = steps(S.current), idx = S.current.focus.idx || 0; if (st[idx] && stepDone(st[idx]) && idx < st.length - 1) S.current.focus.idx = idx + 1; }
 
   W.view = () => {
     const c = S.current;
@@ -163,7 +173,7 @@
   });
   document.addEventListener('change', ev => {
     const t = ev.target;
-    if (S.current && t.dataset.chk) { const it = findItem(t.dataset.chk); if (it) { it.checked = t.checked; rerender(); } }
+    if (S.current && t.dataset.chk) { const it = findItem(t.dataset.chk); if (it) { it.checked = t.checked; advanceFocusIfDone(); rerender(); } }
   });
   A['w-set'] = d => {
     const it = findItem(d.key), i = +d.i;
@@ -178,10 +188,10 @@
     U.hold(it.vals[i] || it.max, S.ex(it.ex).name, sec => { it.vals[i] = sec; it.done[i] = true; rerender(); U.rest(it.rest || 60, S.ex(it.ex).name); });
   };
   A['w-chktime'] = d => { const it = findItem(d.key); U.hold(it.max, S.ex(it.ex).name + (it.side ? ' (um lado)' : ''), () => { if (!it.side) { it.checked = true; rerender(); } }); };
-  A['w-cardio'] = d => { const b = S.current.blocks[+d.b]; U.hold(b.min * 60, b.title, sec => { b.minutes = Math.max(1, Math.round(sec / 60)); rerender(); }); };
+  A['w-cardio'] = d => { const b = S.current.blocks[+d.b]; U.hold(b.min * 60, b.title, sec => { b.minutes = Math.max(1, Math.round(sec / 60)); advanceFocusIfDone(); rerender(); }); };
   A['w-interval'] = d => {
     const b = S.current.blocks[+d.b], o = b.options[+d.o], r = S.current.round === 1 && o.firstRounds ? o.firstRounds : o.rounds;
-    U.interval(o, r, () => { b.doneOpt = o.name; rerender(); U.toast('Intervalado concluído!'); });
+    U.interval(o, r, () => { b.doneOpt = o.name; advanceFocusIfDone(); rerender(); U.toast('Intervalado concluído!'); });
   };
   A['w-up'] = d => {
     const it = findItem(d.key), p = S.program();

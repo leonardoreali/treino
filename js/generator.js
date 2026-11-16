@@ -95,7 +95,7 @@
     // aquecimento: cardio leve + mobilidade ativa das articulações que a sessão mais usa (nada de alongamento estático antes de força)
     const short = time <= 30;
     const aquec = regs => ({ title: 'Aquecimento', kind: 'check', items: [
-      can('corda') ? { ex: 'corda', sets: 1, min: short ? 60 : 120, max: short ? 60 : 120, unit: 's' } : (avoid.has('polichinelo') ? { text: 'Marcha parada ou caminhada leve — ' + (short ? 1 : 2) + ' min', cardio: true } : { ex: 'polichinelo', sets: 1, min: 60, max: 60, unit: 's' }),
+      can('corda') ? { ex: 'corda', sets: 1, min: short ? 60 : 120, max: short ? 60 : 120, unit: 's' } : (avoid.has('polichinelo') ? { text: 'Marcha parada ou caminhada leve — ' + (short ? 1 : 2) + ' min', cardio: true, ex: 'caminhada' } : { ex: 'polichinelo', sets: 1, min: 60, max: 60, unit: 's' }),
       ...MOB.warmup(regs, Object.assign(mctx(), { n: short ? 2 : 3 })),
       { ex: 'agachamento', sets: 1, min: 10, max: 10, unit: 'reps', note: 'Lento' }, { text: '1 série leve do primeiro exercício' }] });
     const flex = regs => MOB.cooldown(regs, mctx());
